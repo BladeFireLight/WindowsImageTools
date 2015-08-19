@@ -23,9 +23,30 @@ Jeffery Hicks wrote two great articals on the process of creating a Gen2 VHDX an
 
 Thease are the starting point for this module. 
 
-## Functions (subject to change at this point as i am not good a picking names)
+## Functions (I'm bad a naming, so i'm open to better names)
+
+### Convert-Wim2GenTwoVhdx
+```NAME
+    Convert-Wim2GenTwoVhdx
+    
+SYNOPSIS
+    Create a VHDX and populate it from a WIM
+    
+    
+SYNTAX
+    Convert-Wim2GenTwoVhdx [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend <String>] [-Size 
+    <UInt64>] [-Dynamic] [-BlockSizeBytes <UInt32>] [-LogicalSectorSizeBytes <UInt32>] 
+    [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
+    You must supply the path to the VHDX file and a valid WIM. You should also
+    include the index number for the Windows Edition to install.
+```
+
 ### Initialize-GenTwoBootDisk
-,,,NAME
+```NAME
     Initialize-GenTwoBootDisk
     
 SYNOPSIS
@@ -42,5 +63,28 @@ DESCRIPTION
     This command will create a generation 2 VHDX file. Many of the parameters are
     from the New-VHD cmdlet. The disk name must end in .vhdx
      
-    If you want a recovery partition use -Recovery
-,,,
+    To create a recovery partition use -Recovery
+```
+
+### Set-GenTwoBootDiskFromWim
+```NAME
+    Set-GenTwoBootDiskFromWim
+    
+SYNOPSIS
+    Configure Windows image and recovery partitions
+    
+    
+SYNTAX
+    Set-GenTwoBootDiskFromWim [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend <String>] 
+    [-Force <Boolean>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
+    You must supply the path to the VHDX file and a valid WIM. You should also
+    include the index number for the Windows Edition to install. The WIM will be
+    copied to the recovery partition.
+    Optionally, you can also specify an XML file to be inserted into the OS
+    partition as unattend.xml
+    CAUTION: This command will reformat partitions.
+```
