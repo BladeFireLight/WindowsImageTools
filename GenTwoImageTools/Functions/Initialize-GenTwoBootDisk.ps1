@@ -7,7 +7,10 @@ function Initialize-GenTwoBootDisk
             Create a Generation 2 VHDX
             .DESCRIPTION
             This command will create a generation 2 VHDX file. Many of the parameters are
-            from the New-VHD cmdlet. The disk name must end in .vhdx.
+            from the New-VHD cmdlet. The disk name must end in .vhdx
+
+            To create a recovery partition use -Recovery
+
             .EXAMPLE
             Initialize-Gen2BootDisk d:\disks\disk001.vhdx -dynamic -size 30GB
             .EXAMPLE
