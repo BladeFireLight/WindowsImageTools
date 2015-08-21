@@ -25,7 +25,7 @@ function Initialize-GenTwoBootDisk
     (
         # Path to the new VHDX file (Must end in .vhdx)
         [Parameter(Position = 0,Mandatory = $true,
-            HelpMessage = 'Enter the path for the new VHDX file')]
+        HelpMessage = 'Enter the path for the new VHDX file')]
         [ValidateNotNullorEmpty()]
         [ValidatePattern("\.vhdx$")]
         [ValidateScript({
@@ -76,6 +76,9 @@ function Initialize-GenTwoBootDisk
     $SysSize = 100MB
     $MSRSize = 128MB
     $fileName = Split-Path -Leaf -Path $Path
+    # make paths absolute
+    #$Path = Resolve-Path $Path -Verbose
+
     if ($pscmdlet.ShouldProcess("$Path", 'Create new Generation Two disk'))
     {
         if (Test-Path -Path $Path) 

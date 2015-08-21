@@ -1,6 +1,4 @@
-﻿#requires -Version 2 -Modules Dism
-
-function Convert-Wim2GenTwoVhdx
+﻿function Convert-Wim2GenTwoVhdx
 {
     <#
             .Synopsis
