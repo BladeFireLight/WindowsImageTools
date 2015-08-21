@@ -32,7 +32,9 @@ function get-AbsoluteFilePath
         {
             $Parent = Resolve-Path (Split-Path -Path $Path -Parent )
             $Leaf = Split-Path -Path $Path -Leaf
-            $Path = "$Parent" + "\$Leaf"
+            
+            if ($Parent.path[-1] -eq '\') { $Path = "$Parent" + "$Leaf" }
+            else {$Path = "$Parent" + "\$Leaf"}
         }
         else 
         {
