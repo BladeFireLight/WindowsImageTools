@@ -27,9 +27,9 @@ function Initialize-GenTwoBootDisk
         [Parameter(Position = 0,Mandatory = $true,
         HelpMessage = 'Enter the path for the new VHDX file')]
         [ValidateNotNullorEmpty()]
-        [ValidatePattern("\.vhdx$")]
+        [ValidatePattern(".\.vhdx$")]
         [ValidateScript({
-                    if (Split-Path -Path $_ | Test-Path) 
+                    if (get-AbsoluteFilePath -Path $_ | Split-Path  | Resolve-Path ) 
                     {
                         $true
                     }
@@ -77,8 +77,8 @@ function Initialize-GenTwoBootDisk
     $MSRSize = 128MB
     $fileName = Split-Path -Leaf -Path $Path
     # make paths absolute
-    #$Path = Resolve-Path $Path -Verbose
-
+    $Path = $path | get-AbsoluteFilePath
+    
     if ($pscmdlet.ShouldProcess("$Path", 'Create new Generation Two disk'))
     {
         if (Test-Path -Path $Path) 
@@ -140,7 +140,7 @@ function Initialize-GenTwoBootDisk
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating a [$RESize] byte Recovery tools partition on disknumber [$disknumber]"
                     $null = New-Partition -DiskNumber $disknumber -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}' -Size $RESize -ErrorAction Stop |
                     Format-Volume -FileSystem NTFS -NewFileSystemLabel 'Windows RE Tools' -Confirm:$false -ErrorAction Stop
-                    $partitionNumber = (Get-Disk $disknumber |
+                    $partitionNumber = (Get-Disk -Number $disknumber |
                         Get-Partition |
                         Where-Object -FilterScript {
                             $_.type -eq 'recovery'

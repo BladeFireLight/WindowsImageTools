@@ -22,9 +22,9 @@
         HelpMessage = 'Enter the path to the VHDX file')]
         [Alias('FullName','pspath')]
         [ValidateNotNullorEmpty()]
-        [ValidatePattern("\.vhdx$")]
+        [ValidatePattern(".\.vhdx$")]
         [ValidateScript({
-                    if (Split-Path $_ | Test-Path) 
+                    if (Split-Path -Path $_ | Test-Path) 
                     {
                         $true
                     }
@@ -39,7 +39,7 @@
         [parameter(Position = 1,Mandatory = $true,
         HelpMessage = 'Enter the path to the WIM file')]
         [ValidateScript({
-                    Test-Path $_
+                    Test-Path -Path $_
         })]
         [string]$WIMPath,
         
@@ -62,8 +62,9 @@
         [int]$Index = 1,
         
         # Path to file to copy inside of VHDX as C:\unattent.xml
+        
         [ValidateScript({
-                    Test-Path $_
+                    Test-Path  -Path $_ 
         })]
         [string]$Unattend,
         
@@ -104,19 +105,19 @@
         }
     }
     # make paths absolute
-    $Path = Resolve-Path $Path
-    $WIMPath = Resolve-Path $WIMPath
+    $Path = $Path | get-AbsoluteFilePath 
+    $WIMPath = $WIMPath | get-AbsoluteFilePath
 
 
     if ($pscmdlet.ShouldProcess("[$Path]", "Create new Bootable VHDX and populate from [$WIMPath]"))
     {
-        if ((Test-Path $Path) -and $Force)
+        if ((Test-Path -Path $Path) -and $Force)
         {
             Write-Warning -Message "Replacing $Path"
             Remove-Item $Path -Force @ParametersToPass
         }
         
-        if (-not (Test-Path $Path)) 
+        if (-not (Test-Path -Path $Path)) 
         {
             $InitializeGen2BootDiskParam = @{
                 'BlockSizeBytes'        = $BlockSizeBytes
@@ -138,14 +139,11 @@
                 'WIMPath' = $WIMPath
                 'Path'  = $Path
                 'Index' = $Index
+                'force' = $true
             }
             if ($Unattend)
             {
                 $SetGenTwoBootDiskFromWimParam.add('Unattend', $Unattend)
-            }
-            if ($Force)
-            {
-                $SetGenTwoBootDiskFromWimParam.add('Force', $Force)
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeGen2BootDiskParam"
             Write-Verbose -Message ($InitializeGen2BootDiskParam | Out-String)
