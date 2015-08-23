@@ -36,7 +36,7 @@
         [parameter(Position = 1,Mandatory = $true,
         HelpMessage = 'Enter the path to the WIM file')]
         [ValidateScript({
-                    Test-Path -Path (get-AbsoluteFilePath -Path $_)
+                    Test-Path -Path (get-AbsoluteFilePath -Path $_ )
         })]
         [string]$WIMPath,
         

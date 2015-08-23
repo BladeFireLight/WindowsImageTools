@@ -154,7 +154,7 @@
             
             Try
             {
-                Initialize-GenTwoBootDisk @InitializeGen2BootDiskParam @ParametersToPass 
+                $null = Initialize-GenTwoBootDisk @InitializeGen2BootDiskParam @ParametersToPass 
                 Set-GenTwoBootDiskFromWim @SetGenTwoBootDiskFromWimParam @ParametersToPass
             }
             Catch

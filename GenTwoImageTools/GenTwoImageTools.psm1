@@ -26,6 +26,8 @@ function get-AbsoluteFilePath
         $Path
     )
 
+    if ([string]::IsNullOrEmpty($path)) { return 'c:\' }
+    else {
     if (-not (Test-Path $Path))
     {
         if (Test-Path (Split-Path -Path $Path -Parent ))
@@ -44,6 +46,7 @@ function get-AbsoluteFilePath
     else 
     {
         $Path = Resolve-Path $Path
+    }
     }
     return $Path
 }

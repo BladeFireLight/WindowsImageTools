@@ -62,7 +62,7 @@ function Initialize-GenTwoBootDisk
         [switch]
         $Recovery
     )
-
+    Begin { 
     if ($Recovery)
     {
         $RESize = 300MB
@@ -185,7 +185,7 @@ exit
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating a [$RecoverySize] byte Recovery partition"
                     $RecoveryPartition = $null = New-Partition -DiskNumber $disknumber -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}' -UseMaximumSize -ErrorAction Stop
                     $RecoveryPartitionNumber = $RecoveryPartition.PartitionNumber
-                    $RecoveryPartition | Format-Volume -FileSystem NTFS -NewFileSystemLabel 'Windows Recovery' -Confirm:$false -ErrorAction Stop
+                    $null = $RecoveryPartition | Format-Volume -FileSystem NTFS -NewFileSystemLabel 'Windows Recovery' -Confirm:$false -ErrorAction Stop
                     #run diskpart to set GPT attribute to prevent partition removal
                     #the here string must be left justified
                     $null = @"
@@ -215,4 +215,4 @@ exit
     }
     #write the new disk object to the pipeline
     Get-Item -Path $Path
-}
+} }
