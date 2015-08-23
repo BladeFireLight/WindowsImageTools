@@ -25,7 +25,6 @@ Thease are the starting point for this module.
 
 ## Functions (I'm bad a naming, so i'm open to better names)
 
-### Convert-Wim2GenTwoVhdx
 ```NAME
     Convert-Wim2GenTwoVhdx
     
@@ -34,19 +33,107 @@ SYNOPSIS
     
     
 SYNTAX
-    Convert-Wim2GenTwoVhdx [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend <String>] [-Size 
-    <UInt64>] [-Dynamic] [-BlockSizeBytes <UInt32>] [-LogicalSectorSizeBytes <UInt32>] 
-    [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+    Convert-Wim2GenTwoVhdx [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend 
+    <String>] [-Size <UInt64>] [-Dynamic] [-BlockSizeBytes <UInt32>] [-LogicalSectorSizeBytes 
+    <UInt32>] [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] [-Force] [-WhatIf] [-Confirm] 
+    [<CommonParameters>]
     
     
 DESCRIPTION
     This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
     You must supply the path to the VHDX file and a valid WIM. You should also
     include the index number for the Windows Edition to install.
-```
+    
 
-### Initialize-GenTwoBootDisk
-```NAME
+PARAMETERS
+    -Path <String>
+        Path to VHDX
+        
+    -WIMPath <String>
+        Path to WIM used to populate VHDX
+        
+    -Index <Int32>
+        Index of image inside of WIM (Default 1)
+        index is valid
+        
+    -Unattend <String>
+        Path to file to copy inside of VHDX as C:\unattent.xml
+        
+    -Size <UInt64>
+        Size in Bytes from 25GB - 64TB (Default 40GB)
+        
+    -Dynamic [<SwitchParameter>]
+        Create Dynamic disk
+        
+    -BlockSizeBytes <UInt32>
+        Block Size (Default 2MB)
+        
+    -LogicalSectorSizeBytes <UInt32>
+        Logical Sector size of 512 or 4098 bytes (Default 512)
+        
+    -PhysicalSectorSizeBytes <UInt32>
+        Phisical Sector size of 512 or 4096 bytes (Default 512)
+        
+    -Recovery [<SwitchParameter>]
+        Create the Recovery Partition (Pet vs Cattle)
+        
+    -Force [<SwitchParameter>]
+        Force overwrite of vhdx
+        
+    -WhatIf [<SwitchParameter>]
+        
+    -Confirm [<SwitchParameter>]
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS C:\>Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 
+    -Size 40GB -force
+   
+   
+   
+NAME
+    get-AbsoluteFilePath
+    
+SYNOPSIS
+    Get Absolute path from relative path
+    
+    
+SYNTAX
+    get-AbsoluteFilePath [-Path] <Object> [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Takes a relative path like .\file.txt and returns the full path.
+    Parent folder must exist, but target file does not.
+    The target file does not have to exist, but the parent folder must exist
+    
+
+PARAMETERS
+    -Path <Object>
+        Path to file
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>$path = Get-AbsoluteFilePath -Path .\file.txt
+   
+   
+NAME
     Initialize-GenTwoBootDisk
     
 SYNOPSIS
@@ -54,20 +141,57 @@ SYNOPSIS
     
     
 SYNTAX
-    Initialize-GenTwoBootDisk [-Path] <String> [-Size <UInt64>] [-Dynamic] [-BlockSizeBytes <UInt32>] 
-    [-LogicalSectorSizeBytes <UInt32>] [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] [-WhatIf] [-Confirm] 
-    [<CommonParameters>]
-    
+    Initialize-GenTwoBootDisk [-Path] <String> [-Size <UInt64>] [-Dynamic] [-BlockSizeBytes 
+    <UInt32>] [-LogicalSectorSizeBytes <UInt32>] [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] 
+    [-WhatIf] [-Confirm] [<CommonParameters>]
     
 DESCRIPTION
     This command will create a generation 2 VHDX file. Many of the parameters are
     from the New-VHD cmdlet. The disk name must end in .vhdx
-     
+    
     To create a recovery partition use -Recovery
-```
-
-### Set-GenTwoBootDiskFromWim
-```NAME
+   
+PARAMETERS
+    -Path <String>
+        Path to the new VHDX file (Must end in .vhdx)
+        
+    -Size <UInt64>
+        Size in Bytes (Default 40B)
+        
+    -Dynamic [<SwitchParameter>]
+        Create Dynamic disk
+        
+    -BlockSizeBytes <UInt32>
+        Block Size (Default 2MB)
+        
+    -LogicalSectorSizeBytes <UInt32>
+        Logical Sector size of 512 or 4098 bytes (Default 512)
+        
+    -PhysicalSectorSizeBytes <UInt32>
+        Phisical Sector size of 512 or 4096 bytes (Default 512)
+        
+    -Recovery [<SwitchParameter>]
+        Create the Recovery Partition (Pet vs Cattle)
+        
+    -WhatIf [<SwitchParameter>]
+        
+    -Confirm [<SwitchParameter>]
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>Initialize-Gen2BootDisk d:\disks\disk001.vhdx -dynamic -size 30GB
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS C:\>Initialize-Gen2BootDisk d:\disks\disk001.vhdx -dynamic -size 40GB -Recovery
+   
+NAME
     Set-GenTwoBootDiskFromWim
     
 SYNOPSIS
@@ -75,8 +199,8 @@ SYNOPSIS
     
     
 SYNTAX
-    Set-GenTwoBootDiskFromWim [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend <String>] 
-    [-Force <Boolean>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    Set-GenTwoBootDiskFromWim [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend 
+    <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -87,4 +211,43 @@ DESCRIPTION
     Optionally, you can also specify an XML file to be inserted into the OS
     partition as unattend.xml
     CAUTION: This command will reformat partitions.
-```
+    
+
+PARAMETERS
+    -Path <String>
+        Path to VHDX
+        
+    -WIMPath <String>
+        Path to WIM used to populate VHDX
+        
+    -Index <Int32>
+        Index of image inside of WIM (Default 1)
+        index is valid
+        
+    -Unattend <String>
+        Path to file to copy inside of VHDX as C:\unattent.xml
+        
+    -Force [<SwitchParameter>]
+        Bypass the warning and about lost data
+        
+    -WhatIf [<SwitchParameter>]
+        
+    -Confirm [<SwitchParameter>]
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -WIMPath D:\wim\Win2012R2-Install.wim 
+    -verbose
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -WIMPath D:\wim\Win2012R2-Install.wim 
+    -verbose
+    
+  ```
