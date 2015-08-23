@@ -99,40 +99,7 @@ PARAMETERS
     
     PS C:\>Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 
     -Size 40GB -force
-   
-   
-   
-NAME
-    get-AbsoluteFilePath
-    
-SYNOPSIS
-    Get Absolute path from relative path
-    
-    
-SYNTAX
-    get-AbsoluteFilePath [-Path] <Object> [<CommonParameters>]
-    
-    
-DESCRIPTION
-    Takes a relative path like .\file.txt and returns the full path.
-    Parent folder must exist, but target file does not.
-    The target file does not have to exist, but the parent folder must exist
-    
-
-PARAMETERS
-    -Path <Object>
-        Path to file
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
-    
-    -------------------------- EXAMPLE 1 --------------------------
-    
-    PS C:\>$path = Get-AbsoluteFilePath -Path .\file.txt
-   
+  
    
 NAME
     Initialize-GenTwoBootDisk
