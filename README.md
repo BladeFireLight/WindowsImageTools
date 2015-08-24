@@ -23,6 +23,11 @@ Jeffery Hicks wrote two great articals on the process of creating a Gen2 VHDX an
 
 Thease are the starting point for this module. 
 
+### Requirements
+On windows 10 the folowing optional features are required
+* Microsoft-Hyper-V-Services
+* Microsoft-Hyper-V-Management-PowerShell
+
 ## Functions (I'm bad a naming, so i'm open to better names)
 
 ```
