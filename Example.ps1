@@ -1,8 +1,8 @@
-﻿if (get-module GenTwoImageTools) { Remove-Module GenTwoImageTools}
+﻿if (get-module WindowsImageTools) { Remove-Module WindowsImageTools}
 
-import-module $PSScriptRoot\GenTwoImageTools
+import-module $PSScriptRoot\WindowsImageTools
 
-Initialize-GenTwoBootDisk -Path $env:temp\temp1.vhdx -Dynamic -Recovery -Verbose|  
-    Set-GenTwoBootDiskFromWim  -WIMPath $PSScriptRoot\Example.wim -Index 1  -Confirm:$false -force -Verbose
+#Initialize-VHDPartition -Path $env:temp\temp1.vhdx -Dynamic -Recovery -Verbose|  
+#    Set-VHDPartition  -WIMPath $PSScriptRoot\Example.wim -Index 1  -Confirm:$false -force -Verbose
 
-Convert-Wim2GenTwoVhdx -Path $env:temp\test2.vhdx -WIMPath $PSScriptRoot\Example.wim -Dynamic -Index 1 -Size 50GB  -Force
+Convert-Wim2VHD -Path $env:temp\test2.vhdx -WIMPath $PSScriptRoot\Example.wim -Dynamic -Index 1 -Size 50GB  -Force -Verbose

@@ -1,6 +1,6 @@
 ﻿#requires -Version 2 -Modules Hyper-V, Storage
 
-function Initialize-GenTwoBootDisk
+function Initialize-VHDPartition
 {
     <#
             .Synopsis
@@ -39,9 +39,9 @@ function Initialize-GenTwoBootDisk
                     }
         })]
         [string]$Path,
-        [ValidateRange(25GB,64TB)]
         
         # Size in Bytes (Default 40B)
+        [ValidateRange(25GB,64TB)]
         [uint64]$Size = 40GB,
         
         # Create Dynamic disk

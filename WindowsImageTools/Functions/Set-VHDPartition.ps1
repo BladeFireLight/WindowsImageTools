@@ -1,4 +1,4 @@
-﻿function Set-GenTwoBootDiskFromWim
+﻿function Set-VHDPartition
 {
     <#
             .Synopsis

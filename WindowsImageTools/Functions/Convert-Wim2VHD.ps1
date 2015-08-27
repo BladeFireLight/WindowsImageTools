@@ -1,4 +1,4 @@
-﻿function Convert-Wim2GenTwoVhdx
+﻿function Convert-Wim2VHD
 {
     <#
             .Synopsis
@@ -119,7 +119,7 @@
         
         if (-not (Test-Path -Path $Path)) 
         {
-            $InitializeGen2BootDiskParam = @{
+            $InitializeVHDPartitionParam = @{
                 'BlockSizeBytes'        = $BlockSizeBytes
                 'LogicalSectorSizeBytes' = $LogicalSectorSizeBytes
                 'PhysicalSectorSizeBytes' = $PhysicalSectorSizeBytes
@@ -128,13 +128,13 @@
             }
             if ($Recovery)
             {
-                $InitializeGen2BootDiskParam.add('Recovery', $true)
+                $InitializeVHDPartitionParam.add('Recovery', $true)
             }
             if ($Dynamic)
             {
-                $InitializeGen2BootDiskParam.add('Dynamic', $true)
+                $InitializeVHDPartitionParam.add('Dynamic', $true)
             }
-            $SetGenTwoBootDiskFromWimParam = @{
+            $SetVHDPartitionParam = @{
                 'Confirm' = $false
                 'WIMPath' = $WIMPath
                 'Path'  = $Path
@@ -143,7 +143,7 @@
             }
             if ($Unattend)
             {
-                $SetGenTwoBootDiskFromWimParam.add('Unattend', $Unattend)
+                $SetVHDPartitionParam.add('Unattend', $Unattend)
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeGen2BootDiskParam"
             Write-Verbose -Message ($InitializeGen2BootDiskParam | Out-String)
@@ -154,8 +154,8 @@
             
             Try
             {
-                $null = Initialize-GenTwoBootDisk @InitializeGen2BootDiskParam @ParametersToPass 
-                Set-GenTwoBootDiskFromWim @SetGenTwoBootDiskFromWimParam @ParametersToPass
+                $null = Initialize-VHDPartition @InitializeVHDPartitionParam @ParametersToPass 
+                Set-VHDPartition @SetVHDPartitionParam @ParametersToPass
             }
             Catch
             {
