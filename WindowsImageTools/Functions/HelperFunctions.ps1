@@ -1,6 +1,6 @@
 #requires -Version 2
 
-function Get-AbsoluteFilePath
+function Get-FullFilePath
 {
     <#
             .Synopsis
@@ -23,38 +23,32 @@ function Get-AbsoluteFilePath
         $Path
     )
 
-    if ([string]::IsNullOrEmpty($Path)) 
+    if (-not (Test-Path $Path))
     {
-        return 'c:\' 
-    }
-    else 
-    {
-        if (-not (Test-Path $Path))
+        if (Test-Path (Split-Path -Path $Path -Parent ))
         {
-            if (Test-Path (Split-Path -Path $Path -Parent ))
-            {
-                $Parent = Resolve-Path (Split-Path -Path $Path -Parent )
-                $Leaf = Split-Path -Path $Path -Leaf
+            $Parent = Resolve-Path (Split-Path -Path $Path -Parent )
+            $Leaf = Split-Path -Path $Path -Leaf
             
-                if ($Parent.path[-1] -eq '\') 
-                {
-                    $Path = "$Parent" + "$Leaf" 
-                }
-                else 
-                {
-                    $Path = "$Parent" + "\$Leaf"
-                }
+            if ($Parent.path[-1] -eq '\') 
+            {
+                $Path = "$Parent" + "$Leaf"
             }
             else 
             {
-                throw "Parent [$(Split-Path -Path $Path -Parent)] does not exist"
+                $Path = "$Parent" + "\$Leaf"
             }
         }
         else 
         {
-            $Path = Resolve-Path $Path
+            throw "Parent [$(Split-Path -Path $Path -Parent)] does not exist"
         }
     }
+    else 
+    {
+        $Path = Resolve-Path $Path
+    }
+    
     return $Path
 }
 
