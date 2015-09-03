@@ -88,29 +88,32 @@ function Initialize-VHDPartition
         #region Validate input
 
         # Recovery Image requires the Recovery Tools
-        if ($RecoveryImage) { $RecoveryTools = $true}
+        if ($RecoveryImage) 
+        {
+            $RecoveryTools = $true
+        }
 
         # resolved Format
         if ($VHDFormat -ilike 'AUTO')
         {
             if ($DiskLayout -eq 'BIOS')
             {
-            Write-Verbose "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHD"
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHD"
                 $VHDFormat = 'VHD'
             }
             else
             {
-            Write-Verbose "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHDX"
-                 $VHDFormat = 'VHDX'
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHDX"
+                $VHDFormat = 'VHDX'
             }
         }
           
-         $ext = ([IO.FileInfo]$Path).Extension
-         Write-Verbose "[$($MyInvocation.MyCommand)] Validating : [$ext] like [.$VHDFormat]"
-         if ($ext -inotlike ".$($VHDFormat)")
-         {
-            throw "The file extention in [$path] does not match format [.$VHDFormat]"
-         } 
+        $ext = ([IO.FileInfo]$Path).Extension
+        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : [$ext] like [.$VHDFormat]"
+        if ($ext -inotlike ".$($VHDFormat)")
+        {
+            throw "The file extention in [$Path] does not match format [.$VHDFormat]"
+        } 
           
         # Choose smallest supported block size for dynamic VHD(X)
         $BlockSize = 1MB
@@ -127,7 +130,7 @@ function Initialize-VHDPartition
             $BlockSize = 512KB
         }
 
-        $SysSize = 100MB
+        $SysSize = 200MB
         $MSRSize = 128MB
         $RESize = 0 
         $RecoverySize = 0
@@ -146,6 +149,7 @@ function Initialize-VHDPartition
         #}
         else 
         {
+
         }
         $fileName = Split-Path -Leaf -Path $Path
     
@@ -183,12 +187,12 @@ function Initialize-VHDPartition
                     }
                     else 
                     {
-                       # $VHDFormat = 'VHDX'
+                        # $VHDFormat = 'VHDX'
 
                         $vhdParams = @{
-                            VHDFormat     = $VHDFormat
-                            Path        = $Path
-                            SizeBytes   = $Size
+                            VHDFormat = $VHDFormat
+                            Path      = $Path
+                            SizeBytes = $Size
                         }
 
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
@@ -218,7 +222,9 @@ function Initialize-VHDPartition
                     try 
                     {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Mounting disk image"
-                        $disk = Mount-DiskImage -ImagePath $Path -PassThru | Get-DiskImage | Get-Disk
+                        $disk = Mount-DiskImage -ImagePath $Path -PassThru |
+                        Get-DiskImage |
+                        Get-Disk
                     }
                     catch 
                     {
@@ -231,125 +237,124 @@ function Initialize-VHDPartition
                     {
                         $disknumber = $disk.Number
 
-            switch ($DiskLayout)            
-            {             
-                'BIOS' 
-                {
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Initializing disk [$disknumber] as MBR"
-                    Initialize-Disk -Number $diskNumber -PartitionStyle MBR
+                        switch ($DiskLayout)            
+                        {             
+                            'BIOS' 
+                            {
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Initializing disk [$disknumber] as MBR"
+                                Initialize-Disk -Number $disknumber -PartitionStyle MBR
 
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Clearing disk partitions to start all over"
-                    Get-Disk -Number $disknumber -ErrorAction Stop |
-                        Get-Partition -ErrorAction Stop |
-                        Remove-Partition -Confirm:$false -ErrorAction Stop
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Clearing disk partitions to start all over"
+                                Get-Disk -Number $disknumber -ErrorAction Stop |
+                                Get-Partition -ErrorAction Stop |
+                                Remove-Partition -Confirm:$false -ErrorAction Stop
 
-                    # Create the Windows/system partition 
-                    # Refresh $disk to update free space
-                    $disk = Get-Diskimage -ImagePath $path | Get-Disk
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating single partition of [$($disk.LargestFreeExtent)] bytes"
-                    $windowsPartition = New-Partition -DiskNumber $diskNumber -UseMaximumSize -MbrType IFS -IsActive #-Size $disk.LargestFreeExtent
-                    $systemPartition = $windowsPartition
+                                # Create the Windows/system partition 
+                                # Refresh $disk to update free space
+                                $disk = Get-DiskImage -ImagePath $Path | Get-Disk
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating single partition of [$($disk.LargestFreeExtent)] bytes"
+                                $windowsPartition = New-Partition -DiskNumber $disknumber -UseMaximumSize -MbrType IFS -IsActive #-Size $disk.LargestFreeExtent
+                                $systemPartition = $windowsPartition
     
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Formatting windows volume"
-                    $windowsVolume = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
-                    $systemVolume = $windowsVolume
-                } 
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Formatting windows volume"
+                                $windowsVolume = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
+                                $systemVolume = $windowsVolume
+                            } 
                 
-                'UEFI' 
-                {
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Initializing disk [$disknumber] as GPT"
-                    Initialize-Disk -Number $disk.Number -PartitionStyle GPT
+                            'UEFI' 
+                            {
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Initializing disk [$disknumber] as GPT"
+                                Initialize-Disk -Number $disk.Number -PartitionStyle GPT
 
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Clearing disk partitions to start all over"
-                    Get-Disk -Number $disknumber -ErrorAction Stop |
-                        Get-Partition -ErrorAction Stop |
-                        Remove-Partition -Confirm:$false -ErrorAction Stop
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Clearing disk partitions to start all over"
+                                Get-Disk -Number $disknumber -ErrorAction Stop |
+                                Get-Partition -ErrorAction Stop |
+                                Remove-Partition -Confirm:$false -ErrorAction Stop
 
-                    if ($RecoveryTools)
-                    {
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery tools : Creating partition of [$RESize] bytes"
-                        $recoveryToolsPartition = New-Partition -DiskNumber $disk.Number -Size $RESize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery tools : Formatting NTFS"
-                        $recoveryToolsVolume = Format-Volume -Partition $recoveryToolsPartition -FileSystem NTFS -NewFileSystemLabel 'Windows RE Tools' -Force -Confirm:$false
-                        #run diskpart to set GPT attribute to prevent partition removal
-                        #the here string must be left justified
-                        $null = @"
+                                if ($RecoveryTools)
+                                {
+                                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery tools : Creating partition of [$RESize] bytes"
+                                    $recoveryToolsPartition = New-Partition -DiskNumber $disk.Number -Size $RESize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
+                                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery tools : Formatting NTFS"
+                                    $recoveryToolsVolume = Format-Volume -Partition $recoveryToolsPartition -FileSystem NTFS -NewFileSystemLabel 'Windows RE Tools' -Force -Confirm:$false
+                                    #run diskpart to set GPT attribute to prevent partition removal
+                                    #the here string must be left justified
+                                    $null = @"
 select disk $($disk.Number)
 select partition $($recoveryToolsPartition.partitionNumber)
 gpt attributes=0x8000000000000001
 exit
 "@ |
-                        diskpart.exe
-                    }
+                                    diskpart.exe
+                                }
                     
                     
-                    # Create the system partition.  Create a data partition so we can format it, then change to ESP
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Creating partition of [$SysSize] bytes"
-                    $systemPartition = New-Partition -DiskNumber $disk.Number -Size $SysSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
+                                # Create the system partition.  Create a data partition so we can format it, then change to ESP
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Creating partition of [$SysSize] bytes"
+                                $systemPartition = New-Partition -DiskNumber $disk.Number -Size $SysSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
                 
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Formatting FAT32"
-                    $windowsVolume = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Formatting FAT32"
+                                $windowsVolume = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
 
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Setting system partition as ESP"
-                    $systemPartition | Set-Partition -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}'
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Setting system partition as ESP"
+                                $systemPartition | Set-Partition -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}'
                 
-                    # Create the reserved partition 
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : MSR : Creating partition of [$MSRSize] bytes"
-                    $reservedPartition = New-Partition -DiskNumber $disk.Number -Size $MSRSize -GptType '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
+                                # Create the reserved partition 
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : MSR : Creating partition of [$MSRSize] bytes"
+                                $reservedPartition = New-Partition -DiskNumber $disk.Number -Size $MSRSize -GptType '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
         
                     
-                    # Create the Windows partition
-                    # Refresh $disk to update free space
-                    $disk = Get-Diskimage -ImagePath $path | Get-Disk
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Creating partition of [$($disk.LargestFreeExtent - $RecoverySize)] bytes"
-                    $windowsPartition = New-Partition -DiskNumber $disk.Number -Size ($disk.LargestFreeExtent - $RecoverySize) -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Formatting volume NTFS"
-                    $windowsVolume = Format-Volume -Partition $windowsPartition -NewFileSystemLabel 'OS' -FileSystem NTFS -Force -Confirm:$false
+                                # Create the Windows partition
+                                # Refresh $disk to update free space
+                                $disk = Get-DiskImage -ImagePath $Path | Get-Disk
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Creating partition of [$($disk.LargestFreeExtent - $RecoverySize)] bytes"
+                                $windowsPartition = New-Partition -DiskNumber $disk.Number -Size ($disk.LargestFreeExtent - $RecoverySize) -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Formatting volume NTFS"
+                                $windowsVolume = Format-Volume -Partition $windowsPartition -NewFileSystemLabel 'OS' -FileSystem NTFS -Force -Confirm:$false
                     
-                    if ($RecoveryImage)
-                    {
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Creating partition useing remaing free space"
-                    $recoveryImagePartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Formatting volume NTFS"
-                    $RecoveryImageVolume = Format-Volume -Partition $recoveryImagePartition -NewFileSystemLabel 'Windows Recovery' -FileSystem NTFS -Force -Confirm:$false
-                    #run diskpart to set GPT attribute to prevent partition removal
-                    #the here string must be left justified
-                    $null = @"
+                                if ($RecoveryImage)
+                                {
+                                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Creating partition useing remaing free space"
+                                    $recoveryImagePartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
+                                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Formatting volume NTFS"
+                                    $RecoveryImageVolume = Format-Volume -Partition $recoveryImagePartition -NewFileSystemLabel 'Windows Recovery' -FileSystem NTFS -Force -Confirm:$false
+                                    #run diskpart to set GPT attribute to prevent partition removal
+                                    #the here string must be left justified
+                                    $null = @"
 select disk $($disk.Number)
 select partition $($recoveryImagePartition.partitionNumber)
 gpt attributes=0x8000000000000001
 exit
 "@ |
-                    diskpart.exe
-                                             
-                    }
-                }
+                                    diskpart.exe
+                                }
+                            }
 
-                'WindowsToGo' 
-                {                
-                    Write-Verbose 'Initializing disk...'
-                    Initialize-Disk -Number $disk.Number -PartitionStyle MBR
+                            'WindowsToGo' 
+                            {                
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Initializing disk [$disknumber] as MBR"
+                                Initialize-Disk -Number $disk.Number -PartitionStyle MBR
+                    
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Clearing disk partitions to start all over"
+                                Get-Disk -Number $disknumber -ErrorAction Stop |
+                                Get-Partition -ErrorAction Stop |
+                                Remove-Partition -Confirm:$false -ErrorAction Stop
                 
-                    #
-                    # Create the system partition 
-                    #
-                    Write-Verbose 'Creating system partition...'
-                    $systemPartition = New-Partition -DiskNumber $disk.Number -Size 350MB -MbrType FAT32 -IsActive 
+                                # Create the system partition 
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : System : Creating partition of [$SysSize] bytes"
+                                $systemPartition = New-Partition -DiskNumber $disk.Number -Size $SysSize -MbrType FAT32 -IsActive 
         
-                    Write-Verbose 'Formatting system volume...'
-                    $systemVolume    = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Formatting FAT32"
+                                $systemVolume    = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
             
-                    #
-                    # Create the Windows partition
-                    #
-                    Write-Verbose 'Creating windows partition...'
-                    $windowsPartition = New-Partition -DiskNumber $disk.Number -Size $disk.LargestFreeExtent -MbrType IFS
+                                # Create the Windows partition
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Creating partition useing remaning space"
+                                $windowsPartition = New-Partition -DiskNumber $disk.Number -Size $disk.LargestFreeExtent -MbrType IFS
         
-                    Write-Verbose 'Formatting windows volume...'
-                    $windowsVolume    = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
-                }
-            }            
-
+                                Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Formatting volume NTFS"
+                                $windowsVolume    = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
+                            }
+                        }
                     }
                     catch 
                     {
