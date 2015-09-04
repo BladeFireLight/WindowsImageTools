@@ -2,15 +2,16 @@
 {
     <#
             .Synopsis
-            Configure Windows image and recovery partitions
+            Sets the content of a VHD(X) using a source WIM or ISO
             .DESCRIPTION
-            This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
-            You must supply the path to the VHDX file and a valid WIM. You should also
-            include the index number for the Windows Edition to install. The WIM will be
-            copied to the recovery partition.
-            Optionally, you can also specify an XML file to be inserted into the OS
-            partition as unattend.xml
-            CAUTION: This command will reformat partitions.
+            This command will copy the content of the SourcePath ISO or WIM and populate the 
+            partitions found in the VHD(X) You must supply the path to the VHD(X) file and a 
+            valid WIM/ISO. You should also include the index number for the Windows Edition 
+            to install. If two Recovery paritiotns are present the source WIM will be copied 
+            to the recovery partition. Optionally, you can also specify an XML file to be 
+            inserted into the OS partition as unattend.xml, any Drivers, WindowsUpdate (MSU)
+            or Optional Features you want installed.
+            CAUTION: This command will replace the content partitions.
             .EXAMPLE
             PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose
             .EXAMPLE
@@ -44,22 +45,12 @@
         [int]$Index = 1,
         
         # Path to file to copy inside of VHD(X) as C:\unattent.xml
-        [ValidateScript({
-                    if ($_) 
-                    {
-                        Test-Path -Path $_
-                    }
-                    else 
-                    {
-                        $true
-                    }
-        })]
+        [ValidateScript({ if ($_){ Test-Path -Path $_}
+                          else { $true} })]
         [string]$Unattend,
 
-        # Include Boot info in VHD(X)
-        [ValidateNotNullOrEmpty()]
-        [ValidateSet('NativeBoot', 'VirtualMachine')]
-        [string]$BCDinVHD = 'VirtualMachine',
+        # Native Boot does not have the boot code iniside the VHD(x) it must exist on the phisical disk. 
+        [switch]$NativeBoot,
 
         # Featurs to turn on (in DISM format)
         [ValidateNotNullOrEmpty()]
@@ -88,7 +79,7 @@
 
         $VhdxFileName = Split-Path -Leaf -Path $Path
 
-        if ($pscmdlet.ShouldProcess("Overwrite partitions inside [$Path] with contentce of [$SourcePath]",
+        if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
                 "Overwrite partitions inside [$Path] with contentce of [$SourcePath]? ",
         'Overwrite WARNING!'))
         {
@@ -102,7 +93,7 @@
                     # or about network latency.
                     if (Test-IsNetworkLocation $SourcePath) 
                     {
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying ISO [$(Split-Path -Path $SourcePath -Leaf)] to temp folder"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying ISO [$(Split-Path -Path $SourcePath -Leaf)] to [$env:temp]"
                         $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
                         $SourcePath = "$($env:temp)\$(Split-Path -Path $SourcePath -Leaf)"
             
@@ -111,7 +102,7 @@
 
                     $isoPath = (Resolve-Path $SourcePath).Path
 
-                    Write-Verbose -Message "Opening ISO $(Split-Path -Path $isoPath -Leaf)..."
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Opening ISO $(Split-Path -Path $isoPath -Leaf)"
                     $openIso     = Mount-DiskImage -ImagePath $isoPath -StorageType ISO -PassThru
                     # Refresh the DiskImage object so we can get the real information about it.  I assume this is a bug.
                     $openIso     = Get-DiskImage -ImagePath $isoPath
@@ -120,7 +111,7 @@
                     $SourcePath  = "$($driveLetter):\sources\install.wim"
 
                     # Check to see if there's a WIM file we can muck about with.
-                    Write-Verbose -Message "Looking for $($SourcePath)..."
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Looking for $($SourcePath)"
                     if (!(Test-Path $SourcePath)) 
                     {
                         throw 'The specified ISO does not appear to be valid Windows installation media.'
@@ -132,13 +123,12 @@
                 # Check to see if the WIM is local, or on a network location.  If the latter, copy it locally.
                 if (Test-IsNetworkLocation $SourcePath) 
                 {
-                    Write-Verbose -Message "Copying WIM $(Split-Path -Path $SourcePath -Leaf) to temp folder..."
-                    $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $TempDirectory $(Split-Path -Path $SourcePath -Leaf)
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying WIM $(Split-Path -Path $SourcePath -Leaf) to [$env:temp]"
+                    $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
                     $SourcePath = "$($TempDirectory)\$(Split-Path -Path $SourcePath -Leaf)"
             
                     $tempSource = $SourcePath
                 }
-
                 $SourcePath  = (Resolve-Path $SourcePath).Path
                 #endregion
                 
@@ -156,10 +146,9 @@
                 }
                 #endregion
                
-                
                 try 
                 {
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Processing disknumber [$($disk.Number)]"
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Munted as disknumber [$($disk.Number)]"
                     
                     #region Assign Drive Letters
                     foreach ($partition in (Get-Partition -DiskNumber $disk.Number | 
@@ -167,9 +156,10 @@
                     {
                         $partition | Add-PartitionAccessPath -AssignDriveLetter -ErrorAction Stop
                     } 
-                    # Workarround for new drivletters in script modules
+                    # Workarround for new drive letters in script modules
                     $null = Get-PSDrive
-                    Write-Verbose -Message (Get-Partition -DiskNumber $disk.Number | Out-String)
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Partition Table"
+                    Write-Verbose -Message (Get-Partition -DiskNumber $disk.Number | select PartitionNumber, DriveLetter, Size, Type| Out-String)
                     #endregion
 
                     #region get partitions
@@ -189,6 +179,14 @@
                     $SystemPartition = Get-Partition -DiskNumber $disk.Number | 
                     Where-Object -Property Type -EQ -Value System| 
                     Select-Object -First 1 
+
+                    if (-not ($WindowsPartition -and $SystemPartition))
+                    {
+                        $WindowsPartition = Get-Partition -DiskNumber $disk.Number | 
+                        Where-Object -Property Type -EQ -Value IFS| 
+                        Select-Object -First 1 
+                        $SystemPartition = $WindowsPartition
+                    }
                     #endregion
 
                     # region Recovery Image
@@ -198,118 +196,50 @@
                         $recoverfolder = Join-Path -Path "$($RecoveryImagePartition.DriveLetter):" -ChildPath 'Recovery'
                         $null = mkdir -Path $recoverfolder
                         $recoveryPath = Join-Path -Path $recoverfolder -ChildPath 'install.wim'
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$($RecoveryImagePartition.PartitionNumber)] : copying $SourcePath to $recoveryPath"
-                        #Copy-Item -Path $SourcePath -Destination $recoveryPath -ErrorAction Stop
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Recovery Image Partition [$($RecoveryImagePartition.PartitionNumber)] : copying [$SourcePath] to [$recoveryPath]"
+                        Copy-Item -Path $SourcePath -Destination $recoveryPath -ErrorAction Stop
                     } # end if Recovery
                     #endregion
 
-                    
-
                     #region Windows partition 
-
                     if ($WindowsPartition)
                     {
                         $WinPath = Join-Path -Path "$($WindowsPartition.DriveLetter):" -ChildPath '\'
                         $windir = Join-Path -Path $WinPath -ChildPath Windows
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$($WindowsPartition.partitionNumber)] : Applying image from [$SourcePath] to [$WinPath] using Index [$Index]"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Applying image from [$SourcePath] to [$WinPath] using Index [$Index]"
                         $null = Expand-WindowsImage -ImagePath $SourcePath -Index $Index -ApplyPath $WinPath -ErrorAction Stop
                     }
                     else 
                     {
                         throw 'Unable to find OS partition'
                     }
-
-                    if ($Unattend) 
-                    {
-                        $unattendpath = Join-Path -Path $WinPath -ChildPath 'Unattend.xml'
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$($WindowsPartition.partitionNumber)] : Copying [$Unattend] to [$unattendpath]"
-                        Copy-Item -Path $Unattend -Destination $unattendpath -ErrorAction Stop
-                    }
-
-                    if ($Driver) 
-                    {
-                        Write-Verbose -text 'Adding Windows Drivers to the Image'
-
-                        $Driver | ForEach-Object -Process 
-                        {
-                            Write-Verbose -text "Driver path: $PSItem"
-                            $Dism = Add-WindowsDriver -Path $WinPath -Recurse -Driver $PSItem
-                        }
-                    }
-
-                    If ($Feature) 
-                    {            
-                        Write-Verbose -text "Installing Windows Feature(s) $Feature to the Image"
-                        $FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
-                        Write-Verbose -text "From $FeatureSourcePath"
-                        $Dism = Enable-WindowsOptionalFeature -FeatureName $Feature -Source $FeatureSourcePath -Path $windowsDrive -All
-                    }
-
-                    if ($Package) 
-                    {
-                        Write-Verbose -text 'Adding Windows Packages to the Image'
-            
-                        $Package | ForEach-Object -Process {
-                            Write-Verbose -text "Package path: $PSItem"
-                            $Dism = Add-WindowsPackage -Path $windowsDrive -PackagePath $PSItem
-                        }
-                    }
-
                     #endregion
-                    break                
-                    #region System partition
-                    $System = $partitions | Where-Object -Property Type -EQ -Value System
-                    if (-not $System)
+ 
+                     #region System partition
+                    if ($SystemPartition -and (-not ($NativeBoot)))
                     {
-                        throw 'Unable to find System partition'
+                        $sysDrive = "$($SystemPartition.driveletter):"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] System Partition [$($SystemPartition.partitionNumber)] : Running bcdboot-> [$windir] /s [$sysDrive] /f UEFI"
+                        Start-Process -Wait -FilePath "$windir\System32\bcdboot.exe" -ArgumentList "$windir /s $sysDrive /F UEFI"  -NoNewWindow
                     }
-                    $partitionNumber = $System[0].PartitionNumber
-                
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : Assigning drive letter to System partition"
-                    Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber |
-                    Add-PartitionAccessPath -AssignDriveLetter
-                    $null = Get-PSDrive
-                    $SystemPartition = Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber
-                    $sysDrive = "$($SystemPartition.driveletter):"
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : Running bcdboot-> [$windir] /s [$sysDrive] /f UEFI"
-                    $cmd = "$windir\System32\bcdboot.exe $windir /s $sysDrive /F UEFI"
-                    #Invoke-Expression -Command $cmd
-                    Start-Process -Wait -FilePath "$windir\System32\bcdboot.exe" -ArgumentList "$windir /s $sysDrive /F UEFI"  -NoNewWindow
-                    #post processing
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] :"
-                    Write-Verbose -Message (Get-Partition -DiskNumber $disknumber | Out-String)
-                    #endregion
+                                    
 
-                    if ($Recovery)
-                    { 
-                        $RecoveryPartition = Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber -ErrorAction Stop
-                        $recoverfolder = Join-Path -Path "$($RecoveryPartition.DriveLetter):" -ChildPath 'Recovery'
-                        
-                        $cmd = "$windir\System32\reagentc.exe /setosimage /path $recoverfolder /index $Index /target $windir" 
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : $cmd"
-                        #Invoke-Expression -Command $cmd
+                    #region Recovery Tools
+                    if ($RecoveryToolsPartition)
+                    {
+                        $recoverfolder = Join-Path -Path "$($RecoveryToolsPartition.DriveLetter):" -ChildPath 'Recovery'
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : [$cmd]"
                         Start-Process -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setosimage /path $recoverfolder /index $Index /target $windir"  -NoNewWindow
-                        #mount the recovery tools partition with a drive letter
-                        $partitionNumber = $Recovery[0].PartitionNumber
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : Formatting Windows RE Tools partition"
-                        $null = Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber |
-                        Format-Volume -FileSystem NTFS -NewFileSystemLabel 'Windows RE Tools' -Confirm:$false
-                        if (-Not (Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber).DriveLetter) 
-                        {
-                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : Assigning drive letter to Windows RE Tools partition"
-                            Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber |
-                            Add-PartitionAccessPath -AssignDriveLetter
-                        }
-                        $null = Get-PSDrive
-                        $retools = Get-Partition -DiskNumber $disknumber -PartitionNumber $partitionNumber
-                        #create \Recovery\WindowsRE
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : Creating Recovery\WindowsRE folder"
-                        $repath = mkdir -Path "$($retools.driveletter):\Recovery\WindowsRE"
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Partition [$partitionNumber] : Copying $($WindowsPartition.DriveLetter):\Windows\System32\recovery\winre.wim to $($repath.fullname)"
+                        
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Creating Recovery\WindowsRE folder [$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE]"
+                        $repath = mkdir -Path "$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Copying [$($WindowsPartition.DriveLetter):\Windows\System32\recovery\winre.wim] to [$($repath.fullname)]"
                         #the winre.wim file is hidden
                         Get-ChildItem -Path "$($WindowsPartition.DriveLetter):\Windows\System32\recovery\winre.wim" -Hidden |
                         Copy-Item -Destination $repath.FullName
-                    } # end if Recovery
+                    }
+                    #endregion
+
                 }
                 catch 
                 {
@@ -331,7 +261,10 @@
                     #dismount
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Dismounting"
                     $null = Dismount-DiskImage -ImagePath $Path
-                    $null = Dismount-DiskImage -ImagePath $isoPath -ErrorAction SilentlyContinue
+                    if ($isopath -and (Get-DiskImage $isoPath).Attached)
+                    { 
+                        $null = Dismount-DiskImage -ImagePath $isoPath 
+                    }
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Finished"
                 }
             }

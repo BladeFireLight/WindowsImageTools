@@ -6,14 +6,14 @@ function Initialize-VHDPartition
             .Synopsis
             Create VHD(X) with partitions needed to be bootable
             .DESCRIPTION
-            This command will create a VHD or VHDX file. 
+            This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFO or WindowsToGo. 
 
-            To create a recovery partition use -Recovery
+            To create a recovery partitions use -RecoveryTools and -RecoveryImage
 
             .EXAMPLE
-            Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 30GB
+            Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 30GB -DiskLayout BIOS
             .EXAMPLE
-            Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 40GB -Recovery
+            Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 40GB -DiskLayout UEFI -RecoveryTools
             .NOTES
             General notes
     #>
@@ -48,12 +48,9 @@ function Initialize-VHDPartition
         # Create Dynamic disk
         [switch]$Dynamic,
 
-        # Block Size (Default 2MB)
-        #[UInt32]$BlockSizeBytes = 2MB,
-
         # Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
         # The default is AUTO, which will create a VHD if using the BIOS disk layout or 
-        # VHDX if using UEFI or WindowsToGo layouts.
+        # VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
         [Alias('Format')]
         [string]
         [ValidateNotNullOrEmpty()]
@@ -70,14 +67,13 @@ function Initialize-VHDPartition
         [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
         $DiskLayout,
 
-        
         # Output the disk image object
         [switch]$Passthru,
          
-        # Create the Recovery Enviroment Tools Partition. Not valid for VHD
+        # Create the Recovery Enviroment Tools Partition. Only valid on UEFI layout
         [switch]$RecoveryTools,
 
-        # Create the Recovery Enviroment Tools and Recovery Image Partitions. Not valid for VHD
+        # Create the Recovery Enviroment Tools and Recovery Image Partitions. Only valid on UEFI layout
         [switch]$RecoveryImage,
 
         # Force the overwrite of existing files
@@ -85,84 +81,77 @@ function Initialize-VHDPartition
     )
     Begin { 
 
-        #region Validate input
-
-        # Recovery Image requires the Recovery Tools
-        if ($RecoveryImage) 
-        {
-            $RecoveryTools = $true
-        }
-
-        # resolved Format
-        if ($VHDFormat -ilike 'AUTO')
-        {
-            if ($DiskLayout -eq 'BIOS')
-            {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHD"
-                $VHDFormat = 'VHD'
-            }
-            else
-            {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHDX"
-                $VHDFormat = 'VHDX'
-            }
-        }
-          
-        $ext = ([IO.FileInfo]$Path).Extension
-        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : [$ext] like [.$VHDFormat]"
-        if ($ext -inotlike ".$($VHDFormat)")
-        {
-            throw "The file extention in [$Path] does not match format [.$VHDFormat]"
-        } 
-          
-        # Choose smallest supported block size for dynamic VHD(X)
-        $BlockSize = 1MB
-
-        # Enforce max VHD size.
-        if ('VHD' -ilike $VHDFormat) 
-        {
-            if ($Size -gt 2040GB) 
-            {
-                Write-Warning -Message 'For the VHD file format, the maximum file size is ~2040GB.  Reseting size to 2040GB.'
-                $Size = 2040GB
-            }
-
-            $BlockSize = 512KB
-        }
-
-        $SysSize = 200MB
-        $MSRSize = 128MB
-        $RESize = 0 
-        $RecoverySize = 0
-        if ($RecoveryTools)
-        {
-            $RESize = 300MB
-        }
-        if ($RecoveryImage)
-        {
-            $RecoverySize = 15GB
-        }
-        #if ($RecoveryTools -or $RecoveryImage)
-        #{
-        #    $OSSize = $Size - $SysSize - $MSRSize - $RESize - $RecoverySize
-        #    Write-Verbose "[$($MyInvocation.MyCommand)] Validating : Recovery Partition Requested OS partition set to [$OSSize] Bytes"
-        #}
-        else 
-        {
-
-        }
-        $fileName = Split-Path -Leaf -Path $Path
-    
-        # make paths absolute
-        $Path = $Path | get-FullFilePath
-        #endregion
-
-        if ($pscmdlet.ShouldProcess("$Path", 'Create partition structure for Bootable disks'))
+ 
+        if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create partition structure for Bootable vhd(x) on [$Path]",
+                "Replace existing file [$Path] ? ",
+        'Overwrite WARNING!'))
         {
             if((-not (Test-Path $Path)) -Or 
                 $force -Or 
             ((Test-Path $Path) -and $pscmdlet.ShouldContinue("TargetFile [$Path] exists! Any existin data will be lost!", 'Warning'))) 
             {
+                #region Validate input
+
+                # Recovery Image requires the Recovery Tools
+                if ($RecoveryImage) 
+                {
+                    $RecoveryTools = $true
+                }
+
+                # resolved Format
+                if ($VHDFormat -ilike 'AUTO')
+                {
+                    if ($DiskLayout -eq 'BIOS')
+                    {
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHD"
+                        $VHDFormat = 'VHD'
+                    }
+                    else
+                    {
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHDX"
+                        $VHDFormat = 'VHDX'
+                    }
+                }
+          
+                $ext = ([IO.FileInfo]$Path).Extension
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : [$ext] like [.$VHDFormat]"
+                if ($ext -inotlike ".$($VHDFormat)")
+                {
+                    throw "The file extention in [$Path] does not match format [.$VHDFormat]"
+                } 
+          
+                # Choose smallest supported block size for dynamic VHD(X)
+                $BlockSize = 1MB
+
+                # Enforce max VHD size.
+                if ('VHD' -ilike $VHDFormat) 
+                {
+                    if ($Size -gt 2040GB) 
+                    {
+                        Write-Warning -Message 'For the VHD file format, the maximum file size is ~2040GB.  Reseting size to 2040GB.'
+                        $Size = 2040GB
+                    }
+
+                    $BlockSize = 512KB
+                }
+
+                $SysSize = 200MB
+                $MSRSize = 128MB
+                $RESize = 0 
+                $RecoverySize = 0
+                if ($RecoveryTools)
+                {
+                    $RESize = 300MB
+                }
+                if ($RecoveryImage)
+                {
+                    $RecoverySize = 15GB
+                }
+                $fileName = Split-Path -Leaf -Path $Path
+    
+                # make paths absolute
+                $Path = $Path | get-FullFilePath
+                #endregion
                 # if we get this far it's ok to delete existing files
                 if (Test-Path -Path $Path) 
                 {
@@ -314,7 +303,7 @@ exit
                     
                                 if ($RecoveryImage)
                                 {
-                                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Creating partition useing remaing free space"
+                                    Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Creating partition using remaing free space"
                                     $recoveryImagePartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
                                     Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Formatting volume NTFS"
                                     $RecoveryImageVolume = Format-Volume -Partition $recoveryImagePartition -NewFileSystemLabel 'Windows Recovery' -FileSystem NTFS -Force -Confirm:$false
