@@ -45,8 +45,16 @@
         [int]$Index = 1,
         
         # Path to file to copy inside of VHD(X) as C:\unattent.xml
-        [ValidateScript({ if ($_){ Test-Path -Path $_}
-                          else { $true} })]
+        [ValidateScript({
+                    if ($_)
+                    {
+                        Test-Path -Path $_
+                    }
+                    else 
+                    {
+                        $true
+                    }
+        })]
         [string]$Unattend,
 
         # Native Boot does not have the boot code iniside the VHD(x) it must exist on the phisical disk. 
@@ -159,7 +167,9 @@
                     # Workarround for new drive letters in script modules
                     $null = Get-PSDrive
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Partition Table"
-                    Write-Verbose -Message (Get-Partition -DiskNumber $disk.Number | select PartitionNumber, DriveLetter, Size, Type| Out-String)
+                    Write-Verbose -Message (Get-Partition -DiskNumber $disk.Number |
+                        Select-Object -Property PartitionNumber, DriveLetter, Size, Type|
+                    Out-String)
                     #endregion
 
                     #region get partitions
@@ -215,7 +225,7 @@
                     }
                     #endregion
  
-                     #region System partition
+                    #region System partition
                     if ($SystemPartition -and (-not ($NativeBoot)))
                     {
                         $sysDrive = "$($SystemPartition.driveletter):"
@@ -239,7 +249,6 @@
                         Copy-Item -Destination $repath.FullName
                     }
                     #endregion
-
                 }
                 catch 
                 {
@@ -261,9 +270,9 @@
                     #dismount
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Dismounting"
                     $null = Dismount-DiskImage -ImagePath $Path
-                    if ($isopath -and (Get-DiskImage $isoPath).Attached)
-                    { 
-                        $null = Dismount-DiskImage -ImagePath $isoPath 
+                    if ($isoPath -and (Get-DiskImage $isoPath).Attached)
+                    {
+                        $null = Dismount-DiskImage -ImagePath $isoPath
                     }
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Finished"
                 }

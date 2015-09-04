@@ -1,4 +1,4 @@
-﻿#requires -Version 2 -Modules Hyper-V, Storage
+﻿#requires -Version 2 -Modules Storage
 
 function Initialize-VHDPartition
 {
