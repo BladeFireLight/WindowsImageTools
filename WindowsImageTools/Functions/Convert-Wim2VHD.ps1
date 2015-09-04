@@ -17,14 +17,15 @@
     ConfirmImpact = 'Medium')]
     Param
     (
-        # Path to VHDX 
-        [parameter(Position = 0,Mandatory = $true,
-        HelpMessage = 'Enter the path to the VHDX file')]
-        [Alias('FullName','pspath')]
+        # Path to the new VHDX file (Must end in .vhdx)
+        [Parameter(Position = 0,Mandatory = $true,
+        HelpMessage = 'Enter the path for the new VHDX file')]
         [ValidateNotNullorEmpty()]
-        [ValidatePattern(".\.vhdx$")]
+        [ValidatePattern(".\.vhdx?$")]
         [ValidateScript({
-                    if (Split-Path -Path $_ | Test-Path) 
+                    if (get-FullFilePath -Path $_ |
+                        Split-Path  |
+                    Resolve-Path ) 
                     {
                         $true
                     }
@@ -35,126 +36,161 @@
         })]
         [string]$Path,
         
-        # Path to WIM used to populate VHDX
-        [parameter(Position = 1,Mandatory = $true,
-        HelpMessage = 'Enter the path to the WIM file')]
-        [ValidateScript({
-                    Test-Path -Path $_
-        })]
-        [string]$WIMPath,
-        
-        # Index of image inside of WIM (Default 1)
-        [ValidateScript({
-                    ,
-                    $last = (Get-WindowsImage -ImagePath $PSBoundParameters.WIMPath |
-                        Sort-Object -Property ImageIndex |
-                    Select-Object -Last 1).ImageIndex
-                    If ($_ -gt $last -OR $_ -lt 1) 
-                    {
-                        Throw "enter a valid index between 1 and $last"
-                    }
-                    else 
-                    {
-                        #index is valid
-                        $true
-                    }
-        })]
-        [int]$Index = 1,
-        
-        # Path to file to copy inside of VHDX as C:\unattent.xml
-        
-        [ValidateScript({
-                    Test-Path  -Path $_ 
-        })]
-        [string]$Unattend,
-        
-        # Size in Bytes from 25GB - 64TB (Default 40GB)
+        # Size in Bytes (Default 40B)
         [ValidateRange(25GB,64TB)]
         [uint64]$Size = 40GB,
         
         # Create Dynamic disk
         [switch]$Dynamic,
-        
-        # Block Size (Default 2MB)
-        [UInt32]$BlockSizeBytes = 2MB,
-        
-        #Logical Sector size of 512 or 4098 bytes (Default 512)
-        [ValidateSet(512,4096)]
-        [Uint32]$LogicalSectorSizeBytes = 512,
-        
-        #Phisical Sector size of 512 or 4096 bytes (Default 512)
-        [ValidateSet(512,4096)]
-        [Uint32]$PhysicalSectorSizeBytes = 512,
-        
-        # Create the Recovery Partition (Pet vs Cattle)
-        [switch]
-        $Recovery,
 
-        # Force overwrite of vhdx
-        [switch]
-        $Force
+        # Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
+        # The default is AUTO, which will create a VHD if using the BIOS disk layout or 
+        # VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
+        [Alias('Format')]
+        [string]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('VHD', 'VHDX', 'AUTO')]
+        $VHDFormat        = 'AUTO',
 
+        # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
+        # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
+        # Windows To Go images will boot in UEFI or BIOS
+        [Parameter(Mandatory = $true)]
+        [Alias('Layout')]
+        [string]
+        [ValidateNotNullOrEmpty()]
+        [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
+        $DiskLayout,
 
+        # Create the Recovery Enviroment Tools Partition. Only valid on UEFI layout
+        [switch]$RecoveryTools,
+
+        # Create the Recovery Enviroment Tools and Recovery Image Partitions. Only valid on UEFI layout
+        [switch]$RecoveryImage,
+
+        # Force the overwrite of existing files
+        [switch]$force,
+        
+        # Path to WIM or ISO used to populate VHDX
+        [parameter(Position = 1,Mandatory = $true,
+        HelpMessage = 'Enter the path to the WIM/ISO file')]
+        [ValidateScript({
+                    Test-Path -Path (get-FullFilePath -Path $_ )
+        })]
+        [string]$SourcePath,
+        
+        # Index of image inside of WIM (Default 1)
+        [int]$Index = 1,
+        
+        # Path to file to copy inside of VHD(X) as C:\unattent.xml
+        [ValidateScript({
+                    if ($_)
+                    {
+                        Test-Path -Path $_
+                    }
+                    else 
+                    {
+                        $true
+                    }
+        })]
+        [string]$Unattend,
+
+        # Native Boot does not have the boot code iniside the VHD(x) it must exist on the phisical disk. 
+        [switch]$NativeBoot,
+
+        # Featurs to turn on (in DISM format)
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Feature,
+
+        # Path to drivers to inject
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    Test-Path -Path $(Resolve-Path $_)
+        })]
+        [string[]]$Driver,
+
+        # Path of packages to install via DSIM
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    Test-Path -Path $(Resolve-Path $_)
+        })]
+        [string[]]$Package
     )
-    $ParametersToPass = @{}
-    foreach ($key in ('Whatif', 'Verbose', 'Debug'))
-    {
-        if ($PSBoundParameters.ContainsKey($key)) 
-        {
-            $ParametersToPass[$key] = $PSBoundParameters[$key]
-        }
-    }
-    # make paths absolute
-    $Path = $Path | get-AbsoluteFilePath 
-    $WIMPath = $WIMPath | get-AbsoluteFilePath
+    $Path = $Path | get-FullFilePath 
+    $SourcePath = $SourcePath | get-FullFilePath
 
+    $VhdxFileName = Split-Path -Leaf -Path $Path
 
-    if ($pscmdlet.ShouldProcess("[$Path]", "Create new Bootable VHDX and populate from [$WIMPath]"))
+    if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
+            "Overwrite partitions inside [$Path] with contentce of [$SourcePath]? ",
+    'Overwrite WARNING!'))
     {
-        if ((Test-Path -Path $Path) -and $Force)
+        if((-not (Test-Path $Path)) -Or $force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning')) 
         {
-            Write-Warning -Message "Replacing $Path"
-            Remove-Item $Path -Force @ParametersToPass
-        }
-        
-        if (-not (Test-Path -Path $Path)) 
-        {
-            $InitializeVHDPartitionParam = @{
-                'BlockSizeBytes'        = $BlockSizeBytes
-                'LogicalSectorSizeBytes' = $LogicalSectorSizeBytes
-                'PhysicalSectorSizeBytes' = $PhysicalSectorSizeBytes
-                'Size'                  = $Size
-                'Path'                  = $Path
-            }
-            if ($Recovery)
+            $ParametersToPass = @{}
+            foreach ($key in ('Whatif', 'Verbose', 'Debug'))
             {
-                $InitializeVHDPartitionParam.add('Recovery', $true)
+                if ($PSBoundParameters.ContainsKey($key)) 
+                {
+                    $ParametersToPass[$key] = $PSBoundParameters[$key]
+                }
+            }
+        
+            $InitializeVHDPartitionParam = @{
+                'Size'       = $Size
+                'Path'       = $Path
+                'force'      = $true
+                'DiskLayout' = $DiskLayout
+            }
+            if ($RecoveryTools)
+            {
+                $InitializeVHDPartitionParam.add('RecoveryTools', $true)
+            }
+            if ($RecoveryImage)
+            {
+                $InitializeVHDPartitionParam.add('RecoveryImage', $true)
             }
             if ($Dynamic)
             {
                 $InitializeVHDPartitionParam.add('Dynamic', $true)
             }
             $SetVHDPartitionParam = @{
-                'Confirm' = $false
-                'WIMPath' = $WIMPath
-                'Path'  = $Path
-                'Index' = $Index
-                'force' = $true
+                'SourcePath' = $SourcePath
+                'Path'       = $Path
+                'Index'      = $Index
+                'force'      = $true
+                'Confirm'    = $false
             }
             if ($Unattend)
             {
                 $SetVHDPartitionParam.add('Unattend', $Unattend)
             }
-            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeGen2BootDiskParam"
-            Write-Verbose -Message ($InitializeGen2BootDiskParam | Out-String)
-            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SetGenTwoBootDiskFromWimParam"
-            Write-Verbose -Message ($SetGenTwoBootDiskFromWimParam | Out-String)
+            if ($NativeBoot)
+            {
+                $SetVHDPartitionParam.add('NativeBoot', $NativeBoot)
+            }
+            if ($Feature)
+            {
+                $SetVHDPartitionParam.add('Feature', $Feature)
+            }
+            if ($Driver)
+            {
+                $SetVHDPartitionParam.add('Driver', $Driver)
+            }
+            if ($Package)
+            {
+                $SetVHDPartitionParam.add('Package', $Package)
+            }
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeVHDPartitionParam"
+            Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SetVHDPartitionParam"
+            Write-Verbose -Message ($SetVHDPartitionParam | Out-String)
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : ParametersToPass"
             Write-Verbose -Message ($ParametersToPass | Out-String)
             
             Try
             {
-                $null = Initialize-VHDPartition @InitializeVHDPartitionParam @ParametersToPass 
+                Initialize-VHDPartition @InitializeVHDPartitionParam @ParametersToPass 
                 Set-VHDPartition @SetVHDPartitionParam @ParametersToPass
             }
             Catch
@@ -162,11 +198,7 @@
                 throw "$($_.Exception.Message) at $($_.Exception.InvocationInfo.ScriptLineNumber)"
             }
         }
-            
-        else
-        {
-            Throw "$Path allready exists"
-        }
     }
 }
+
 
