@@ -71,7 +71,7 @@ Test-Admin
 
     $currentUser = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $([Security.Principal.WindowsIdentity]::GetCurrent())
     $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
-    Write-W2VTrace "isUserAdmin? $isAdmin"
+    Write-Verbose "[$($MyInvocation.MyCommand)] : is User Admin? [$isAdmin]"
 
     return $isAdmin
 }
@@ -114,17 +114,22 @@ Run-Executable
 
     )
 
-    Write-W2VTrace "Running $Executable $Arguments"
-    $ret = Start-Process           `
-    -FilePath $Executable      `
-    -ArgumentList $Arguments   `
-    -NoNewWindow               `
-    -Wait                      `
-    -RedirectStandardOutput "$($TempDirectory)\$($scriptName)\$($sessionKey)\$($Executable)-StandardOutput.txt" `
-    -RedirectStandardError  "$($TempDirectory)\$($scriptName)\$($sessionKey)\$($Executable)-StandardError.txt"  `
-    -PassThru
+    $exeName = Split-Path -Path $Executable -Leaf
+    Write-Verbose "[$($MyInvocation.MyCommand)] : Running [$Executable] [$Arguments]"
+    $Params = @{
+     'FilePath' = $Executable
+     'ArgumentList' = $Arguments
+     'NoNewWindow' = $true
+     'Wait' = $true 
+     'RedirectStandardOutput' = "$($env:temp)\$($exeName)-StandardOutput.txt" 
+    'RedirectStandardError' = "$($env:temp)\$($exeName)-StandardError.txt"  
+    'PassThru' = $true
+    }
 
-    Write-W2VTrace "Return code was $($ret.ExitCode)."
+    Write-Verbose ($Params | out-string)
+    $ret = Start-Process @Params
+
+    Write-Verbose "[$($MyInvocation.MyCommand)] : Return code was [$($ret.ExitCode)]"
 
     if ($ret.ExitCode -ne $SuccessfulErrorCode) 
     {
