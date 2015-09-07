@@ -95,14 +95,14 @@
         {
             if($Force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning')) 
             {
-         $ParametersToPass = @{}
-            foreach ($key in ('Whatif', 'Verbose', 'Debug'))
-            {
-                if ($PSBoundParameters.ContainsKey($key)) 
+                $ParametersToPass = @{}
+                foreach ($key in ('Whatif', 'Verbose', 'Debug'))
                 {
-                    $ParametersToPass[$key] = $PSBoundParameters[$key]
+                    if ($PSBoundParameters.ContainsKey($key)) 
+                    {
+                        $ParametersToPass[$key] = $PSBoundParameters[$key]
+                    }
                 }
-            }
                 #region ISO detection
                 # If we're using an ISO, mount it and get the path to the WIM file.
                 if (([IO.FileInfo]$SourcePath).Extension -ilike '.ISO') 
@@ -156,7 +156,7 @@
                 try 
                 {
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Mounting disk image [$Path]"
-                    $disk = Mount-Diskimage -ImagePath $Path -PassThru |
+                    $disk = Mount-DiskImage -ImagePath $Path -PassThru |
                     Get-DiskImage |
                     Get-Disk
                 }
@@ -231,38 +231,67 @@
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Applying image from [$SourcePath] to [$WinPath] using Index [$Index]"
                         $null = Expand-WindowsImage -ImagePath $SourcePath -Index $Index -ApplyPath $WinPath -ErrorAction Stop
 
+                        #region Modify the OS with Drivers, Active Featurs and Packages
+                        if ($Driver) 
+                        {
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Adding Windows Drivers to the Image"
 
-            if ($Driver) 
-            {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Adding Windows Drivers to the Image"
+                            $Driver | ForEach-Object -Process 
+                            {
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Driver path: [$PSItem]"
+                                $Dism = Add-WindowsDriver -Path $WinPath -Recurse -Driver $PSItem
+                            }
+                        }
 
-                $Driver | ForEach-Object -Process 
-                {
+                        If ($Feature) 
+                        {            
+                            
+                            try { 
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Colecting posible source paths"
+                            $FeatureSourcePath = @()
+                            if ($driveletter) #ISO
+                            {
+                                $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                            }
 
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Driver path: [$PSItem]"
-                    $Dism = Add-WindowsDriver -Path $WinPath -Recurse -Driver $PSItem
-                }
-            }
+                            $images = Get-WindowsImage -ImagePath $SourcePath
+                            $MountFolderList = @()
+                            foreach ($image in $images)
+                            {
+                                #$image | fl *
+                                $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+                                $MountFolderList += $MountFolder.FullName
+                                write-verbose "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Mounting Source $($image.ImageIndex) $($image.ImageName)"
+                                $null = Mount-WindowsImage -ImagePath $SourcePath -Index $image.ImageIndex -Path  $MountFolder.FullName -ReadOnly
+                                $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
 
-            If ($Feature) 
-            {            
-                $FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath "sources\sxs"
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) [$Feature] to the Image From [$FeatureSourcePath]"
-                $Dism = Enable-WindowsOptionalFeature -FeatureName $Feature -Source $FeatureSourcePath -Path $WinPath -All
+                            }
+                            #$FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
+                            $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
+                            }
+                            catch {
+                                Write-Error -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Error Installing Windows Feature "
+                                    throw $_.Exception.Message
+                            }
+                            finally { 
+                            foreach ($MountFolder in $MountFolderList) {
+                             $null = Dismount-WindowsImage -Path $MountFolder -Discard 
+                            }
+                            }
 
-            }
+                        }
 
-            if ($Package) 
-            {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Adding Windows Packages to the Image"
+                        if ($Package) 
+                        {
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Adding Windows Packages to the Image"
             
-                $Package | ForEach-Object -Process {
-
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Package path: [$PSItem]"
-                    $Dism = Add-WindowsPackage -Path $WinPath -PackagePath $PSItem
-                }
-            }
-
+                            $Package | ForEach-Object -Process {
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Package path: [$PSItem]"
+                                $Dism = Add-WindowsPackage -Path $WinPath -PackagePath $PSItem
+                            }
+                        }
+                        #endregion
                     }
                     else 
                     {
@@ -273,55 +302,54 @@
                     #region System partition
                     if ($SystemPartition -and (-not ($NativeBoot)))
                     {
-                         $systemDrive = "$($SystemPartition.driveletter):"
-                       $bcdBootArgs = @(
-                        "$($WinPath)Windows", # Path to the \Windows on the VHD
-                        "/s $systemDrive",          # Specifies the volume letter of the drive to create the \BOOT folder on.
-                        "/v"                        # Enabled verbose logging.
+                        $systemDrive = "$($SystemPartition.driveletter):"
+                        $bcdBootArgs = @(
+                            "$($WinPath)Windows", # Path to the \Windows on the VHD
+                            "/s $systemDrive", # Specifies the volume letter of the drive to create the \BOOT folder on.
+                            '/v'                        # Enabled verbose logging.
                         )
 
-                    switch ($DiskLayout) 
-                    {        
-                        "UEFI" 
-                        {   
-                            $bcdBootArgs += "/f UEFI"   # Specifies the firmware type of the target system partition
-                        }
-                        "BIOS" 
-                        {   
-                            $bcdBootArgs += "/f BIOS"   # Specifies the firmware type of the target system partition
-                        }
-
-                        "WindowsToGo" 
-                        {    
-                            # Create entries for both UEFI and BIOS if possible
-                            if (Test-Path "$($windowsDrive)\Windows\boot\EFI\bootmgfw.efi")
+                        switch ($DiskLayout) 
+                        {        
+                            'UEFI' 
                             {
-                                $bcdBootArgs += "/f ALL"    
-                            }     
-                        }
-                    }
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] System Partition [$($SystemPartition.partitionNumber)] : Running [$windir\System32\bcdboot.exe] -> $bcdBootArgs" 
-                        Run-Executable -Executable "bcdboot.exe" -Arguments $bcdBootArgs @ParametersToPass
+                                $bcdBootArgs += '/f UEFI'   # Specifies the firmware type of the target system partition
+                            }
+                            'BIOS' 
+                            {
+                                $bcdBootArgs += '/f BIOS'   # Specifies the firmware type of the target system partition
+                            }
 
-                    # The following is added to mitigate the VMM diff disk handling
-                    # We're going to change from MBRBootOption to LocateBootOption.
-                    if ($DiskLayout -eq "BIOS")
-                    {
-                    
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] System Partition [$($SystemPartition.partitionNumber)] : Fixing the Device ID in the BCD store on [$($VHDFormat)]"
-                        Run-Executable -Executable "BCDEDIT.EXE" -Arguments (
-                            "/store $($WinPath)boot\bcd",
-                            "/set `{bootmgr`} device locate"
-                        )
-                        Run-Executable -Executable "BCDEDIT.EXE" -Arguments (
-                            "/store $($WinPath)boot\bcd",
-                            "/set `{default`} device locate"
-                        )
-                        Run-Executable -Executable "BCDEDIT.EXE" -Arguments (
-                            "/store $($WinPath)boot\bcd",
-                            "/set `{default`} osdevice locate"
-                        )
-                    }
+                            'WindowsToGo' 
+                            {    
+                                # Create entries for both UEFI and BIOS if possible
+                                if (Test-Path -Path "$($windowsDrive)\Windows\boot\EFI\bootmgfw.efi")
+                                {
+                                    $bcdBootArgs += '/f ALL'
+                                }     
+                            }
+                        }
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] System Partition [$($SystemPartition.partitionNumber)] : Running [$windir\System32\bcdboot.exe] -> $bcdBootArgs" 
+                        Run-Executable -Executable 'bcdboot.exe' -Arguments $bcdBootArgs @ParametersToPass
+
+                        # The following is added to mitigate the VMM diff disk handling
+                        # We're going to change from MBRBootOption to LocateBootOption.
+                        if ($DiskLayout -eq 'BIOS')
+                        {
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] System Partition [$($SystemPartition.partitionNumber)] : Fixing the Device ID in the BCD store on [$($VHDFormat)]"
+                            Run-Executable -Executable 'BCDEDIT.EXE' -Arguments (
+                                "/store $($WinPath)boot\bcd", 
+                                "/set `{bootmgr`} device locate"
+                            )
+                            Run-Executable -Executable 'BCDEDIT.EXE' -Arguments (
+                                "/store $($WinPath)boot\bcd", 
+                                "/set `{default`} device locate"
+                            )
+                            Run-Executable -Executable 'BCDEDIT.EXE' -Arguments (
+                                "/store $($WinPath)boot\bcd", 
+                                "/set `{default`} osdevice locate"
+                            )
+                        }
                     }
                                     
 
