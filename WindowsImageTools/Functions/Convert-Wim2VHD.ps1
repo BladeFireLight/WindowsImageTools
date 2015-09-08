@@ -62,10 +62,10 @@
         [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
         $DiskLayout,
 
-        # Create the Recovery Enviroment Tools Partition. Only valid on UEFI layout
+        # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
         [switch]$RecoveryTools,
 
-        # Create the Recovery Enviroment Tools and Recovery Image Partitions. Only valid on UEFI layout
+        # Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI layout
         [switch]$RecoveryImage,
 
         # Force the overwrite of existing files
@@ -95,10 +95,10 @@
         })]
         [string]$Unattend,
 
-        # Native Boot does not have the boot code iniside the VHD(x) it must exist on the phisical disk. 
+        # Native Boot does not have the boot code inside the VHD(x) it must exist on the physical disk. 
         [switch]$NativeBoot,
 
-        # Featurs to turn on (in DISM format)
+        # Features to turn on (in DISM format)
         [ValidateNotNullOrEmpty()]
         [string[]]$Feature,
 

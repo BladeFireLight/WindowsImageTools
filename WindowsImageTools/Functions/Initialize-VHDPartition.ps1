@@ -70,10 +70,10 @@ function Initialize-VHDPartition
         # Output the disk image object
         [switch]$Passthru,
          
-        # Create the Recovery Enviroment Tools Partition. Only valid on UEFI layout
+        # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
         [switch]$RecoveryTools,
 
-        # Create the Recovery Enviroment Tools and Recovery Image Partitions. Only valid on UEFI layout
+        # Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI layout
         [switch]$RecoveryImage,
 
         # Force the overwrite of existing files

@@ -2,29 +2,32 @@
 PowerShell Tools for Generation 2 Images
 
 ## Synopsis
-This module provides tools to quickly convert a WIM into a Gen 2 compatable UEFI bootable VHDX
+This module provides tools to quickly convert a WIM into  bootable VHD/VHDX
 
 ## Description
-Creating Patched Images or just a baseline VHDX from a CD has in the past required MDT to deploy to a machine, patch and then caputre the images.
+Creating Patched Images or just a baseline VHDX from a CD has in the past required MDT to deploy to a machine, patch and then capture the images.
 
-Useing MDT is time consumeing. Converting the WIM directly to a VHDX is more efficiant.
+Using MDT is time consuming. Converting the WIM directly to a VHDX is more efficient.
 
-In the past this was acomplished with Convert-WindowsImage.ps1 https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f
+In the past this was accomplished with Convert-WindowsImage.ps1 https://gallery.technet.microsoft.com/scriptcenter/Convert-WindowsImageps1-0fe23a8f
 
 While that is a great tool, I found it had many shortcomings
-* It's huge (as single purpose PowerShell scirpt go)
-* It's buggy
-* It's not a Module (This being my bigest gripe)
+* It's one huge file (as single purpose PowerShell script go)
+* It's buggy (Most of them have been fixed recently)
+* It's not a Module (This being my biggest gripe)
 
 
-Jeffery Hicks wrote two great articals on the process of creating a Gen2 VHDX and populating it from a WIM
+Jeffrey Hicks wrote two great articles on the process of creating a Gen2 VHDX and populating it from a WIM
 * http://www.altaro.com/hyper-v/creating-generation-2-disk-powershell/
 * http://www.altaro.com/hyper-v/customizing-generation-2-vhdx/
 
-Thease are the starting point for this module. 
+These are the starting point for this module. 
 
 ### Requirements
-On windows 10 the folowing optional features are required
+This should work on a base install of Windows client or server. (tested on Windows 10)
+It's recommended to have the Hyper-V PowerShell tools installed.
+* Microsoft-Hyper-V-Management-PowerShell
+On windows 10 the There are two features recommended
 * Microsoft-Hyper-V-Services
 * Microsoft-Hyper-V-Management-PowerShell
 
@@ -32,17 +35,168 @@ On windows 10 the folowing optional features are required
 
 ```
 NAME
-    Convert-Wim2GenTwoVhdx
+    Initialize-VHDPartition
+    
+SYNOPSIS
+    Create VHD(X) with partitions needed to be bootable
+    
+    
+SYNTAX
+    Initialize-VHDPartition [-Path] <String> [-Size <UInt64>] [-Dynamic] [-VHDFormat <String>] 
+    -DiskLayout <String> [-Passthru] [-RecoveryTools] [-RecoveryImage] [-force] [-WhatIf] 
+    [-Confirm] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFO or 
+    WindowsToGo. 
+    
+    To create a recovery partitions use -RecoveryTools and -RecoveryImage
+    
+
+PARAMETERS
+    -Path <String>
+        Path to the new VHDX file (Must end in .vhdx)
+        
+    -Size <UInt64>
+        Size in Bytes (Default 40B)
+        
+    -Dynamic [<SwitchParameter>]
+        Create Dynamic disk
+        
+    -VHDFormat <String>
+        Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
+        The default is AUTO, which will create a VHD if using the BIOS disk layout or 
+        VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
+        
+    -DiskLayout <String>
+        Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
+        Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
+        Windows To Go images will boot in UEFI or BIOS
+        
+    -Passthru [<SwitchParameter>]
+        Output the disk image object
+        
+    -RecoveryTools [<SwitchParameter>]
+        Create the Recovery Environment Tools Partition. Only valid on UEFI layout
+        
+    -RecoveryImage [<SwitchParameter>]
+        Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI 
+        layout
+        
+    -force [<SwitchParameter>]
+        Force the overwrite of existing files
+        
+    -WhatIf [<SwitchParameter>]
+        
+    -Confirm [<SwitchParameter>]
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 30GB -DiskLayout BIOS
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS C:\>Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 40GB -DiskLayout UEFI 
+    -RecoveryTools    
+   
+  ```
+  
+  ```
+  NAME
+    Set-VHDPartition
+    
+SYNOPSIS
+    Sets the content of a VHD(X) using a source WIM or ISO
+    
+    
+SYNTAX
+    Set-VHDPartition [-Path] <String> [-SourcePath] <String> [-Index <Int32>] [-Unattend 
+    <String>] [-NativeBoot] [-Feature <String[]>] [-Driver <String[]>] [-Package <String[]>] 
+    [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    This command will copy the content of the SourcePath ISO or WIM and populate the 
+    partitions found in the VHD(X) You must supply the path to the VHD(X) file and a 
+    valid WIM/ISO. You should also include the index number for the Windows Edition 
+    to install. If two Recovery partitions are present the source WIM will be copied 
+    to the recovery partition. Optionally, you can also specify an XML file to be 
+    inserted into the OS partition as unattend.xml, any Drivers, WindowsUpdate (MSU)
+    or Optional Features you want installed.
+    CAUTION: This command will replace the content partitions.
+    
+
+PARAMETERS
+    -Path <String>
+        Path to VHDX
+        
+    -SourcePath <String>
+        Path to WIM or ISO used to populate VHDX
+        
+    -Index <Int32>
+        Index of image inside of WIM (Default 1)
+        
+    -Unattend <String>
+        Path to file to copy inside of VHD(X) as C:\unattent.xml
+        
+    -NativeBoot [<SwitchParameter>]
+        Native Boot does not have the boot code inside the VHD(x) it must exist on the physical 
+        disk.
+        
+    -Feature <String[]>
+        Featurs to turn on (in DISM format)
+        
+    -Driver <String[]>
+        Path to drivers to inject
+        
+    -Package <String[]>
+        Path of packages to install via DSIM
+        
+    -Force [<SwitchParameter>]
+        Bypass the warning and about lost data
+        
+    -WhatIf [<SwitchParameter>]
+        
+    -Confirm [<SwitchParameter>]
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
+    D:\wim\Win2012R2-Install.wim -verbose
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
+    D:\wim\Win2012R2-Install.wim -verbose
+    
+  ```
+  
+  ```
+  NAME
+    Convert-Wim2VHD
     
 SYNOPSIS
     Create a VHDX and populate it from a WIM
     
     
 SYNTAX
-    Convert-Wim2GenTwoVhdx [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend 
-    <String>] [-Size <UInt64>] [-Dynamic] [-BlockSizeBytes <UInt32>] [-LogicalSectorSizeBytes 
-    <UInt32>] [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] [-Force] [-WhatIf] [-Confirm] 
-    [<CommonParameters>]
+    Convert-Wim2VHD [-Path] <String> [-Size <UInt64>] [-Dynamic] [-VHDFormat <String>] 
+    -DiskLayout <String> [-RecoveryTools] [-RecoveryImage] [-force] [-SourcePath] <String> 
+    [-Index <Int32>] [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-Driver 
+    <String[]>] [-Package <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -53,38 +207,55 @@ DESCRIPTION
 
 PARAMETERS
     -Path <String>
-        Path to VHDX
-        
-    -WIMPath <String>
-        Path to WIM used to populate VHDX
-        
-    -Index <Int32>
-        Index of image inside of WIM (Default 1)
-        index is valid
-        
-    -Unattend <String>
-        Path to file to copy inside of VHDX as C:\unattent.xml
+        Path to the new VHDX file (Must end in .vhdx)
         
     -Size <UInt64>
-        Size in Bytes from 25GB - 64TB (Default 40GB)
+        Size in Bytes (Default 40B)
         
     -Dynamic [<SwitchParameter>]
         Create Dynamic disk
         
-    -BlockSizeBytes <UInt32>
-        Block Size (Default 2MB)
+    -VHDFormat <String>
+        Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
+        The default is AUTO, which will create a VHD if using the BIOS disk layout or 
+        VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
         
-    -LogicalSectorSizeBytes <UInt32>
-        Logical Sector size of 512 or 4098 bytes (Default 512)
+    -DiskLayout <String>
+        Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
+        Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
+        Windows To Go images will boot in UEFI or BIOS
         
-    -PhysicalSectorSizeBytes <UInt32>
-        Phisical Sector size of 512 or 4096 bytes (Default 512)
+    -RecoveryTools [<SwitchParameter>]
+        Create the Recovery Environment Tools Partition. Only valid on UEFI layout
         
-    -Recovery [<SwitchParameter>]
-        Create the Recovery Partition (Pet vs Cattle)
+    -RecoveryImage [<SwitchParameter>]
+        Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI 
+        layout
         
-    -Force [<SwitchParameter>]
-        Force overwrite of vhdx
+    -force [<SwitchParameter>]
+        Force the overwrite of existing files
+        
+    -SourcePath <String>
+        Path to WIM or ISO used to populate VHDX
+        
+    -Index <Int32>
+        Index of image inside of WIM (Default 1)
+        
+    -Unattend <String>
+        Path to file to copy inside of VHD(X) as C:\unattent.xml
+        
+    -NativeBoot [<SwitchParameter>]
+        Native Boot does not have the boot code inside the VHD(x) it must exist on the physical 
+        disk.
+        
+    -Feature <String[]>
+        Features to turn on (in DISM format)
+        
+    -Driver <String[]>
+        Path to drivers to inject
+        
+    -Package <String[]>
+        Path of packages to install via DSIM
         
     -WhatIf [<SwitchParameter>]
         
@@ -104,123 +275,4 @@ PARAMETERS
     
     PS C:\>Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 
     -Size 40GB -force
-  
-   
-NAME
-    Initialize-GenTwoBootDisk
-    
-SYNOPSIS
-    Create a Generation 2 VHDX
-    
-    
-SYNTAX
-    Initialize-GenTwoBootDisk [-Path] <String> [-Size <UInt64>] [-Dynamic] [-BlockSizeBytes 
-    <UInt32>] [-LogicalSectorSizeBytes <UInt32>] [-PhysicalSectorSizeBytes <UInt32>] [-Recovery] 
-    [-WhatIf] [-Confirm] [<CommonParameters>]
-    
-DESCRIPTION
-    This command will create a generation 2 VHDX file. Many of the parameters are
-    from the New-VHD cmdlet. The disk name must end in .vhdx
-    
-    To create a recovery partition use -Recovery
-   
-PARAMETERS
-    -Path <String>
-        Path to the new VHDX file (Must end in .vhdx)
-        
-    -Size <UInt64>
-        Size in Bytes (Default 40B)
-        
-    -Dynamic [<SwitchParameter>]
-        Create Dynamic disk
-        
-    -BlockSizeBytes <UInt32>
-        Block Size (Default 2MB)
-        
-    -LogicalSectorSizeBytes <UInt32>
-        Logical Sector size of 512 or 4098 bytes (Default 512)
-        
-    -PhysicalSectorSizeBytes <UInt32>
-        Phisical Sector size of 512 or 4096 bytes (Default 512)
-        
-    -Recovery [<SwitchParameter>]
-        Create the Recovery Partition (Pet vs Cattle)
-        
-    -WhatIf [<SwitchParameter>]
-        
-    -Confirm [<SwitchParameter>]
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
-    
-    -------------------------- EXAMPLE 1 --------------------------
-    
-    PS C:\>Initialize-Gen2BootDisk d:\disks\disk001.vhdx -dynamic -size 30GB
-    
-    -------------------------- EXAMPLE 2 --------------------------
-    
-    PS C:\>Initialize-Gen2BootDisk d:\disks\disk001.vhdx -dynamic -size 40GB -Recovery
-   
-NAME
-    Set-GenTwoBootDiskFromWim
-    
-SYNOPSIS
-    Configure Windows image and recovery partitions
-    
-    
-SYNTAX
-    Set-GenTwoBootDiskFromWim [-Path] <String> [-WIMPath] <String> [-Index <Int32>] [-Unattend 
-    <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
-    
-    
-DESCRIPTION
-    This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
-    You must supply the path to the VHDX file and a valid WIM. You should also
-    include the index number for the Windows Edition to install. The WIM will be
-    copied to the recovery partition.
-    Optionally, you can also specify an XML file to be inserted into the OS
-    partition as unattend.xml
-    CAUTION: This command will reformat partitions.
-    
-
-PARAMETERS
-    -Path <String>
-        Path to VHDX
-        
-    -WIMPath <String>
-        Path to WIM used to populate VHDX
-        
-    -Index <Int32>
-        Index of image inside of WIM (Default 1)
-        index is valid
-        
-    -Unattend <String>
-        Path to file to copy inside of VHDX as C:\unattent.xml
-        
-    -Force [<SwitchParameter>]
-        Bypass the warning and about lost data
-        
-    -WhatIf [<SwitchParameter>]
-        
-    -Confirm [<SwitchParameter>]
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
-    
-    -------------------------- EXAMPLE 1 --------------------------
-    
-    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -WIMPath D:\wim\Win2012R2-Install.wim 
-    -verbose
-    
-    -------------------------- EXAMPLE 2 --------------------------
-    
-    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -WIMPath D:\wim\Win2012R2-Install.wim 
-    -verbose
-    
   ```
