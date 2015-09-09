@@ -24,7 +24,7 @@ function Initialize-VHDPartition
     (
         # Path to the new VHDX file (Must end in .vhdx)
         [Parameter(Position = 0,Mandatory = $true,
-        HelpMessage = 'Enter the path for the new VHDX file')]
+        HelpMessage = 'Enter the path for the new VHD/VHDX file')]
         [ValidateNotNullorEmpty()]
         [ValidatePattern(".\.vhdx?$")]
         [ValidateScript({
@@ -47,15 +47,6 @@ function Initialize-VHDPartition
         
         # Create Dynamic disk
         [switch]$Dynamic,
-
-        # Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
-        # The default is AUTO, which will create a VHD if using the BIOS disk layout or 
-        # VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
-        [Alias('Format')]
-        [string]
-        [ValidateNotNullOrEmpty()]
-        [ValidateSet('VHD', 'VHDX', 'AUTO')]
-        $VHDFormat        = 'AUTO',
 
         # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
         # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
@@ -97,28 +88,13 @@ function Initialize-VHDPartition
                 {
                     $RecoveryTools = $true
                 }
-
-                # resolved Format
-                if ($VHDFormat -ilike 'AUTO')
-                {
-                    if ($DiskLayout -eq 'BIOS')
-                    {
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHD"
-                        $VHDFormat = 'VHD'
-                    }
-                    else
-                    {
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : Dislayout [$DiskLayout] Setting Format to VHDX"
-                        $VHDFormat = 'VHDX'
-                    }
-                }
           
-                $ext = ([IO.FileInfo]$Path).Extension
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Validating : [$ext] like [.$VHDFormat]"
-                if ($ext -inotlike ".$($VHDFormat)")
+                $VHDFormat = ([IO.FileInfo]$Path).Extension.split('.')[-1]
+                
+                if (($DiskLayout -eq 'UEFI')-and ($VHDFormat -eq 'VHD'))
                 {
-                    throw "The file extention in [$Path] does not match format [.$VHDFormat]"
-                } 
+                    throw 'UEFI disks must be in VHDX format. Please change the path to end in VHDX'
+                }
           
                 # Choose smallest supported block size for dynamic VHD(X)
                 $BlockSize = 1MB
@@ -141,7 +117,7 @@ function Initialize-VHDPartition
                 $RecoverySize = 0
                 if ($RecoveryTools)
                 {
-                    $RESize = 300MB
+                    $RESize = 350MB
                 }
                 if ($RecoveryImage)
                 {
@@ -152,6 +128,7 @@ function Initialize-VHDPartition
                 # make paths absolute
                 $Path = $Path | get-FullFilePath
                 #endregion
+ 
                 # if we get this far it's ok to delete existing files
                 if (Test-Path -Path $Path) 
                 {
@@ -176,8 +153,6 @@ function Initialize-VHDPartition
                     }
                     else 
                     {
-                        # $VHDFormat = 'VHDX'
-
                         $vhdParams = @{
                             VHDFormat = $VHDFormat
                             Path      = $Path
@@ -186,7 +161,6 @@ function Initialize-VHDPartition
 
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
                         Write-Verbose -Message ($vhdParams | Out-String)
-                        
                         
                         [WIM2VHD.VirtualHardDisk]::CreateSparseDisk(
                             $VHDFormat,
@@ -202,8 +176,6 @@ function Initialize-VHDPartition
                 }
                   
                 #endregion
-                
-                
                 
                 if (Test-Path -Path $Path) 
                 {

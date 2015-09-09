@@ -4,13 +4,13 @@
             .Synopsis
             Create a VHDX and populate it from a WIM
             .DESCRIPTION
-            This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
-            You must supply the path to the VHDX file and a valid WIM. You should also
+            This command will create a VHD or VHDX formated for UEFI (Gen 2/GPT) or BIOS (Gen 1/MBR)
+            You must supply the path to the VHD/VHDX file and a valid WIM/ISO. You should also
             include the index number for the Windows Edition to install.
             .EXAMPLE
-            Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery
+            Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
             .EXAMPLE
-            Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 -Size 40GB -force
+            Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 -Size 40GB -force -DiskLayout UEFI
     #>
     [CmdletBinding(SupportsShouldProcess = $true, 
             PositionalBinding = $false,
@@ -42,15 +42,6 @@
         
         # Create Dynamic disk
         [switch]$Dynamic,
-
-        # Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
-        # The default is AUTO, which will create a VHD if using the BIOS disk layout or 
-        # VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
-        [Alias('Format')]
-        [string]
-        [ValidateNotNullOrEmpty()]
-        [ValidateSet('VHD', 'VHDX', 'AUTO')]
-        $VHDFormat        = 'AUTO',
 
         # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
         # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.

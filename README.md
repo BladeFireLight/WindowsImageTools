@@ -42,9 +42,9 @@ SYNOPSIS
     
     
 SYNTAX
-    Initialize-VHDPartition [-Path] <String> [-Size <UInt64>] [-Dynamic] [-VHDFormat <String>] 
-    -DiskLayout <String> [-Passthru] [-RecoveryTools] [-RecoveryImage] [-force] [-WhatIf] 
-    [-Confirm] [<CommonParameters>]
+    Initialize-VHDPartition [-Path] <String> [-Size <UInt64>] [-Dynamic] -DiskLayout <String> 
+    [-Passthru] [-RecoveryTools] [-RecoveryImage] [-force] [-WhatIf] [-Confirm] 
+    [<CommonParameters>]
     
     
 DESCRIPTION
@@ -63,11 +63,6 @@ PARAMETERS
         
     -Dynamic [<SwitchParameter>]
         Create Dynamic disk
-        
-    -VHDFormat <String>
-        Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
-        The default is AUTO, which will create a VHD if using the BIOS disk layout or 
-        VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
         
     -DiskLayout <String>
         Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
@@ -104,12 +99,11 @@ PARAMETERS
     -------------------------- EXAMPLE 2 --------------------------
     
     PS C:\>Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 40GB -DiskLayout UEFI 
-    -RecoveryTools    
-   
+    -RecoveryTools   
   ```
   
   ```
-  NAME
+NAME
     Set-VHDPartition
     
 SYNOPSIS
@@ -180,12 +174,11 @@ PARAMETERS
     -------------------------- EXAMPLE 2 --------------------------
     
     PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
-    D:\wim\Win2012R2-Install.wim -verbose
-    
-  ```
+    D:\wim\Win2012R2-Install.wim -verbose  ```
   
   ```
-  NAME
+  
+NAME
     Convert-Wim2VHD
     
 SYNOPSIS
@@ -193,10 +186,10 @@ SYNOPSIS
     
     
 SYNTAX
-    Convert-Wim2VHD [-Path] <String> [-Size <UInt64>] [-Dynamic] [-VHDFormat <String>] 
-    -DiskLayout <String> [-RecoveryTools] [-RecoveryImage] [-force] [-SourcePath] <String> 
-    [-Index <Int32>] [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-Driver 
-    <String[]>] [-Package <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    Convert-Wim2VHD [-Path] <String> [-Size <UInt64>] [-Dynamic] -DiskLayout <String> 
+    [-RecoveryTools] [-RecoveryImage] [-force] [-SourcePath] <String> [-Index <Int32>] [-Unattend 
+    <String>] [-NativeBoot] [-Feature <String[]>] [-Driver <String[]>] [-Package <String[]>] 
+    [-WhatIf] [-Confirm] [<CommonParameters>]
     
     
 DESCRIPTION
@@ -214,11 +207,6 @@ PARAMETERS
         
     -Dynamic [<SwitchParameter>]
         Create Dynamic disk
-        
-    -VHDFormat <String>
-        Specifies whether to create a VHD or VHDX formatted Virtual Hard Disk.
-        The default is AUTO, which will create a VHD if using the BIOS disk layout or 
-        VHDX if using UEFI or WindowsToGo layouts. The extention in -path must match.
         
     -DiskLayout <String>
         Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
@@ -271,8 +259,13 @@ PARAMETERS
     
     PS C:\>Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery
     
+    
+    
+    
+    
+    
     -------------------------- EXAMPLE 2 --------------------------
     
     PS C:\>Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 
     -Size 40GB -force
-  ```
+	```

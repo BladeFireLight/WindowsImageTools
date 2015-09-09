@@ -13,9 +13,9 @@
             or Optional Features you want installed.
             CAUTION: This command will replace the content partitions.
             .EXAMPLE
-            PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose
+            PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose -DiskLayout UEFI
             .EXAMPLE
-            PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose
+            PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose -DiskLayout BIOS
     #>
     [CmdletBinding(SupportsShouldProcess = $true, 
             PositionalBinding = $true,
