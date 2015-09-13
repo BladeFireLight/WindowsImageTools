@@ -13,9 +13,9 @@
             or Optional Features you want installed.
             CAUTION: This command will replace the content partitions.
             .EXAMPLE
-            PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose -DiskLayout UEFI
+            PS C:\> Set-VHDPartition -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -Index 1 
             .EXAMPLE
-            PS C:\> Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -verbose -DiskLayout BIOS
+            PS C:\> Set-VHDPartition -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -Index 1 -Confirm:$false -force -Verbose
     #>
     [CmdletBinding(SupportsShouldProcess = $true, 
             PositionalBinding = $true,
@@ -202,13 +202,21 @@
                     Where-Object -Property Type -EQ -Value System| 
                     Select-Object -First 1 
 
+                    $DiskLayout = 'UEFI'
                     if (-not ($WindowsPartition -and $SystemPartition))
                     {
                         $WindowsPartition = Get-Partition -DiskNumber $disk.Number | 
                         Where-Object -Property Type -EQ -Value IFS| 
                         Select-Object -First 1 
                         $SystemPartition = $WindowsPartition
+                        $DiskLayout = 'BIOS'
                     }
+                    if (Get-Partition -DiskNumber $disk.Number | 
+                    Where-Object -Property Type -EQ -Value FAT32 )
+                    {
+                        $DiskLayout = 'WindowsToGo'
+                    }
+
                     #endregion
 
                     # region Recovery Image
@@ -303,12 +311,16 @@
                     if ($SystemPartition -and (-not ($NativeBoot)))
                     {
                         $systemDrive = "$($SystemPartition.driveletter):"
+                        
+ 
                         $bcdBootArgs = @(
                             "$($WinPath)Windows", # Path to the \Windows on the VHD
                             "/s $systemDrive", # Specifies the volume letter of the drive to create the \BOOT folder on.
                             '/v'                        # Enabled verbose logging.
                         )
 
+                        #if ($UEFICapable) {
+                        write-warning "Disk Layout [$DiskLayout]"
                         switch ($DiskLayout) 
                         {        
                             'UEFI' 

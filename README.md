@@ -169,12 +169,14 @@ PARAMETERS
     -------------------------- EXAMPLE 1 --------------------------
     
     PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
-    D:\wim\Win2012R2-Install.wim -verbose
+    D:\wim\Win2012R2-Install.wim -Index 1 -verbose
     
     -------------------------- EXAMPLE 2 --------------------------
     
     PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
-    D:\wim\Win2012R2-Install.wim -verbose  ```
+    D:\wim\Win2012R2-Install.wim -Confirm:$false -force -Verbose  
+  
+  ```
   
   ```
   
