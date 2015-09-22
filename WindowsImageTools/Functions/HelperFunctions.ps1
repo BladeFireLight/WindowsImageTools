@@ -177,3 +177,61 @@ Function Test-IsNetworkLocation
 
     return $result
 }
+
+function New-TemporaryDirectory
+{
+<#
+.Synopsis
+   Create a new Temporary Directory
+.DESCRIPTION
+   Creates a new Directory in the $env:temp and returns the System.IO.DirectoryInfo (dir) 
+.EXAMPLE
+   $TempDirPath = NewTemporaryDirectory
+#>
+    [CmdletBinding(SupportsShouldProcess=$true)]
+    [OutputType([System.IO.DirectoryInfo])]
+    Param
+    (
+    )
+
+  #return [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+
+    Begin
+    {
+        try
+        {
+            if($PSCmdlet.ShouldProcess($env:TEMP))
+            {
+                $tempDirPath = [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))          
+            }
+        }
+        catch
+        {
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new($_.Exception,"NewTemporaryDirectoryWriteError", "WriteError", $env:TEMP)
+            Write-Error -ErrorRecord $errorRecord
+            return
+        } 
+
+        if($tempDirPath)
+        {
+            Get-Item $env:Temp\$tempDirPath
+        }
+    }    
+
+
+}
+
+function Get-UnattendChunk 
+{
+    param
+    (
+        [string] $pass, 
+        [string] $component, 
+        [xml] $unattend
+    ); 
+    
+    # Helper function that returns one component chunk from the Unattend XML data structure
+    return $Unattend.unattend.settings | Where-Object pass -eq $pass `
+        | Select-Object -ExpandProperty component `
+        | Where-Object name -eq $component;
+}
