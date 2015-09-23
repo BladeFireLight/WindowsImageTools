@@ -1,4 +1,4 @@
-#requires -Version 2
+#requires -Version 3
 
 function Get-FullFilePath
 {
@@ -71,7 +71,7 @@ Test-Admin
 
     $currentUser = New-Object -TypeName Security.Principal.WindowsPrincipal -ArgumentList $([Security.Principal.WindowsIdentity]::GetCurrent())
     $isAdmin = $currentUser.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
-    Write-Verbose "[$($MyInvocation.MyCommand)] : is User Admin? [$isAdmin]"
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : is User Admin? [$isAdmin]"
 
     return $isAdmin
 }
@@ -115,18 +115,18 @@ Run-Executable
     )
 
     $exeName = Split-Path -Path $Executable -Leaf
-    Write-Verbose "[$($MyInvocation.MyCommand)] : Running [$Executable] [$Arguments]"
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Running [$Executable] [$Arguments]"
     $Params = @{
-     'FilePath' = $Executable
-     'ArgumentList' = $Arguments
-     'NoNewWindow' = $true
-     'Wait' = $true 
-     'RedirectStandardOutput' = "$($env:temp)\$($exeName)-StandardOutput.txt" 
-    'RedirectStandardError' = "$($env:temp)\$($exeName)-StandardError.txt"  
-    'PassThru' = $true
+        'FilePath'             = $Executable
+        'ArgumentList'         = $Arguments
+        'NoNewWindow'          = $true
+        'Wait'                 = $true
+        'RedirectStandardOutput' = "$($env:temp)\$($exeName)-StandardOutput.txt"
+        'RedirectStandardError' = "$($env:temp)\$($exeName)-StandardError.txt"
+        'PassThru'             = $true
     }
 
-    Write-Verbose ($Params | out-string)
+    Write-Verbose -Message ($Params | Out-String)
     $ret = Start-Process @Params
 
     Write-Verbose "[$($MyInvocation.MyCommand)] : Return code was [$($ret.ExitCode)]"
@@ -180,58 +180,41 @@ Function Test-IsNetworkLocation
 
 function New-TemporaryDirectory
 {
-<#
-.Synopsis
-   Create a new Temporary Directory
-.DESCRIPTION
-   Creates a new Directory in the $env:temp and returns the System.IO.DirectoryInfo (dir) 
-.EXAMPLE
-   $TempDirPath = NewTemporaryDirectory
-#>
-    [CmdletBinding(SupportsShouldProcess=$true)]
+    <#
+            .Synopsis
+            Create a new Temporary Directory
+            .DESCRIPTION
+            Creates a new Directory in the $env:temp and returns the System.IO.DirectoryInfo (dir) 
+            .EXAMPLE
+            $TempDirPath = NewTemporaryDirectory
+    #>
+    [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([System.IO.DirectoryInfo])]
     Param
     (
     )
 
-  #return [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+    #return [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))
 
     Begin
     {
         try
         {
-            if($PSCmdlet.ShouldProcess($env:TEMP))
+            if($PSCmdlet.ShouldProcess($env:temp))
             {
-                $tempDirPath = [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))          
+                $tempDirPath = [System.IO.Directory]::CreateDirectory((Join-Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
             }
         }
         catch
         {
-            $errorRecord = [System.Management.Automation.ErrorRecord]::new($_.Exception,"NewTemporaryDirectoryWriteError", "WriteError", $env:TEMP)
+            $errorRecord = [System.Management.Automation.ErrorRecord]::new($_.Exception,'NewTemporaryDirectoryWriteError', 'WriteError', $env:temp)
             Write-Error -ErrorRecord $errorRecord
             return
         } 
 
         if($tempDirPath)
         {
-            Get-Item $env:Temp\$tempDirPath
+            Get-Item $env:temp\$tempDirPath
         }
-    }    
-
-
-}
-
-function Get-UnattendChunk 
-{
-    param
-    (
-        [string] $pass, 
-        [string] $component, 
-        [xml] $unattend
-    ); 
-    
-    # Helper function that returns one component chunk from the Unattend XML data structure
-    return $Unattend.unattend.settings | Where-Object pass -eq $pass `
-        | Select-Object -ExpandProperty component `
-        | Where-Object name -eq $component;
+    }
 }
