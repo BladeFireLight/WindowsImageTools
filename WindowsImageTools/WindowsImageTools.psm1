@@ -27,3 +27,4 @@ if (-not ($VHDCmdlets))
 . $PSScriptRoot\Functions\Convert-Wim2VHD.ps1
 . $PSScriptRoot\Functions\Initialize-VHDPartition.ps1
 . $PSScriptRoot\Functions\Set-VHDPartition.ps1
+. $PSScriptRoot\Functions\New-Unattend.ps1

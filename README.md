@@ -271,3 +271,64 @@ PARAMETERS
     PS C:\>Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 
     -Size 40GB -force
 	```
+
+	```
+	NAME
+    New-UnattendXml
+    
+SYNOPSIS
+    Create a new basic Unattend.xml
+    
+    
+SYNTAX
+    New-UnattendXml [-AdminPassword] <String> [-Path <String>] [-LogonCount <Int32>] [-ScriptPath <String>] 
+    [-TimeZone <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    Creates a new Unattend.xml and sets the admin password, Skips any prompts, logs in a set number of times 
+    (default 0) and starts a powershell script (default c:\pstemp\firstrun.ps1).
+    If no Path is provided a the file will be created in a temp folder and the path returned.
+    
+
+PARAMETERS
+    -AdminPassword <String>
+        The password to have unattnd.xml set the local Administrator to
+        
+    -Path <String>
+        Output Path
+        
+    -LogonCount <Int32>
+        Number of times that the local Administrator account should automaticaly login (default 1)
+        
+    -ScriptPath <String>
+        Script to run on autologin (default: %SystemDrive%\PSTemp\FirstRun.ps1 )
+        
+    -TimeZone <String>
+        set new machine to this timezone (default Central Standard Time)
+        
+    -WhatIf [<SwitchParameter>]
+        
+    -Confirm [<SwitchParameter>]
+        
+    <CommonParameters>
+        This cmdlet supports the common parameters: Verbose, Debug,
+        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
+        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
+        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+    
+    -------------------------- EXAMPLE 1 --------------------------
+    
+    PS C:\>New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
+    
+    
+    
+    
+    
+    
+    -------------------------- EXAMPLE 2 --------------------------
+    
+    PS C:\>New-UnattendXml -Path c:\temp\Unattent.xml -AdminPassword 'P@ssword' -logonCount 100 -ScriptPath 
+    c:\pstemp\firstrun.ps1
+    ```
+	

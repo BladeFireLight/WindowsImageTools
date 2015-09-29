@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.2'
+ModuleVersion = '1.0.3'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -66,7 +66,7 @@ Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
 # NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = '*VHD*'
+FunctionsToExport = '*VHD*', 'New-UnattendXml'
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'
