@@ -105,7 +105,14 @@
         [ValidateScript({
                     Test-Path -Path $(Resolve-Path $_)
         })]
-        [string[]]$Package
+        [string[]]$Package,
+                # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    foreach ($path in $_) {Test-Path -Path $(Resolve-Path $path)}
+        })]
+        [string[]]$filesToInject
+
     )
     $Path = $Path | get-FullFilePath 
     $SourcePath = $SourcePath | get-FullFilePath
@@ -171,6 +178,10 @@
             if ($Package)
             {
                 $SetVHDPartitionParam.add('Package', $Package)
+            }
+            if ($filesToInject)
+            {
+                $SetVHDPartitionParam.add('filesToInject', $filesToInject)
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeVHDPartitionParam"
             Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)

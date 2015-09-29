@@ -29,7 +29,7 @@
         ValueFromPipelineByPropertyName = $true)]
         [Alias('FullName','pspath','ImagePath')]
         [ValidateScript({
-                    Test-Path -Path (get-FullFilePath -Path $_)
+                    Test-Path -Path (Get-FullFilePath -Path $_)
         })]
         [string]$Path,
         
@@ -37,7 +37,7 @@
         [parameter(Position = 1,Mandatory = $true,
         HelpMessage = 'Enter the path to the WIM/ISO file')]
         [ValidateScript({
-                    Test-Path -Path (get-FullFilePath -Path $_ )
+                    Test-Path -Path (Get-FullFilePath -Path $_ )
         })]
         [string]$SourcePath,
         
@@ -78,14 +78,21 @@
         })]
         [string[]]$Package,
 
+        # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    foreach ($path in $_) {Test-Path -Path $(Resolve-Path $path)}
+        })]
+        [string[]]$filesToInject,
+
         # Bypass the warning and about lost data
         [switch]$Force
     )
            
   
     Process {
-        $Path = $Path | get-FullFilePath 
-        $SourcePath = $SourcePath | get-FullFilePath
+        $Path = $Path | Get-FullFilePath 
+        $SourcePath = $SourcePath | Get-FullFilePath
 
         $VhdxFileName = Split-Path -Leaf -Path $Path
 
@@ -109,7 +116,7 @@
                 {
                     # If the ISO isn't local, copy it down so we don't have to worry about resource contention
                     # or about network latency.
-                    if (Test-IsNetworkLocation $SourcePath) 
+                    if (Test-IsNetworkLocation -Path $SourcePath) 
                     {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying ISO [$(Split-Path -Path $SourcePath -Leaf)] to [$env:temp]"
                         $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
@@ -141,7 +148,7 @@
                 
                 #region WIM on network
                 # Check to see if the WIM is local, or on a network location.  If the latter, copy it locally.
-                if (Test-IsNetworkLocation $SourcePath) 
+                if (Test-IsNetworkLocation -Path $SourcePath) 
                 {
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying WIM $(Split-Path -Path $SourcePath -Leaf) to [$env:temp]"
                     $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
@@ -250,44 +257,67 @@
                                 $Dism = Add-WindowsDriver -Path $WinPath -Recurse -Driver $PSItem
                             }
                         }
-
-                        If ($Feature) 
-                        {            
-                            
-                            try { 
-                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Colecting posible source paths"
-                            $FeatureSourcePath = @()
-                            if ($driveletter) #ISO
+                        if ($filesToInject)
+                        {
+                            foreach ($filePath in $filesToInject)
                             {
-                                $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                                $recurse = $false
+                                if (test-path $filePath -PathType Container) { $recurse = $true}
+                                copy -Path $filePath -Destination $WinPath -Recurse:$recurse
                             }
-
-                            $images = Get-WindowsImage -ImagePath $SourcePath
-                            $MountFolderList = @()
-                            foreach ($image in $images)
+                        }
+                        
+                        
+                        if ($Unattend)
+                        {
+                            try 
                             {
-                                #$image | fl *
-                                $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path $env:Temp -Ch ([System.IO.Path]::GetRandomFileName().split('.')[0])))
-                                $MountFolderList += $MountFolder.FullName
-                                write-verbose "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Mounting Source $($image.ImageIndex) $($image.ImageName)"
-                                $null = Mount-WindowsImage -ImagePath $SourcePath -Index $image.ImageIndex -Path  $MountFolder.FullName -ReadOnly
-                                $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
-
+                                Copy-Item $Unattend -Destination "$WinPath\unattend.xml"
                             }
-                            #$FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
-                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
-                            $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
-                            }
-                            catch {
+                            catch 
+                            {
                                 Write-Error -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Error Installing Windows Feature "
-                                    throw $_.Exception.Message
+                                throw $_.Exception.Message
                             }
-                            finally { 
-                            foreach ($MountFolder in $MountFolderList) {
-                             $null = Dismount-WindowsImage -Path $MountFolder -Discard 
-                            }
-                            }
+                        }
+                        If ($Feature) 
+                        {
+                            try 
+                            { 
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Colecting posible source paths"
+                                $FeatureSourcePath = @()
+                                if ($driveLetter) #ISO
+                                {
+                                    $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                                }
 
+                                $images = Get-WindowsImage -ImagePath $SourcePath
+                                $MountFolderList = @()
+                                foreach ($image in $images)
+                                {
+                                    #$image | fl *
+                                    $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+                                    $MountFolderList += $MountFolder.FullName
+                                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Mounting Source $($image.ImageIndex) $($image.ImageName)"
+                                    $null = Mount-WindowsImage -ImagePath $SourcePath -Index $image.ImageIndex -Path  $MountFolder.FullName -ReadOnly
+                                    $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
+                                }
+                                #$FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
+                                $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
+                            }
+                            catch 
+                            {
+                                Write-Error -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Error Installing Windows Feature "
+                                throw $_.Exception.Message
+                            }
+                            finally 
+                            { 
+                                foreach ($MountFolder in $MountFolderList) 
+                                {
+                                    $null = Dismount-WindowsImage -Path $MountFolder -Discard
+                                }
+                            }
                         }
 
                         if ($Package) 
@@ -320,7 +350,7 @@
                         )
 
                         #if ($UEFICapable) {
-                        write-warning "Disk Layout [$DiskLayout]"
+                        Write-Warning -Message "Disk Layout [$DiskLayout]"
                         switch ($DiskLayout) 
                         {        
                             'UEFI' 
