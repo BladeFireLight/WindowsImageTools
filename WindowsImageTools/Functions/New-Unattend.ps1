@@ -1,7 +1,6 @@
 
 function New-UnattendXml
 {
-
     <#
             .Synopsis
             Create a new basic Unattend.xml 
@@ -191,16 +190,16 @@ function New-UnattendXml
             try
             {
                 $unattend = $unattendTemplate.Clone()
-                (Get-UnattendChunk -pass 'specialize' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).TimeZone = $Timezone
+                (Get-UnattendChunk -pass 'specialize' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).TimeZone = $TimeZone
                 (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).UserAccounts.AdministratorPassword.Value = $AdminPassword
                 (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).AutoLogon.Password.Value = $AdminPassword
-                (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).AutoLogon.LogonCount = [string]$logonCount
-               # ((Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).FirstLogonCommands.SynchronousCommand | where Description -eq 'PowerShellFirstRun' ).CommandLine = "$PowerShellStartupCmd $ScriptPath"
-                (Get-UnattendChunk -pass 'specialize' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).TimeZone = $Timezone
+                (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).AutoLogon.LogonCount = [string]$LogonCount
+                # ((Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).FirstLogonCommands.SynchronousCommand | where Description -eq 'PowerShellFirstRun' ).CommandLine = "$PowerShellStartupCmd $ScriptPath"
+                (Get-UnattendChunk -pass 'specialize' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).TimeZone = $TimeZone
                 (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).UserAccounts.AdministratorPassword.Value = $AdminPassword
                 (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).AutoLogon.Password.Value = $AdminPassword
-                (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).AutoLogon.LogonCount = [string]$logonCount
-                ((Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).FirstLogonCommands.SynchronousCommand | where Description -eq 'PowerShellFirstRun' ).CommandLine = "$PowerShellStartupCmd $ScriptPath"
+                (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).AutoLogon.LogonCount = [string]$LogonCount
+                ((Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).FirstLogonCommands.SynchronousCommand | Where-Object -Property Description -EQ -Value 'PowerShellFirstRun' ).CommandLine = "$PowerShellStartupCmd $ScriptPath"
                 $unattend.Save($Path)
                 Get-ChildItem $Path
             }

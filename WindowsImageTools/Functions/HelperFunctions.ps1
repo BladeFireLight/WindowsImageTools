@@ -1,4 +1,4 @@
-#requires -Version 3
+#requires -Version 1
 
 function Get-FullFilePath
 {
