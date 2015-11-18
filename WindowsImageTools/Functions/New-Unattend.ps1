@@ -55,6 +55,13 @@ function New-UnattendXml
         [string]
         $ScriptPath = '%SystemDrive%\PSTemp\FirstRun.ps1',
 
+        # The product key to use for the unattended installation.
+        [ValidateScript({
+              ($_ -imatch '^[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}-[a-z0-9]{5}$') -or ($_ =eq $null)
+        })]
+        [string]
+        $ProductKey,
+
         # set new machine to this timezone (default Central Standard Time) 
         [string]
         $TimeZone = 'Central Standard Time'
@@ -200,6 +207,14 @@ function New-UnattendXml
                 (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).AutoLogon.Password.Value = $AdminPassword
                 (Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).AutoLogon.LogonCount = [string]$LogonCount
                 ((Get-UnattendChunk -pass 'oobeSystem' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).FirstLogonCommands.SynchronousCommand | Where-Object -Property Description -EQ -Value 'PowerShellFirstRun' ).CommandLine = "$PowerShellStartupCmd $ScriptPath"
+                if ($ProductKey) {
+                    $ProdKeyElement = $unattend.CreateElement('ProductKey','urn:schemas-microsoft-com:unattend')
+                    $ProdKeyElement.InnerText = $ProductKey
+                    $null = (Get-UnattendChunk -pass 'specialize' -component 'Microsoft-Windows-Shell-Setup' -arch 'amd64' -unattend $unattend).AppendChild($ProdKeyElement)
+                    $ProdKeyElement2 = $unattend.CreateElement('ProductKey','urn:schemas-microsoft-com:unattend')
+                    $ProdKeyElement2.InnerText = $ProductKey
+                    $null = (Get-UnattendChunk -pass 'specialize' -component 'Microsoft-Windows-Shell-Setup' -arch 'x86' -unattend $unattend).AppendChild($ProdKeyElement2)
+                }
                 $unattend.Save($Path)
                 Get-ChildItem $Path
             }
