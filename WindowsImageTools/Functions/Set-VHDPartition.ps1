@@ -261,6 +261,7 @@
                         {
                             foreach ($filePath in $filesToInject)
                             {
+                                write-verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Adding files from $filePath"
                                 $recurse = $false
                                 if (test-path $filePath -PathType Container) { $recurse = $true}
                                 copy -Path $filePath -Destination $WinPath -Recurse:$recurse
@@ -272,6 +273,7 @@
                         {
                             try 
                             {
+                                write-verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Adding Unattend.xml ($Unattend)"
                                 Copy-Item $Unattend -Destination "$WinPath\unattend.xml"
                             }
                             catch 
@@ -350,7 +352,7 @@
                         )
 
                         #if ($UEFICapable) {
-                        Write-Warning -Message "Disk Layout [$DiskLayout]"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Disk Layout [$DiskLayout]"
                         switch ($DiskLayout) 
                         {        
                             'UEFI' 
@@ -422,7 +424,7 @@
                     Get-Partition -DiskNumber $disk.number |
                     Where-Object -FilterScript {
                         $_.driveletter
-                    }  |
+                    }  | where Type -NE 'Basic' |
                     ForEach-Object -Process {
                         $dl = "$($_.DriveLetter):"
                         $_ |
