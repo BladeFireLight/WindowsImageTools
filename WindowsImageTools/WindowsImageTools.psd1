@@ -66,7 +66,13 @@ Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
 # NestedModules = @()
 
 # Functions to export from this module
-FunctionsToExport = '*VHD*', 'New-UnattendXml'
+FunctionsToExport = 'Convert-Wim2VHD',
+                    'Initilize-VHDPartition',
+                    'Set-VHDPartition',
+                    'New-UnattendXml', 
+                    'New-WindowsImageToolsExample', 
+                    'Set-UpdateConfig', 
+                    'Add-UpdateImage'
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'
