@@ -218,3 +218,65 @@ function New-TemporaryDirectory
         }
     }
 }
+
+function MountVHDandRunBlock 
+{
+    param
+    (
+        [string]$vhd, 
+        [scriptblock]$block,
+        [switch]$ReadOnly
+    );
+     
+    # This function mounts a VHD, runs a script block and unmounts the VHD.
+    # Drive letter of the mounted VHD is stored in $driveLetter - can be used by script blocks
+    if($ReadOnly) {
+        $driveLetter = (Mount-VHD $vhd -ReadOnly -Passthru | Get-Disk | Get-Partition | Get-Volume).DriveLetter;
+    } else {
+        $driveLetter = (Mount-VHD $vhd -Passthru | Get-Disk | Get-Partition | Get-Volume).DriveLetter;
+    }
+    & $block;
+
+    Dismount-VHD $vhd;
+
+    # Wait 2 seconds for activity to clean up
+    Start-Sleep -Seconds 2;
+}
+
+function createRunAndWaitVM 
+{
+    param
+    (
+        [string] $vhdPath, 
+        [string] $vmGeneration,
+        [Hashtable] $configData
+    );
+    
+    $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
+     
+    New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop| Out-Null
+
+    If($configData.vLan -ne 0) {
+        Get-VMNetworkAdapter -VMName $vmName | Set-VMNetworkAdapterVlan -Access -VlanId $configData.vLan
+    }
+
+    set-vm -Name $vmName -ProcessorCount 2;
+    Start-VM $vmName;
+
+    # Give the VM a moment to start before we start checking for it to stop
+    Start-Sleep -Seconds 10;
+
+    # Wait for the VM to be stopped for a good solid 5 seconds
+    do
+    {
+        $state1 = (Get-VM | Where-Object name -eq $vmName).State;
+        Start-Sleep -Seconds 5;
+        
+        $state2 = (Get-VM | Where-Object name -eq $vmName).State;
+        Start-Sleep -Seconds 5;
+    } 
+    until (($state1 -eq 'Off') -and ($state2 -eq 'Off'))
+
+    # Clean up the VM
+    Remove-VM $vmName -Force;
+}
