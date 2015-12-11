@@ -27,3 +27,6 @@ if (-not ($VHDCmdlets))
 . $PSScriptRoot\Functions\Initialize-VHDPartition.ps1
 . $PSScriptRoot\Functions\Set-VHDPartition.ps1
 . $PSScriptRoot\Functions\New-Unattend.ps1
+. $PSScriptRoot\Functions\New-WindowsImageToolsExample.ps1
+. $PSScriptRoot\Functions\Set-UpdateConfig.ps1
+. $PSScriptRoot\Functions\Add-UpdateImage.ps1
