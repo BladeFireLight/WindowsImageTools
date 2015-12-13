@@ -30,3 +30,4 @@ if (-not ($VHDCmdlets))
 . $PSScriptRoot\Functions\New-WindowsImageToolsExample.ps1
 . $PSScriptRoot\Functions\Set-UpdateConfig.ps1
 . $PSScriptRoot\Functions\Add-UpdateImage.ps1
+. $PSScriptRoot\Functions\Update-UpdateImageWMF.ps1

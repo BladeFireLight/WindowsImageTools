@@ -139,10 +139,6 @@ function Add-UpdateImage
         }
 
         #region Validate Input
-        if (Test-Path -Path "$Path\$($FriendlyName)_Base.vhdx")
-        {
-            Throw "BaseImage for $FriendlyName allready exists. use Remove-WindowsImageToolsUpdateImage -Name $FriendlyName first"
-        }
         try 
         {
             $null = Test-Path -Path "$Path\BaseImage" -ErrorAction Stop
@@ -152,6 +148,10 @@ function Add-UpdateImage
         {
             Throw "$Path missing required folder structure use New-WindowsImagetoolsExample to create example"
         }
+        #if (Test-Path -Path "$Path\BaseImage\$($FriendlyName)_Base.vhdx")
+        #{
+        #    Throw "BaseImage for $FriendlyName allready exists. use Remove-WindowsImageToolsUpdateImage -Name $FriendlyName first"
+        #}
         if (-not (Get-Command Save-Module))
         {
             Write-Warning -Message 'PowerShellGet missing. you will need to doanload required modules from the Galary manualy'
@@ -160,86 +160,31 @@ function Add-UpdateImage
 
         #region Update Resource Folder
         # PowerShell Modules
-        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Geting latest PSWindowsUpdate"
-        try 
-        {
-            Save-Module -Name PSWindowsUpdate -Path $Path\Resource -Force -ErrorAction Stop
-        }
-        catch 
-        {
-            if (Test-Path -Path $Path\Resource\PSWindowsUpdate)
-            {
-                Write-Warning -Message "[$($MyInvocation.MyCommand)] : PSwindowsUpdate present, but unable to download latest"
-            }
-            else 
-            {
-                throw "unable to download PSWindowsUpdate from PowerShellGalary.com, download manualy and place in $Path\Resource "
-            }
-        }
+       # Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Geting latest PSWindowsUpdate"
+       # try 
+       # {
+       #     Save-Module -Name PSWindowsUpdate -Path $Path\Resource -Force -ErrorAction Stop
+       # }
+       # catch 
+       # {
+       #     if (Test-Path -Path $Path\Resource\PSWindowsUpdate)
+       #     {
+       #         Write-Warning -Message "[$($MyInvocation.MyCommand)] : PSwindowsUpdate present, but unable to download latest"
+       #     }
+       #     else 
+       #     {
+       #         throw "unable to download PSWindowsUpdate from PowerShellGalary.com, download manualy and place in $Path\Resource "
+       #     }
+       # }
         
-        # download WMF5
-        try
-        { 
-            if (-not (Test-Path -Path $Path\Resource\Wmf)) 
-            {
-                mkdir -Path $Path\Resource\WMF
-            } 
-            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for the latest WMF5"
-            $confirmationPage = 'http://www.microsoft.com/en-us/download/' +  $((Invoke-WebRequest -Uri 'http://aka.ms/wmf5latest' -UseBasicParsing).links | 
-                Where-Object -Property Class -EQ -Value 'mscom-link download-button dl' |
-            ForEach-Object -MemberName href) 
-            $directURLs = (Invoke-WebRequest -Uri $confirmationPage -UseBasicParsing).Links | 
-            Where-Object -Property Class -EQ -Value 'mscom-link' |
-            Where-Object -Property href -Like -Value '*.msu' |
-            ForEach-Object -MemberName href
-            foreach ($directURL in $directURLs)
-            {
-                $filename = $directURL -split '/' | Select-Object -Last 1
-                if (-not (Test-Path -Path "$Path\Resource\WMF\$filename" ))
-                { 
-                    Write-Warning -Message "[$($MyInvocation.MyCommand)] : Missing WMF : $filename Downloading"
-                    $download = Invoke-WebRequest -Uri $directURL -OutFile "$Path\Resource\WMF\$filename" 
-                }
-            }
-        }
-        catch 
-        {
-            if (-not (Test-Path -Path "$Path\Resource\WMF\*.msu"))
-            {
-                throw "Unable to downlaod WMF5 to $Path\Resource\WMF. please download WMF5 manualy "
-            }
-        }
-        # download .NET 4.6
-        try
-        {
-            if (-not (Test-Path -Path $Path\Resource\dotNET)) 
-            {
-                mkdir -Path $Path\Resource\dotNET
-            } 
-            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6"
-            $directURL = 'https://download.microsoft.com/download/C/3/A/C3A5200B-D33C-47E9-9D70-2F7C65DAAD94/NDP46-KB3045557-x86-x64-AllOS-ENU.exe'
-            $filename = 'dotNet4-6.exe'
-            if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename" ))
-            { 
-                Write-Warning -Message "[$($MyInvocation.MyCommand)] : missing .net 4.6: Downloading"
-                $download = Invoke-WebRequest -Uri $directURL -OutFile "$Path\Resource\dotNET\$filename" 
-            }    
-        }
-        catch 
-        {
-            if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename"))
-            {
-                throw "Unable to downlaod .net 4.6 to $Path\Resource\dotNET. please download .net 4.6 manualy "
-            }
-        }
-
+     
         #endregion
 
         #region Unattend
         
         $unattentParam = @{
             LogonCount = 1
-            ScriptPath = 'c:\Resource\FirstBoot.ps1'
+            ScriptPath = 'c:\pstemp\FirstBoot.ps1'
         }
         if ($AdminPassword) 
         {
@@ -282,13 +227,8 @@ function Add-UpdateImage
         }
         if ($filesToInject) 
         {
-            $filesToInject.add("$Path\Resource") 
+            $convertParm.add('filesToInject',$filesToInject)
         }
-        else 
-        {
-            $filesToInject = "$Path\Resource" 
-        }
-        $convertParm.add('filesToInject',$filesToInject)
         
         Convert-Wim2VHD @convertParm  @ParametersToPass
         #endregion
@@ -296,16 +236,8 @@ function Add-UpdateImage
         $FirstBootContent = {
             Start-Transcript -Path $PSScriptRoot\FirstBoot.log
 
-            #$Paramaters = @{
-            #  Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0#\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\Resource\AtStartup.ps1'
-            #  Trigger  = New-ScheduledTaskTrigger -AtLogOn  -User $env:COMPUTERNAME\administrator
-            #  Settings = New-ScheduledTaskSettingsSet
-            #  Principal = New-ScheduledTaskPrincipal -RunLevel Highest -GroupID "BUILTIN\Administrators"
-            #}
-            ##$TaskObject = New-ScheduledTask @Paramaters 
-            #Register-ScheduledTask AtStartup @Paramaters 
             $Paramaters = @{
-                Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\Resource\AtStartup.ps1'
+                Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1'
                 Trigger  = New-ScheduledTaskTrigger -AtStartup
                 Settings = New-ScheduledTaskSettingsSet
             }
@@ -317,35 +249,13 @@ function Add-UpdateImage
             Stop-Transcript
         }
        
-        $dotNetInstallAtStartup = {
-            Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
-            $currentDotNetVersionv = (Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP' -Recurse |
-                Get-ItemProperty -Name Version, Release -EA 0 |
-                Where-Object {
-                    $_.PSChildName -match '^(?!S)\p{L}'
-                }  | 
-                Sort-Object version -Descending |
-            Select-Object -First 1 ).version 
-            if ($currentDotNetVersionv -lt 4.6)
-            {
-                Write-Verbose 'Installing .NET' -Verbose
-                Start-Process  -Verb runas -Wait -FilePath 'C:\Resource\dotNET\dotNet4-6.exe' -ArgumentList '/q', '/log c:\Resource\dotNet\dotNetLog.htm'
-            }
-            Start-Sleep -Seconds 30
-            Stop-Computer -Force
-        }
-
-
         $AddScriptFilesBlock = {
-            $null = New-Item -Path "$($driveLetter):\Resource" -Name FirstBoot.ps1 -ItemType 'file' -Value $FirstBootContent  
-            $null = New-Item -Path "$($driveLetter):\Resource" -Name AtStartup.ps1 -ItemType 'file' -Value $dotNetInstallAtStartup 
+            if (-not (Test-Path "$($driveLetter):\PsTemp"))
+            { mkdir "$($driveLetter):\PsTemp" }
+            $null = New-Item -Path "$($driveLetter):\PsTemp" -Name FirstBoot.ps1 -ItemType 'file' -Value $FirstBootContent  
         }
 
-        MountVHDandRunBlock -vhd $target -block $AddScriptFilesBlock
-        $vmGeneration = 1
-        if ($DiskLayout -eq 'UEFI') { $vmGeneration = 2}
-        $ConfigData = Get-UpdateConfig -Path $Path
-        createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -ConfigData $ConfigData
-        
+        MountVHDandRunBlock -vhd $target -block $AddScriptFilesBlock @ParametersToPass
+        ################ need to finish ####
     }
 }

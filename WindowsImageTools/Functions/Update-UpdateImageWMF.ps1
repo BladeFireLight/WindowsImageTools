@@ -1,0 +1,267 @@
+<#
+.Synopsis
+   Updates WMF to 5.0 (and .NET to 4.6) in a Windows Update Image
+.DESCRIPTION
+   Downloads WMF 5.0 (Production Preview) and .NET 4.6 offline installer
+   If no Image Name is provided, it will update WMF on all Base images in the Windows Image Tools
+   Update Folder (Created with New-WindowsImageUpdateExmaple)
+.EXAMPLE
+   Update-UpdateImageWMF -Path C:\WITExample
+   Updates every Image in c:\WITExample\BaseImages
+.EXAMPLE
+   Update-UpdateImageWMF -Path C:\WitExample -Name Server2012R2Core
+   Updates only C:\WitExample\BaseImages\Server2012R2Core_Base.vhdx
+#>
+function Update-UpdateImageWMF
+{
+    [CmdletBinding(SupportsShouldProcess = $true)]
+    #[OutputType([String])]
+    Param
+    (
+        # Path to the Windows Image Tools Update Folders (created via New-WindowsImageToolsExample)
+        [Parameter(Mandatory = $true, 
+        ValueFromPipelineByPropertyName = $true)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    if (Test-Path $_) 
+                    {
+                        $true
+                    }
+                    else 
+                    {
+                        throw "Path $_ does not exist"
+                    }
+        })]
+        [Alias('FullName')] 
+        $Path,
+ 
+        # Administrator Password for Base VHD (Default = P@ssw0rd)
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNull()]
+        [ValidateNotNullOrEmpty()]
+        [Alias('FriendlyName')]
+        [string[]]
+        $ImageName,
+
+        # Use WMF 4 instead of the default WMF 5
+        [switch]
+        $Wmf4
+
+    )
+
+    foreach ($image in $ImageName) {  
+    
+    $parentVHD = "$Path\BaseImage\$($image)_Base.vhdx"
+    $target = "$Path\BaseImage\$($image)_Update.vhdx"
+    
+    if ($pscmdlet.ShouldProcess("$parentVHD", 'Update WMF in Windows Image Tools Update Image'))
+    {
+        $ParametersToPass = @{}
+        foreach ($key in ('Whatif', 'Verbose', 'Debug'))
+        {
+            if ($PSBoundParameters.ContainsKey($key)) 
+            {
+                $ParametersToPass[$key] = $PSBoundParameters[$key]
+            }
+        }
+        
+        Write-Verbose "[$($MyInvocation.MyCommand)] : Creating $target from $parentVHD"
+        $null = New-VHD -Path $target -ParentPath $parentVHD
+                
+        #region Validate Input
+        try 
+        {
+            $null = Test-Path -Path "$Path\BaseImage" -ErrorAction Stop
+            $null = Test-Path -Path "$Path\Resource" -ErrorAction Stop
+        }
+        catch
+        {
+            Throw "$Path missing required folder structure use New-WindowsImagetoolsExample to create example"
+        }
+        
+        if (-not(Test-Path -Path "$Path\BaseImage\$($ImageName)_Base.vhdx"))
+        {
+            Throw "BaseImage for $ImageName does not exists. Use Add-UpdateImage first"
+        }
+        #endregion
+
+        #region Update Resource Folder
+        
+        # download WMF
+        $wmfPath = "$Path\Resource\WMF\5"
+        $wmfDownloadUrl = 'http://aka.ms/wmf5latest'
+        
+        if ($wmf4)
+        {
+            $wmfPath = "$Path\Resource\WMF\4"
+            $wmfDownloadUrl = 'http://www.microsoft.com/en-us/download/details.aspx?id=40855'
+        
+        }
+        try
+        { 
+            if (-not (Test-Path -Path $wmfPath)) 
+            {
+                $nul = mkdir -Path $wmfPath
+            } 
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for the latest WMF in $wmfPath"
+            $confirmationPage = 'http://www.microsoft.com/en-us/download/' +  $((Invoke-WebRequest -Uri $wmfDownloadUrl -UseBasicParsing).links | 
+                Where-Object -Property Class -EQ -Value 'mscom-link download-button dl' |
+                ForEach-Object -MemberName href) 
+            $directURLs = (Invoke-WebRequest -Uri $confirmationPage -UseBasicParsing).Links | 
+            Where-Object -Property Class -EQ -Value 'mscom-link' |
+            Where-Object -Property href -Like -Value '*.msu' |
+            ForEach-Object -MemberName href
+            foreach ($directURL in $directURLs)
+            {
+                $filename = $directURL -split '/' | Select-Object -Last 1
+                if (-not (Test-Path -Path "$wmfPath\$filename" ))
+                { 
+                    Write-Warning -Message "[$($MyInvocation.MyCommand)] : Checking for the latest WMF : $filename Missing, Downloading"
+                    $download = Invoke-WebRequest -Uri $directURL -OutFile "$wmfPath\$filename" 
+                }
+                else
+                {
+                   Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for the latest WMF : $wmfPath\$filename : Found"
+                }
+            }
+        }
+        catch 
+        {
+            if (-not (Test-Path -Path "$wmfPath\*.msu"))
+            {
+                throw "Unable to downlaod WMF to $wmfPath. please download WMF manualy and place in $wmfPath "
+            }
+        }
+        
+
+        # download .NET 4.6
+        try
+        {
+            if (-not (Test-Path -Path $Path\Resource\dotNET)) 
+            {
+                mkdir -Path $Path\Resource\dotNET
+            } 
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6"
+            $directURL = 'https://download.microsoft.com/download/C/3/A/C3A5200B-D33C-47E9-9D70-2F7C65DAAD94/NDP46-KB3045557-x86-x64-AllOS-ENU.exe'
+            $filename = 'dotNet4-6.exe'
+            if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename" ))
+            { 
+                Write-Warning -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6 : Missing : Downloading"
+                $download = Invoke-WebRequest -Uri $directURL -OutFile "$Path\Resource\dotNET\$filename" 
+            }    
+        }
+        catch 
+        {
+            if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename"))
+            {
+                throw "Unable to downlaod .net 4.6 to $Path\Resource\dotNET. please download .net 4.6 manualy "
+            }
+        }
+
+        #endregion
+       
+        $dotNetInstallAtStartup = {
+            Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
+            $currentDotNetVersionv = (Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP' -Recurse |
+                Get-ItemProperty -Name Version, Release -EA 0 |
+                Where-Object {
+                    $_.PSChildName -match '^(?!S)\p{L}'
+                }  | 
+                Sort-Object version -Descending |
+            Select-Object -First 1 ).version 
+            if ($currentDotNetVersionv -lt 4.6)
+            {
+                if (-not (Test-Path c:\PsTemp\dotNET\attempt.txt))
+                {  
+                get-date | Out-File c:\PsTemp\dotNET\attempt.txt
+                Write-Verbose '.Net 4.6 : Installing' -Verbose
+                Start-Process  -Verb runas -Wait -FilePath 'C:\PsTemp\dotNET\dotNet4-6.exe' -ArgumentList '/q', '/norestart', '/log c:\PsTemp\dotNet\dotNetLog.htm'
+                }
+                
+                else 
+                {
+                    Write-Error '.Net 4.6 :  install attempted but failed!'
+                    Start-Sleep -Seconds 30
+                    Stop-Computer -Force
+                }
+            }
+            else 
+            {
+                get-date | Out-File c:\PsTemp\dotNET\Verified.txt
+                Write-Verbose '.Net 4.6 : detected shuting down' -Verbose
+                Stop-Computer -Force
+            }
+            Start-Sleep -Seconds 30
+            Restart-Computer -Force
+        }
+
+        $AddDotNetFilesBlock = {
+            if (-not (Test-Path "$($driveLetter):\PsTemp"))
+            { mkdir "$($driveLetter):\PsTemp" }
+            if (-not (Test-Path "$($driveLetter):\PsTemp\dotNET"))
+            { mkdir "$($driveLetter):\PsTemp\dotNET" }
+            
+            $null = New-Item -Path "$($driveLetter):\PsTemp" -Name AtStartup.ps1 -ItemType 'file' -Value $dotNetInstallAtStartup -Force
+            $null = Copy-Item "$Path\Resource\dotNET\$filename" "$($driveLetter):\PsTemp\dotNET\$filname"
+        }
+
+
+        MountVHDandRunBlock -vhd $target -block $AddDotNetFilesBlock
+        $vmGeneration = 1
+        if ((GetVHDPartitionStyle -vhd $target) -eq 'GPT') { $vmGeneration = 2}
+        $ConfigData = Get-UpdateConfig -Path $Path
+        
+        createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -ConfigData $ConfigData
+
+        $verifyWmfVersion4 = {
+            Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
+            if ($PSVersionTable.PSVersion.Major -ge 4)
+            {
+                Write-Verbose 'WMF : version varified'
+                get-date | Out-File -FilePath c:\PsTemp\ChangesMade.txt
+            }
+            else 
+            {
+                Write-Warning "WMF : Excpected version 4, found $($PSVersionTable.PSVersion.Major)"
+            }
+            Stop-Transcript
+            Stop-Computer -Force
+
+        }
+        $verifyWmfVersion5 = {
+            Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
+            if ($PSVersionTable.PSVersion.Major -ge 5)
+            {
+                Write-Verbose 'WMF : version varified'
+                get-date | Out-File -FilePath c:\PsTemp\ChangesMade.txt
+            }
+            else 
+            {
+                Write-Warning "WMF : Excpected version 4, found $($PSVersionTable.PSVersion.Major)"
+            }
+            Stop-Transcript
+            Stop-Computer -Force
+        }
+        
+        
+        if ($wmf4)
+        {
+            $VeirfyWmfAtStartup = $verifyWmfVersion4
+        }
+        else {
+            $VeirfyWmfAtStartup = $verifyWmfVersion5
+        }
+
+        $addWmfFilesBlock = {
+            $null = New-Item -Path "$($driveLetter):\PsTemp" -Name AtStartup.ps1 -ItemType 'file' -Value $VeirfyWmfAtStartup -Force
+            
+        }
+
+        $checkresultsBlock = {
+            Test-Path 
+        }
+
+    }
+    }
+}

@@ -231,17 +231,29 @@ function MountVHDandRunBlock
     # This function mounts a VHD, runs a script block and unmounts the VHD.
     # Drive letter of the mounted VHD is stored in $driveLetter - can be used by script blocks
     if($ReadOnly) {
-        $driveLetter = (Mount-VHD $vhd -ReadOnly -Passthru | Get-Disk | Get-Partition | Get-Volume).DriveLetter;
+        $virtualDisk = Mount-VHD $vhd -ReadOnly -Passthru
     } else {
-        $driveLetter = (Mount-VHD $vhd -Passthru | Get-Disk | Get-Partition | Get-Volume).DriveLetter;
+        $virtualDisk = Mount-VHD $vhd -Passthru
     }
+    $driveLetter = ($virtualDisk | Get-Disk | Get-Partition | Get-Volume).DriveLetter
     & $block;
 
-    Dismount-VHD $vhd;
+    Dismount-VHD $vhd
 
     # Wait 2 seconds for activity to clean up
-    Start-Sleep -Seconds 2;
+    Start-Sleep -Seconds 2
 }
+
+Function GetVHDPartitionStyle
+{     param
+    (
+        [string]$vhd 
+    )
+    $PartitionStyle = (Mount-VHD $vhd -ReadOnly -Passthru | Get-Disk).PartitionStyle
+    Dismount-VHD $vhd
+    Start-Sleep -Seconds 2
+    return $PartitionStyle
+}         
 
 function createRunAndWaitVM 
 {
@@ -280,3 +292,4 @@ function createRunAndWaitVM
     # Clean up the VM
     Remove-VM $vmName -Force;
 }
+
