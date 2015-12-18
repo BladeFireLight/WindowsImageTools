@@ -152,10 +152,11 @@ function Add-UpdateImage
         #{
         #    Throw "BaseImage for $FriendlyName allready exists. use Remove-WindowsImageToolsUpdateImage -Name $FriendlyName first"
         #}
-        if (-not (Get-Command Save-Module))
-        {
-            Write-Warning -Message 'PowerShellGet missing. you will need to doanload required modules from the Galary manualy'
-        }
+        
+        #if (-not (Get-Command Save-Module))
+        #{
+        #    Write-Warning -Message 'PowerShellGet missing. you will need to doanload required modules from the Galary manualy'
+        #}
         #endregion
 
         #region Update Resource Folder
@@ -230,6 +231,7 @@ function Add-UpdateImage
             $convertParm.add('filesToInject',$filesToInject)
         }
         
+        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : $target : Creating "
         Convert-Wim2VHD @convertParm  @ParametersToPass
         #endregion
 
@@ -251,11 +253,12 @@ function Add-UpdateImage
        
         $AddScriptFilesBlock = {
             if (-not (Test-Path "$($driveLetter):\PsTemp"))
-            { mkdir "$($driveLetter):\PsTemp" }
+            { $null = mkdir "$($driveLetter):\PsTemp" }
             $null = New-Item -Path "$($driveLetter):\PsTemp" -Name FirstBoot.ps1 -ItemType 'file' -Value $FirstBootContent  
         }
 
+        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : $target : Adding First Boot Script "
         MountVHDandRunBlock -vhd $target -block $AddScriptFilesBlock @ParametersToPass
-        ################ need to finish ####
+        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : $target : Finished "
     }
 }
