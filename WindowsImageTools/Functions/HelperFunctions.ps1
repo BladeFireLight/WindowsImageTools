@@ -235,6 +235,8 @@ function MountVHDandRunBlock
     } else {
         $virtualDisk = Mount-VHD $vhd -Passthru
     }
+    # Workarround for new drive letters in script modules                  
+    $null = Get-PSDrive
     $driveLetter = ($virtualDisk | Get-Disk | Get-Partition | Get-Volume).DriveLetter
     & $block;
 
@@ -257,6 +259,7 @@ Function GetVHDPartitionStyle
 
 function createRunAndWaitVM 
 {
+    [CmdletBinding()]
     param
     (
         [string] $vhdPath, 
@@ -266,6 +269,7 @@ function createRunAndWaitVM
     
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName"  
     New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop| Out-Null
 
     If($configData.vLan -ne 0) {
@@ -290,6 +294,8 @@ function createRunAndWaitVM
     until (($state1 -eq 'Off') -and ($state2 -eq 'Off'))
 
     # Clean up the VM
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Stoped"
     Remove-VM $vmName -Force;
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted"
 }
 
