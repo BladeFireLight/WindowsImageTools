@@ -291,8 +291,8 @@ function Update-UpdateImageWMF
             }
             else 
             {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WMF : No Changes : Discarting $target"
-                del $target
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WMF : No Changes : Discarding $target"
+                Remove-Item $target
             }
         }
     }
