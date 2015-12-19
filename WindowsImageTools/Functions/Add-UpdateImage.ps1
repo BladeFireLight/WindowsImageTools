@@ -161,22 +161,22 @@ function Add-UpdateImage
 
         #region Update Resource Folder
         # PowerShell Modules
-       # Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Geting latest PSWindowsUpdate"
-       # try 
-       # {
-       #     Save-Module -Name PSWindowsUpdate -Path $Path\Resource -Force -ErrorAction Stop
-       # }
-       # catch 
-       # {
-       #     if (Test-Path -Path $Path\Resource\PSWindowsUpdate)
-       #     {
-       #         Write-Warning -Message "[$($MyInvocation.MyCommand)] : PSwindowsUpdate present, but unable to download latest"
-       #     }
-       #     else 
-       #     {
-       #         throw "unable to download PSWindowsUpdate from PowerShellGalary.com, download manualy and place in $Path\Resource "
-       #     }
-       # }
+        # Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Geting latest PSWindowsUpdate"
+        # try 
+        # {
+        #     Save-Module -Name PSWindowsUpdate -Path $Path\Resource -Force -ErrorAction Stop
+        # }
+        # catch 
+        # {
+        #     if (Test-Path -Path $Path\Resource\PSWindowsUpdate)
+        #     {
+        #         Write-Warning -Message "[$($MyInvocation.MyCommand)] : PSwindowsUpdate present, but unable to download latest"
+        #     }
+        #     else 
+        #     {
+        #         throw "unable to download PSWindowsUpdate from PowerShellGalary.com, download manualy and place in $Path\Resource "
+        #     }
+        # }
         
      
         #endregion
@@ -189,11 +189,11 @@ function Add-UpdateImage
         }
         if ($AdminPassword) 
         {
-            $unattentParam.add('AdminPassword',$AdminPassword) 
+            $unattentParam.add('AdminPassword',$AdminPassword)
         }
         if ($ProductKey) 
         {
-            $unattentParam.add('ProductKey',$ProductKey) 
+            $unattentParam.add('ProductKey',$ProductKey)
         }
         
         $UnattendPath = New-UnattendXml @unattentParam @ParametersToPass
@@ -212,7 +212,7 @@ function Add-UpdateImage
         }
         if ($NativeBoot) 
         {
-            $convertParm.add('NativeBoot',$NativeBoot) 
+            $convertParm.add('NativeBoot',$NativeBoot)
         }
         if ($Feature) 
         {
@@ -237,15 +237,22 @@ function Add-UpdateImage
 
         $FirstBootContent = {
             Start-Transcript -Path $PSScriptRoot\FirstBoot.log
-
-            $Paramaters = @{
-                Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1'
-                Trigger  = New-ScheduledTaskTrigger -AtStartup
-                Settings = New-ScheduledTaskSettingsSet
+            
+            #Feature check and CMD fallback (remove when win7/2008 no longer supported)
+            if (Get-Command Register-ScheduledTask -ErrorAction SilentlyContinue)
+            {
+                $Paramaters = @{
+                    Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1'
+                    Trigger  = New-ScheduledTaskTrigger -AtStartup
+                    Settings = New-ScheduledTaskSettingsSet
+                }
+                $TaskObject = New-ScheduledTask @Paramaters
+                Register-ScheduledTask AtStartup -InputObject $TaskObject -User 'nt authority\system' -Verbose 
             }
-            $TaskObject = New-ScheduledTask @Paramaters
-            Register-ScheduledTask AtStartup -InputObject $TaskObject -User 'nt authority\system' -Verbose 
-
+            else 
+            {
+                schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
+            }
             Start-Sleep -Seconds 20
             Restart-Computer -Verbose -Force 
             Stop-Transcript
@@ -253,7 +260,9 @@ function Add-UpdateImage
        
         $AddScriptFilesBlock = {
             if (-not (Test-Path "$($driveLetter):\PsTemp"))
-            { $null = mkdir "$($driveLetter):\PsTemp" }
+            {
+                $null = mkdir "$($driveLetter):\PsTemp" 
+            }
             $null = New-Item -Path "$($driveLetter):\PsTemp" -Name FirstBoot.ps1 -ItemType 'file' -Value $FirstBootContent  
         }
 
