@@ -36,7 +36,7 @@ function Update-UpdateImageWMF
         [Alias('FullName')] 
         $Path,
  
-        # Administrator Password for Base VHD (Default = P@ssw0rd)
+        # Name of the Image to update
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
@@ -189,9 +189,12 @@ function Update-UpdateImageWMF
                 {
                     Get-Date | Out-File -FilePath c:\PsTemp\dotNET\Verified.txt
                     Write-Verbose -Message '.Net 4.6 : detected shuting down' -Verbose
+                    Stop-Transcript
                     Stop-Computer -Force
                 }
                 Start-Sleep -Seconds 30
+                Write-Verbose -Message 'Rebooting computer' -Verbose
+                Stop-Transcript
                 Restart-Computer -Force
             }
 
@@ -209,7 +212,7 @@ function Update-UpdateImageWMF
             }
 
 
-            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : .NET : Adding instealler to $target"
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : .NET : Adding installer to $target"
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : .NET : updateting AtStartup script"
             MountVHDandRunBlock -vhd $target -block $AddDotNetFilesBlock
             $vmGeneration = 1
@@ -220,7 +223,7 @@ function Update-UpdateImageWMF
             $ConfigData = Get-UpdateConfig -Path $Path
             
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : .NET : Creating temp vm and waiting "
-            #createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -ConfigData $ConfigData @ParametersToPass
+            createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -ConfigData $ConfigData @ParametersToPass
 
             $verifyWmfVersion4 = {
                 Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
