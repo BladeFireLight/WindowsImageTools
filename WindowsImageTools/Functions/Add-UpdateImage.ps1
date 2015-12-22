@@ -153,32 +153,6 @@ function Add-UpdateImage
         #    Throw "BaseImage for $FriendlyName allready exists. use Remove-WindowsImageToolsUpdateImage -Name $FriendlyName first"
         #}
         
-        #if (-not (Get-Command Save-Module))
-        #{
-        #    Write-Warning -Message 'PowerShellGet missing. you will need to doanload required modules from the Galary manualy'
-        #}
-        #endregion
-
-        #region Update Resource Folder
-        # PowerShell Modules
-        # Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Geting latest PSWindowsUpdate"
-        # try 
-        # {
-        #     Save-Module -Name PSWindowsUpdate -Path $Path\Resource -Force -ErrorAction Stop
-        # }
-        # catch 
-        # {
-        #     if (Test-Path -Path $Path\Resource\PSWindowsUpdate)
-        #     {
-        #         Write-Warning -Message "[$($MyInvocation.MyCommand)] : PSwindowsUpdate present, but unable to download latest"
-        #     }
-        #     else 
-        #     {
-        #         throw "unable to download PSWindowsUpdate from PowerShellGalary.com, download manualy and place in $Path\Resource "
-        #     }
-        # }
-        
-     
         #endregion
 
         #region Unattend
