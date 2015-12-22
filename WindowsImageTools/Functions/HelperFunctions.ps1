@@ -226,19 +226,24 @@ function MountVHDandRunBlock
         [string]$vhd, 
         [scriptblock]$block,
         [switch]$ReadOnly
-    );
+    )
      
     # This function mounts a VHD, runs a script block and unmounts the VHD.
     # Drive letter of the mounted VHD is stored in $driveLetter - can be used by script blocks
-    if($ReadOnly) {
+    if($ReadOnly) 
+    {
         $virtualDisk = Mount-VHD $vhd -ReadOnly -Passthru
-    } else {
+    } else 
+    {
         $virtualDisk = Mount-VHD $vhd -Passthru
     }
     # Workarround for new drive letters in script modules                  
     $null = Get-PSDrive
-    $driveLetter = ($virtualDisk | Get-Disk | Get-Partition | Get-Volume).DriveLetter
-    & $block;
+    $driveLetter = ($virtualDisk |
+        Get-Disk |
+        Get-Partition |
+    Get-Volume).DriveLetter
+    & $block
 
     Dismount-VHD $vhd
 
@@ -247,7 +252,8 @@ function MountVHDandRunBlock
 }
 
 Function GetVHDPartitionStyle
-{     param
+{
+    param
     (
         [string]$vhd 
     )
@@ -265,37 +271,53 @@ function createRunAndWaitVM
         [string] $vhdPath, 
         [string] $vmGeneration,
         [Hashtable] $configData
-    );
+    )
     
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName"  
-    New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop| Out-Null
+    $null = New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop
 
-    If($configData.vLan -ne 0) {
+    If($configData.vLan -ne 0) 
+    {
         Get-VMNetworkAdapter -VMName $vmName | Set-VMNetworkAdapterVlan -Access -VlanId $configData.vLan
     }
 
-    set-vm -Name $vmName -ProcessorCount 2;
-    Start-VM $vmName;
+    Set-VM -Name $vmName -ProcessorCount 2
+    Start-VM $vmName
 
     # Give the VM a moment to start before we start checking for it to stop
-    Start-Sleep -Seconds 10;
+    Start-Sleep -Seconds 10
 
     # Wait for the VM to be stopped for a good solid 5 seconds
     do
     {
-        $state1 = (Get-VM | Where-Object name -eq $vmName).State;
-        Start-Sleep -Seconds 5;
+        $state1 = (Get-VM | Where-Object name -EQ -Value $vmName).State
+        Start-Sleep -Seconds 5
         
-        $state2 = (Get-VM | Where-Object name -eq $vmName).State;
-        Start-Sleep -Seconds 5;
+        $state2 = (Get-VM | Where-Object name -EQ -Value $vmName).State
+        Start-Sleep -Seconds 5
     } 
     until (($state1 -eq 'Off') -and ($state2 -eq 'Off'))
 
     # Clean up the VM
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Stoped"
-    Remove-VM $vmName -Force;
+    Remove-VM $vmName -Force
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted"
 }
 
+function cleanupFile
+{
+    param
+    (
+        [string[]] $file
+    )
+    
+    foreach ($target in $file) 
+    { 
+        if (Test-Path $target) 
+        {
+            Remove-Item $target -Recurse
+        }
+    }
+}
