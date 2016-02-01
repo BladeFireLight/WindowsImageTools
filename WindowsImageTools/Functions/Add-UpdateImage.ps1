@@ -44,10 +44,11 @@ function Add-UpdateImage
         $FriendlyName,
 
         # Administrator Password for Base VHD (Default = P@ssw0rd)
+        [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
-        [string]
-        $AdminPassword = 'P@ssw0rd',
+        [PSCredential]
+        $AdminCredential,
 
         # Product Key for sorce image (Not required for volume licence media) 
         [ValidateNotNullOrEmpty()]
@@ -92,9 +93,6 @@ function Add-UpdateImage
         # Index of image inside of WIM (Default 1)
         [int]$Index = 1,
         
-        # Native Boot does not have the boot code inside the VHD(x) it must exist on the physical disk. 
-        [switch]$NativeBoot,
-
         # Features to turn on (in DISM format)
         [ValidateNotNullOrEmpty()]
         [string[]]$Feature,
@@ -158,12 +156,9 @@ function Add-UpdateImage
         #region Unattend
         
         $unattentParam = @{
-            LogonCount = 1
-            ScriptPath = 'c:\pstemp\FirstBoot.ps1'
-        }
-        if ($AdminPassword) 
-        {
-            $unattentParam.add('AdminPassword',$AdminPassword)
+            FirstBootScriptPath = 'c:\pstemp\FirstBoot.ps1'
+            AdminCredential = $AdminCredential
+            EnableAdministrator = $true
         }
         if ($ProductKey) 
         {
@@ -184,9 +179,9 @@ function Add-UpdateImage
             Unattend   = $UnattendPath
             Path       = $target
         }
-        if ($NativeBoot) 
+        if ($Dynamic) 
         {
-            $convertParm.add('NativeBoot',$NativeBoot)
+            $convertParm.add('Dynamic',$Dynamic)
         }
         if ($Feature) 
         {
@@ -212,30 +207,40 @@ function Add-UpdateImage
         $FirstBootContent = {
             Start-Transcript -Path $PSScriptRoot\FirstBoot.log
             
-            #Feature check and CMD fallback (remove when win7/2008 no longer supported)
-            if (Get-Command Register-ScheduledTask -ErrorAction SilentlyContinue)
-            {
-                $Paramaters = @{
-                    Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1'
-                    Trigger  = New-ScheduledTaskTrigger -AtStartup
-                    Settings = New-ScheduledTaskSettingsSet
-                }
-                $TaskObject = New-ScheduledTask @Paramaters
-                Register-ScheduledTask AtStartup -InputObject $TaskObject -User 'nt authority\system' -Verbose 
-            }
-            else 
-            {
-                schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
-            }
+            get-service Schedule | start-service
             Start-Sleep -Seconds 20
-            Restart-Computer -Verbose -Force 
+            #### PS cmdlets Fails in Specialize Pass
+            ### Feature check and CMD fallback (remove when win7/2008 no longer supported)
+            #if (Get-Command Register-ScheduledTask -ErrorAction SilentlyContinue)
+            #{
+            #    $Paramaters = @{
+            #        Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1'
+            #        Trigger  = New-ScheduledTaskTrigger -AtStartup
+            #        Settings = New-ScheduledTaskSettingsSet
+            #    }
+            #    $TaskObject = New-ScheduledTask @Paramaters
+            #    Register-ScheduledTask AtStartup -InputObject $TaskObject -User 'nt authority\system' -Verbose 
+            #}
+            #else 
+            #{
+               schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
+            #}
+            Start-Sleep -Seconds 20
+            # added test if ran on wmf2
+            if (get-command restart-computer) {
+                Restart-Computer -Verbose -Force 
+            }
+            else
+            {
+                shutdown.exe /r /t 0 
+            }
             Stop-Transcript
         }
        
         $AddScriptFilesBlock = {
             if (-not (Test-Path "$($driveLetter):\PsTemp"))
             {
-                $null = mkdir "$($driveLetter):\PsTemp" 
+                $null = mkdir "$($driveLetter):\PsTemp" -ErrorAction SilentlyContinue
             }
             $null = New-Item -Path "$($driveLetter):\PsTemp" -Name FirstBoot.ps1 -ItemType 'file' -Value $FirstBootContent  
         }

@@ -275,7 +275,7 @@ function createRunAndWaitVM
     
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
-    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName"  
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(get-date)"  
     $null = New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop
 
     If($configData.vLan -ne 0) 
@@ -303,7 +303,7 @@ function createRunAndWaitVM
     # Clean up the VM
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Stoped"
     Remove-VM $vmName -Force
-    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted"
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted at $(get-date)"
 }
 
 function cleanupFile
@@ -317,7 +317,7 @@ function cleanupFile
     { 
         if (Test-Path $target) 
         {
-            Remove-Item $target -Recurse
+            Remove-Item $target -Recurse -Force
         }
     }
 }

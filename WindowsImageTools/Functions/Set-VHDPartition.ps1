@@ -402,7 +402,7 @@
                     {
                         $recoverfolder = Join-Path -Path "$($RecoveryToolsPartition.DriveLetter):" -ChildPath 'Recovery'
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : [$cmd]"
-                        Start-Process -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setosimage /path $recoverfolder /index $Index /target $windir"  -NoNewWindow
+                        Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setosimage /path $recoverfolder /index $Index /target $windir"  -NoNewWindow
                         
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Creating Recovery\WindowsRE folder [$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE]"
                         $repath = mkdir -Path "$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE"
@@ -425,6 +425,7 @@
                     Where-Object -FilterScript {
                         $_.driveletter
                     }  | where Type -NE 'Basic' |
+                    where Type -NE 'IFS' |
                     ForEach-Object -Process {
                         $dl = "$($_.DriveLetter):"
                         $_ |
