@@ -100,6 +100,9 @@
         })]
         [string[]]$Driver,
 
+        # Add payload for all removed features
+        [switch]$AddPayloadForRemovedFeature,
+
         # Path of packages to install via DSIM
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
@@ -170,6 +173,10 @@
             if ($Feature)
             {
                 $SetVHDPartitionParam.add('Feature', $Feature)
+            }
+            if ($AddPayloadForRemovedFeature)
+            {
+                $SetVHDPartitionParam.add('AddPayloadForRemovedFeature', $AddPayloadForRemovedFeature)
             }
             if ($Driver)
             {

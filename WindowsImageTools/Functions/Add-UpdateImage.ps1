@@ -93,6 +93,9 @@ function Add-UpdateImage
         # Index of image inside of WIM (Default 1)
         [int]$Index = 1,
         
+        # Add payload for all removed features
+        [switch]$AddPayloadForRemovedFeature,
+
         # Features to turn on (in DISM format)
         [ValidateNotNullOrEmpty()]
         [string[]]$Feature,
@@ -182,6 +185,10 @@ function Add-UpdateImage
         if ($Dynamic) 
         {
             $convertParm.add('Dynamic',$Dynamic)
+        }
+        if ($AddPayloadForRemovedFeature)
+        {
+            $convertParm.add('AddPayloadForRemovedFeature', $AddPayloadForRemovedFeature)
         }
         if ($Feature) 
         {
