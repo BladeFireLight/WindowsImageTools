@@ -77,14 +77,14 @@ function Invoke-WindowsImageUpdate
     
     if ($ImageName)
     {
-        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Validateing $ImageName"
-        try 
+        foreach ($testpath in $ImageName) 
         {
-            $null = Test-Path -Path "$Path\BaseImage\$($ImageName)_base.vhdx" -ErrorAction Stop
-        }
-        catch 
-        {
-            throw "$ImageName not found in $Path"
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Validateing [$testpath]"
+            if (-not (Test-Path -Path "$Path\BaseImage\$($testpath)_base.vhdx" ))
+            
+            {
+                throw "$Path\BaseImage\$($testpath)_base.vhdx" 
+            }
         }
         $ImageList = $ImageName
     }
@@ -223,7 +223,7 @@ function Invoke-WindowsImageUpdate
                 }
 
                 try 
-                {  
+                {
                     Import-Module "$env:SystemDrive\PsTemp\Modules\PSWindowsUpdate" -Force -ErrorAction Stop
                 }
                 catch
@@ -323,13 +323,12 @@ function Invoke-WindowsImageUpdate
 
                 if ((Get-ChildItem "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" -File).count -eq 0)
                 {
-                    write-verbose -Message 'Sidebyside detected in PSWindowsUpdate : switching to v4 compatability'
+                    Write-Verbose -Message 'Sidebyside detected in PSWindowsUpdate : switching to v4 compatability'
                     $newest = (Get-ChildItem "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" -Directory | Sort-Object LastWriteTime)[0] 
                     Copy-Item -Path $newest.fullname -Destination "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate_temp" -Recurse
                     cleanupFile "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate"
                     Rename-Item -Path "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate_temp" -NewName "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" 
                 }
-
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : Adding PSWindowsUpdate Module to $UpdateImage"
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : updateting AtStartup script"
@@ -337,7 +336,7 @@ function Invoke-WindowsImageUpdate
             #endregion
 
             #region create vm and run updates
-            createRunAndWaitVM -vhdPath $UpdateImage -vmGeneration $vmGeneration -ConfigData $configData @ParametersToPass
+            createRunAndWaitVM -vhdPath $UpdateImage -vmGeneration $vmGeneration -configData $configData @ParametersToPass
             #endregion
 
             #region Detect results - Merge or discard.
@@ -360,129 +359,130 @@ function Invoke-WindowsImageUpdate
       
             if ($output -ne 'none')
             { 
-            #region Sysprep if changes or missing output vhd
-            if (($ChangesMade) -or (-not (Test-Path $OutputVhd)))
-            {
-                try 
-                { 
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : New Diff Disk : Creating $SysprepImage from $BaseImage"
-                    cleanupfile $SysprepImage
-                    $null = New-VHD -Path $SysprepImage -ParentPath $BaseImage -ErrorAction Stop @ParametersToPass
-                }
-                catch 
+                #region Sysprep if changes or missing output vhd
+                if (($ChangesMade) -or (-not (Test-Path $OutputVhd)))
                 {
-                    throw "error creating differencing disk $SysprepImage from $BaseImage"
-                }
+                    try 
+                    { 
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : New Diff Disk : Creating $SysprepImage from $BaseImage"
+                        cleanupFile $SysprepImage
+                        $null = New-VHD -Path $SysprepImage -ParentPath $BaseImage -ErrorAction Stop @ParametersToPass
+                    }
+                    catch 
+                    {
+                        throw "error creating differencing disk $SysprepImage from $BaseImage"
+                    }
                 
       
-                $sysprepAtStartup = {
-                    Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
-                    # Run pre-sysprep script if it exists
-                    if (Test-Path "$env:SystemDrive\PsTemp\PreSysprepScript.ps1") 
-                    {
-                        & "$env:SystemDrive\PsTemp\PreSysprepScript.ps1"
-                    }
+                    $sysprepAtStartup = {
+                        Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
+                        # Run pre-sysprep script if it exists
+                        if (Test-Path "$env:SystemDrive\PsTemp\PreSysprepScript.ps1") 
+                        {
+                            & "$env:SystemDrive\PsTemp\PreSysprepScript.ps1"
+                        }
                     
       
-                    # Remove Scedualed task
-                    Write-Verbose -Message 'SysPrep : Removeing AtStartup task' -Verbose
-                    if (Get-Command -Name Unregister-ScheduledTask -ErrorAction SilentlyContinue)
-                    {
-                        Unregister-ScheduledTask -TaskName AtStartup -Confirm:$false -Verbose
-                    }
-                    else 
-                    {
-                        schtasks.exe /delete /TN 'AtStartup' /f
-                    }
-                    $params = @{
-                        'FilePath'             = "$ENV:SystemRoot\System32\Sysprep\Sysprep.exe"
-                        'ArgumentList'         = '/generalize', '/oobe', '/shutdown'
-                        'NoNewWindow'          = $true
-                        'Wait'                 = $true
-                        'RedirectStandardOutput' = "$($env:temp)\$($exeName)-StandardOutput.txt"
-                        'RedirectStandardError' = "$($env:temp)\$($exeName)-StandardError.txt"
-                        'PassThru'             = $true
+                        # Remove Scedualed task
+                        Write-Verbose -Message 'SysPrep : Removeing AtStartup task' -Verbose
+                        if (Get-Command -Name Unregister-ScheduledTask -ErrorAction SilentlyContinue)
+                        {
+                            Unregister-ScheduledTask -TaskName AtStartup -Confirm:$false -Verbose
+                        }
+                        else 
+                        {
+                            schtasks.exe /delete /TN 'AtStartup' /f
+                        }
+                        $params = @{
+                            'FilePath'             = "$ENV:SystemRoot\System32\Sysprep\Sysprep.exe"
+                            'ArgumentList'         = '/generalize', '/oobe', '/shutdown'
+                            'NoNewWindow'          = $true
+                            'Wait'                 = $true
+                            'RedirectStandardOutput' = "$($env:temp)\$($exeName)-StandardOutput.txt"
+                            'RedirectStandardError' = "$($env:temp)\$($exeName)-StandardError.txt"
+                            'PassThru'             = $true
+                        }
+      
+                        Write-Verbose -Message 'SysPrep : starting Sysprep' -Verbose
+                        $ret = Start-Process @params
+                        Start-Sleep -Seconds 30
+                        Get-Date | Out-File c:\sysprepfail.txt
                     }
       
-                    Write-Verbose -Message 'SysPrep : starting Sysprep' -Verbose
-                    $ret = Start-Process @params
-                    Start-Sleep -Seconds 30
-                    Get-Date | Out-File c:\sysprepfail.txt
-                }
-      
-                $CopyInSysprepFilesBlock = {
-                    $null = New-Item -Path "$($driveLetter):\PsTemp" -Name AtStartup.ps1 -ItemType 'file' -Value $sysprepAtStartup -Force
-                }
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : updateting AtStartup script"
-                MountVHDandRunBlock -vhd $SysprepImage -block $CopyInSysprepFilesBlock 
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Creating temp vm and waiting"
-                createRunAndWaitVM -vhdPath $SysprepImage -vmGeneration $vmGeneration -ConfigData $configData @ParametersToPass
+                    $CopyInSysprepFilesBlock = {
+                        $null = New-Item -Path "$($driveLetter):\PsTemp" -Name AtStartup.ps1 -ItemType 'file' -Value $sysprepAtStartup -Force
+                    }
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : updateting AtStartup script"
+                    MountVHDandRunBlock -vhd $SysprepImage -block $CopyInSysprepFilesBlock 
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Creating temp vm and waiting"
+                    createRunAndWaitVM -vhdPath $SysprepImage -vmGeneration $vmGeneration -configData $configData @ParametersToPass
              
-                MountVHDandRunBlock -vhd $SysprepImage -block {
-                    if (Test-Path "$($driveLetter):\sysprepfail.txt")
-                    {
-                        throw 'Sysprep Failed!'
+                    MountVHDandRunBlock -vhd $SysprepImage -block {
+                        if (Test-Path "$($driveLetter):\sysprepfail.txt")
+                        {
+                            throw 'Sysprep Failed!'
+                        }
                     }
-                }
                 
-                $CleanupVhdBlock = {
-                    cleanupFile "$($driveLetter):\Unattend.xml"
-                    cleanupFile "$($driveLetter):\PsTemp"
-                    attrib.exe -s -h "$($driveLetter):\pagefile.sys"
-                    cleanupFile "$($driveLetter):\pagefile.sys"
-                    if ($ReduceImageSize)
-                    { 
-                        Dism.exe /image:$($driveLetter):\ /Cleanup-Image /StartComponentCleanup /ResetBase | Out-Null
-                        Get-WindowsOptionalFeature -Path "$($driveLetter):\" | Where-Object State -EQ 'Disabled' |
+                    $CleanupVhdBlock = {
+                        cleanupFile "$($driveLetter):\Unattend.xml"
+                        cleanupFile "$($driveLetter):\PsTemp"
+                        attrib.exe -s -h "$($driveLetter):\pagefile.sys"
+                        cleanupFile "$($driveLetter):\pagefile.sys"
+                        if ($ReduceImageSize)
+                        { 
+                            $null = Dism.exe /image:$($driveLetter):\ /Cleanup-Image /StartComponentCleanup /ResetBase
+                            $null = Get-WindowsOptionalFeature -Path "$($driveLetter):\" |
+                            Where-Object State -EQ -Value 'Disabled' |
                             Disable-WindowsOptionalFeature -Remove -Path "$($driveLetter):\" @ParametersToPass
+                        }
                     }
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Removing PageFile and PsTemp"
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Cleaning SxS"
+                    MountVHDandRunBlock -vhd $SysprepImage -block $CleanupVhdBlock
                 }
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Removing PageFile and PsTemp"
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Cleaning SxS"
-                MountVHDandRunBlock -vhd $SysprepImage -block $CleanupVhdBlock
-            }
-            #endregion
+                #endregion
       
-            #region export WIM
-            if (($ChangesMade) -or (-not (Test-Path $OutputWim)) -or (-not (Test-Path $OutputVhd)))
-            { 
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WIM : Creating $OutputWim"
-                cleanupFile $OutputWim
-                MountVHDandRunBlock -ReadOnly $SysprepImage {
-                    $nul = New-WindowsImage -CapturePath "$($driveLetter):" -ImagePath $OutputWim -Name "$TargetImage Updated $(Get-Date)" @ParametersToPass
+                #region export WIM
+                if (($ChangesMade) -or (-not (Test-Path $OutputWim)) -or (-not (Test-Path $OutputVhd)))
+                { 
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WIM : Creating $OutputWim"
+                    cleanupFile $OutputWim
+                    MountVHDandRunBlock -ReadOnly $SysprepImage -block {
+                        $nul = New-WindowsImage -CapturePath "$($driveLetter):" -ImagePath $OutputWim -Name "$TargetImage Updated $(Get-Date)" @ParametersToPass
+                    }
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WIM : removing $SysprepImage"
+                    cleanupFile $SysprepImage
                 }
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WIM : removing $SysprepImage"
-                cleanupFile $SysprepImage
-            }
             
-            #endregion
+                #endregion
       
-            #region create output VHD
-            if ((($ChangesMade) -or (-not (Test-Path $OutputVhd))) -and $output -eq 'both')
-            {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VHD : Creating $OutputVhd from $OutputWim"
-                cleanupFile $OutputVhd
-                $layout = 'BIOS'
-                if ($PartitionStyle -eq 'GPT')
+                #region create output VHD
+                if ((($ChangesMade) -or (-not (Test-Path $OutputVhd))) -and $output -eq 'both')
                 {
-                    $layout = 'UEFI'
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VHD : Creating $OutputVhd from $OutputWim"
+                    cleanupFile $OutputVhd
+                    $layout = 'BIOS'
+                    if ($PartitionStyle -eq 'GPT')
+                    {
+                        $layout = 'UEFI'
+                    }
+                    $dynamic = $false
+                    if ($vhdData.VhdType -eq 'Dynamic')
+                    {
+                        $dynamic = $true
+                    }
+                    $param = @{
+                        Path       = "$OutputVhd"
+                        Size       = $vhdData.Size
+                        dynamic    = $dynamic
+                        DiskLayout = $layout
+                        force      = $true
+                        SourcePath = "$OutputWim"
+                    }
+                    $nul = Convert-Wim2VHD @param @ParametersToPass 
                 }
-                $dynamic = $false
-                if ($vhdData.VhdType -eq 'Dynamic')
-                {
-                    $dynamic = $true
-                }
-                $param = @{
-                    Path       = "$OutputVhd"
-                    Size       = $vhdData.Size
-                    dynamic    = $dynamic
-                    DiskLayout = $layout
-                    force      = $true
-                    SourcePath = "$OutputWim"
-                }
-                $nul = Convert-Wim2VHD @param @ParametersToPass 
-            }
-            #endregion
+                #endregion
             }
         }
     }
