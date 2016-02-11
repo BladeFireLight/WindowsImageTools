@@ -67,7 +67,7 @@ Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
 
 # Functions to export from this module
 FunctionsToExport = 'Convert-Wim2VHD',
-                    'Initilize-VHDPartition',
+                    'Initialize-VHDPartition',
                     'Set-VHDPartition',
                     'New-UnattendXml', 
                     'New-WindowsImageToolsExample', 
