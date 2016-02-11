@@ -122,7 +122,10 @@ function Add-UpdateImage
                         Test-Path -Path $(Resolve-Path $Path)
                     }
         })]
-        [string[]]$filesToInject
+        [string[]]$filesToInject,
+
+        # Force the overwrite of existing Image
+        [switch]$force
 
     )
 
@@ -149,10 +152,10 @@ function Add-UpdateImage
         {
             Throw "$Path missing required folder structure use New-WindowsImagetoolsExample to create example"
         }
-        #if (Test-Path -Path "$Path\BaseImage\$($FriendlyName)_Base.vhdx")
-        #{
-        #    Throw "BaseImage for $FriendlyName allready exists. use Remove-WindowsImageToolsUpdateImage -Name $FriendlyName first"
-        #}
+        if ((Test-Path -Path "$Path\BaseImage\$($FriendlyName)_Base.vhdx") -and (-not ($force)))
+        {
+            Throw "BaseImage $Path\BaseImage\$($FriendlyName)_Base.vhdx allready exists. use -force to overwrite "
+        }
         
         #endregion
 
@@ -206,6 +209,10 @@ function Add-UpdateImage
         {
             $convertParm.add('filesToInject',$filesToInject)
         }
+        if ($force)
+        {
+            $convertParm.add('force',$true)
+        }
         
         Write-Verbose -Message "[$($MyInvocation.MyCommand)] : $target : Creating "
         Convert-Wim2VHD @convertParm  @ParametersToPass
@@ -216,23 +223,9 @@ function Add-UpdateImage
             
             get-service Schedule | start-service
             Start-Sleep -Seconds 20
-            #### PS cmdlets Fails in Specialize Pass
-            ### Feature check and CMD fallback (remove when win7/2008 no longer supported)
-            #if (Get-Command Register-ScheduledTask -ErrorAction SilentlyContinue)
-            #{
-            #    $Paramaters = @{
-            #        Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1'
-            #        Trigger  = New-ScheduledTaskTrigger -AtStartup
-            #        Settings = New-ScheduledTaskSettingsSet
-            #    }
-            #    $TaskObject = New-ScheduledTask @Paramaters
-            #    Register-ScheduledTask AtStartup -InputObject $TaskObject -User 'nt authority\system' -Verbose 
-            #}
-            #else 
-            #{
-               schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
-            #}
+            schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
             Start-Sleep -Seconds 20
+            
             # added test if ran on wmf2
             if (get-command restart-computer) {
                 Restart-Computer -Verbose -Force 
