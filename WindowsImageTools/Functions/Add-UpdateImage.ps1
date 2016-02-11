@@ -36,14 +36,14 @@ function Add-UpdateImage
         [Alias('FullName')] 
         $Path,
  
-        # Administrator Password for Base VHD (Default = P@ssw0rd)
+        # Friendly name for for Base VHD used for filenames and targeting in Invoke-WindwosImageUpdate
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string]
         $FriendlyName,
 
-        # Administrator Password for Base VHD (Default = P@ssw0rd)
+        # Administrator Password for Base VHD
         [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
