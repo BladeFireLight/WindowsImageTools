@@ -35,6 +35,6 @@ if ($VHDCmdlets) #only import if depended functions avalible
     . $PSScriptRoot\Functions\New-WindowsImageToolsExample.ps1
     . $PSScriptRoot\Functions\Set-UpdateConfig.ps1
     . $PSScriptRoot\Functions\Add-UpdateImage.ps1
-    . $PSScriptRoot\Functions\Update-UpdateImageWMF.ps1
+    . $PSScriptRoot\Functions\Update-WindowsImageWMF.ps1
     . $PSScriptRoot\Functions\Invoke-WindowsImageUpdate.ps1
 }

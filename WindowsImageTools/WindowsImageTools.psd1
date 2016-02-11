@@ -73,7 +73,7 @@ FunctionsToExport = 'Convert-Wim2VHD',
                     'New-WindowsImageToolsExample', 
                     'Set-UpdateConfig', 
                     'Add-UpdateImage',
-                    'Update-UpdateImageWMF',
+                    'Update-WindowsImageWMF',
                     'Invoke-WindowsImageUpdate'
 
 # Cmdlets to export from this module

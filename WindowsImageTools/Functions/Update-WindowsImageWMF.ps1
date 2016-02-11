@@ -12,7 +12,7 @@
         Update-UpdateImageWMF -Path C:\WitExample -Name Server2012R2Core
         Updates only C:\WitExample\BaseImages\Server2012R2Core_Base.vhdx
 #>
-function Update-UpdateImageWMF
+function Update-WindowsImageWMF
 {
     [CmdletBinding(SupportsShouldProcess = $true)]
     #[OutputType([String])]
