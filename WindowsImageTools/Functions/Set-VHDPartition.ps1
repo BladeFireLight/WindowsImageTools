@@ -84,7 +84,10 @@
         # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
-                    foreach ($path in $_) {Test-Path -Path $(Resolve-Path $path)}
+                    foreach ($Path in $_) 
+                    {
+                        Test-Path -Path $(Resolve-Path $Path)
+                    }
         })]
         [string[]]$filesToInject,
 
@@ -264,9 +267,12 @@
                         {
                             foreach ($filePath in $filesToInject)
                             {
-                                write-verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Adding files from $filePath"
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Adding files from $filePath"
                                 $recurse = $false
-                                if (test-path $filePath -PathType Container) { $recurse = $true}
+                                if (Test-Path $filePath -PathType Container) 
+                                {
+                                    $recurse = $true
+                                }
                                 Copy-Item -Path $filePath -Destination $WinPath -Recurse:$recurse
                             }
                         }
@@ -276,7 +282,7 @@
                         {
                             try 
                             {
-                                write-verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Adding Unattend.xml ($Unattend)"
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Adding Unattend.xml ($Unattend)"
                                 Copy-Item $Unattend -Destination "$WinPath\unattend.xml"
                             }
                             catch 
@@ -287,7 +293,7 @@
                         }
                         if ($AddPayloadForRemovedFeature)
                         {
-                            $feature = $Feature + (Get-WindowsOptionalFeature -Path $WinPath | Where-Object state -eq 'DisabledWithPayloadRemoved' ).FeatureName                            
+                            $Feature = $Feature + (Get-WindowsOptionalFeature -Path $WinPath | Where-Object -Property state -EQ -Value 'DisabledWithPayloadRemoved' ).FeatureName
                         }
 
                         If ($Feature) 
@@ -432,8 +438,9 @@
                     Get-Partition -DiskNumber $disk.number |
                     Where-Object -FilterScript {
                         $_.driveletter
-                    }  | Where-Object Type -NE 'Basic' |
-                    Where-Object Type -NE 'IFS' |
+                    }  |
+                    Where-Object Type -NE -Value 'Basic' |
+                    Where-Object Type -NE -Value 'IFS' |
                     ForEach-Object -Process {
                         $dl = "$($_.DriveLetter):"
                         $_ |

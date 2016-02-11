@@ -23,7 +23,7 @@
         [ValidateNotNullorEmpty()]
         [ValidatePattern(".\.vhdx?$")]
         [ValidateScript({
-                    if (get-FullFilePath -Path $_ |
+                    if (Get-FullFilePath -Path $_ |
                         Split-Path  |
                     Resolve-Path ) 
                     {
@@ -66,7 +66,7 @@
         [parameter(Position = 1,Mandatory = $true,
         HelpMessage = 'Enter the path to the WIM/ISO file')]
         [ValidateScript({
-                    Test-Path -Path (get-FullFilePath -Path $_ )
+                    Test-Path -Path (Get-FullFilePath -Path $_ )
         })]
         [string]$SourcePath,
         
@@ -109,16 +109,19 @@
                     Test-Path -Path $(Resolve-Path $_)
         })]
         [string[]]$Package,
-                # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
+        # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
-                    foreach ($path in $_) {Test-Path -Path $(Resolve-Path $path)}
+                    foreach ($Path in $_) 
+                    {
+                        Test-Path -Path $(Resolve-Path $Path)
+                    }
         })]
         [string[]]$filesToInject
 
     )
-    $Path = $Path | get-FullFilePath 
-    $SourcePath = $SourcePath | get-FullFilePath
+    $Path = $Path | Get-FullFilePath 
+    $SourcePath = $SourcePath | Get-FullFilePath
 
     $VhdxFileName = Split-Path -Leaf -Path $Path
 
@@ -138,9 +141,9 @@
             }
         
             $InitializeVHDPartitionParam = @{
-                'Size'       = $Size
-                'Path'       = $Path
-                'force'      = $true
+                'Size'     = $Size
+                'Path'     = $Path
+                'force'    = $true
                 'DiskLayout' = $DiskLayout
             }
             if ($RecoveryTools)
@@ -157,10 +160,10 @@
             }
             $SetVHDPartitionParam = @{
                 'SourcePath' = $SourcePath
-                'Path'       = $Path
-                'Index'      = $Index
-                'force'      = $true
-                'Confirm'    = $false
+                'Path'     = $Path
+                'Index'    = $Index
+                'force'    = $true
+                'Confirm'  = $false
             }
             if ($Unattend)
             {

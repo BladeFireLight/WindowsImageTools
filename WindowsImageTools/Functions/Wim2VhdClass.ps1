@@ -1,4 +1,5 @@
-        $code      = @"
+#requires -Version 2
+$code      = @"
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -1634,4 +1635,4 @@ VirtualHardDisk
 #endregion VHD Interop
 }
 "@
-Add-Type -TypeDefinition $code -ReferencedAssemblies "System.Xml","System.Linq","System.Xml.Linq"
+Add-Type -TypeDefinition $code -ReferencedAssemblies 'System.Xml', 'System.Linq', 'System.Xml.Linq'

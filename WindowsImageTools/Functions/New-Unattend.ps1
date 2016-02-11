@@ -705,7 +705,7 @@ function New-UnattendXml
         {
             if ($FirstBootScriptPath)
             {
-                Write-Verbose "[$($MyInvocation.MyCommand)] Adding PowerShell script to First boot command"
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding PowerShell script to First boot command"
                 $FirstBootExecuteCommand = @(@{
                         Description = 'PowerShell First boot script'
                         order       = 1
@@ -715,7 +715,7 @@ function New-UnattendXml
      
             if ($enableAdministrator)
             {
-                Write-Verbose "[$($MyInvocation.MyCommand)] Enabeling Administrator via First boot command"
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Enabeling Administrator via First boot command"
                 if ($FirstBootExecuteCommand)
                 {
                     $FirstBootExecuteCommand = $FirstBootExecuteCommand + @{
@@ -750,7 +750,7 @@ function New-UnattendXml
                     {
                         if (($FirstBootExecuteCommand -ne $null -or $FirstBootExecuteCommand.Length -gt 0) -and $component.'processorArchitecture' -eq 'x86') 
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding first boot command(s)"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding first boot command(s)"
                             $commandOrder = 1
                             $runSynchronousElement = $component.AppendChild($unattendXml.CreateElement('RunSynchronous','urn:schemas-microsoft-com:unattend'))
                             foreach ($synchronousCommand in ($FirstBootExecuteCommand | Sort-Object -Property {
@@ -773,13 +773,13 @@ function New-UnattendXml
                     {
                         if ($ComputerName) 
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding custom computername for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding custom computername for $($component.'processorArchitecture') Architecture"
                             $computerNameElement = $component.AppendChild($unattendXml.CreateElement('ComputerName','urn:schemas-microsoft-com:unattend'))
                             $computerNameTextNode = $computerNameElement.AppendChild($unattendXml.CreateTextNode($ComputerName))
                         }
                         if ($ProductKey) 
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Product key for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Product key for $($component.'processorArchitecture') Architecture"
                             $productKeyElement = $component.AppendChild($unattendXml.CreateElement('ProductKey','urn:schemas-microsoft-com:unattend'))
                             $productKeyTextNode = $productKeyElement.AppendChild($unattendXml.CreateTextNode($ProductKey.ToUpper()))
                         }
@@ -789,22 +789,22 @@ function New-UnattendXml
                     {
                         if ($InputLocale)
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Input Locale for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Input Locale for $($component.'processorArchitecture') Architecture"
                             $component.InputLocale = $InputLocale
                         }
                         if ($SystemLocale)
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding System Locale for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding System Locale for $($component.'processorArchitecture') Architecture"
                             $component.SystemLocale = $SystemLocale
                         }
                         if ($UILanguage)
                         { 
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding UI Language for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding UI Language for $($component.'processorArchitecture') Architecture"
                             $component.UILanguage = $UILanguage
                         }
                         if ($UserLocale)
                         { 
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding User Locale for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding User Locale for $($component.'processorArchitecture') Architecture"
                             $component.UserLocale = $UserLocale
                         }
                     }
@@ -813,25 +813,25 @@ function New-UnattendXml
                     {
                         if ($TimeZone)
                         { 
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Time Zone for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Time Zone for $($component.'processorArchitecture') Architecture"
                             $component.TimeZone = $TimeZone
                         }
-                        Write-Verbose "[$($MyInvocation.MyCommand)] Adding Administrator Passwords for $($component.'processorArchitecture') Architecture"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Administrator Passwords for $($component.'processorArchitecture') Architecture"
                         $concatenatedPassword = '{0}AdministratorPassword' -f $AdminCredential.GetNetworkCredential().password
                         $component.UserAccounts.AdministratorPassword.Value = [System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($concatenatedPassword))
                         if ($RegisteredOrganization)
                         { 
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Registred Organization for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Registred Organization for $($component.'processorArchitecture') Architecture"
                             $component.RegisteredOrganization = $RegisteredOrganization
                         }
                         if ($RegisteredOwner)
                         { 
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Registered Owner for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Registered Owner for $($component.'processorArchitecture') Architecture"
                             $component.RegisteredOwner = $RegisteredOwner
                         }
                         if ($UserAccount)
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding User Account(s) for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding User Account(s) for $($component.'processorArchitecture') Architecture"
                             $UserAccountsElement = $component.UserAccounts
                             $LocalAccountsElement = $UserAccountsElement.AppendChild($unattendXml.CreateElement('LocalAccounts','urn:schemas-microsoft-com:unattend'))
                             foreach ($Account in $UserAccount) 
@@ -856,7 +856,7 @@ function New-UnattendXml
                         
                         if ($LogonCount)
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Autologon for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Autologon for $($component.'processorArchitecture') Architecture"
                             $autoLogonElement = $component.AppendChild($unattendXml.CreateElement('AutoLogon','urn:schemas-microsoft-com:unattend'))
                             $autoLogonPasswordElement = $autoLogonElement.AppendChild($unattendXml.CreateElement('Password','urn:schemas-microsoft-com:unattend'))
                             $autoLogonPasswordValueElement = $autoLogonPasswordElement.AppendChild($unattendXml.CreateElement('Value','urn:schemas-microsoft-com:unattend'))
@@ -872,7 +872,7 @@ function New-UnattendXml
 
                         if (($FirstLogonExecuteCommand -ne $null -or $FirstBootExecuteCommand.Length -gt 0) -and $component.'processorArchitecture' -eq 'x86')
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding First Logon Commands"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding First Logon Commands"
                             $commandOrder = 1
                             $FirstLogonCommandsElement = $component.AppendChild($unattendXml.CreateElement('FirstLogonCommands','urn:schemas-microsoft-com:unattend'))
                             foreach ($command in ($FirstLogonExecuteCommand | Sort-Object -Property {
@@ -895,7 +895,7 @@ function New-UnattendXml
                         }
                         if (($EveryLogonExecuteCommand -ne $null -or $FirstBootExecuteCommand.Length -gt 0) -and $component.'processorArchitecture' -eq 'x86')
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] Adding Every-Logon Commands"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Every-Logon Commands"
                             $commandOrder = 1
                             $FirstLogonCommandsElement = $component.AppendChild($unattendXml.CreateElement('LogonCommands','urn:schemas-microsoft-com:unattend'))
                             foreach ($command in ($EveryLogonExecuteCommand | Sort-Object -Property {
@@ -920,7 +920,7 @@ function New-UnattendXml
                 } #end foreach setting.Component
             } #end foreach unattendXml.Unattend.Settings
 
-            Write-Verbose "[$($MyInvocation.MyCommand)] Saving file"
+            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Saving file"
  
             $unattendXml.Save($Path)
             Get-ChildItem $Path

@@ -46,7 +46,11 @@ function Update-UpdateImageWMF
 
         # Use WMF 4 instead of the default WMF 5
         [switch]
-        $Wmf4
+        $Wmf4,
+
+        # Use WMF5 Production Preview instead of the default WMF 5 (overrides -vmf4)
+        [switch]
+        $Wmf5pp
 
     )
 
@@ -87,8 +91,7 @@ function Update-UpdateImageWMF
             #endregion
 
             #region Update Resource Folder
-        
-            # download WMF
+            ## download WMF
             $wmfPath = "$Path\Resource\WMF\5"
             $wmfDownloadUrl = 'http://aka.ms/wmf5latest'
         
@@ -96,6 +99,11 @@ function Update-UpdateImageWMF
             {
                 $wmfPath = "$Path\Resource\WMF\4"
                 $wmfDownloadUrl = 'http://www.microsoft.com/en-us/download/details.aspx?id=40855'
+            }
+            if ($Wmf5pp)
+            {
+                $wmfPath = "$Path\Resource\WMF\5pp"
+                $wmfDownloadUrl = 'https://www.microsoft.com/en-us/download/details.aspx?id=48729'
             }
             try
             { 
@@ -134,7 +142,7 @@ function Update-UpdateImageWMF
             }
         
 
-            # download .NET 4.6
+            ## download .NET 4.6
             try
             {
                 if (-not (Test-Path -Path $Path\Resource\dotNET)) 
@@ -154,12 +162,12 @@ function Update-UpdateImageWMF
             {
                 if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename"))
                 {
-                    throw "Unable to downlaod .net 4.6 to $Path\Resource\dotNET. please download .net 4.6 manualy "
+                    throw "Unable to downlaod .net 4.6 to $Path\Resource\dotNET\$filename. please download .net 4.6 manualy "
                 }
             }
-
             #endregion
        
+            #region Install .NET
             $dotNetInstallAtStartup = {
                 Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
                 $currentDotNetVersionv = (Get-ChildItem -Path 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP' -Recurse |
@@ -223,8 +231,10 @@ function Update-UpdateImageWMF
             $ConfigData = Get-UpdateConfig -Path $Path
             
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : .NET : Creating temp vm and waiting "
-            createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -ConfigData $ConfigData @ParametersToPass
+            createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -configData $ConfigData @ParametersToPass
+            #endregion
 
+            #region Install WMF
             $verifyWmfVersion4 = {
                 Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
                 if ($PSVersionTable.PSVersion.Major -ge 4)
@@ -275,14 +285,15 @@ function Update-UpdateImageWMF
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WMF : Applying WMF to $target and Updating AtStartup script"
             MountVHDandRunBlock -vhd $target -block $addWmfFilesBlock
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WMF : creating temp VM to finalize install on $target"
-            createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -ConfigData $ConfigData @ParametersToPass
+            createRunAndWaitVM -vhdPath $target -vmGeneration $vmGeneration -configData $ConfigData @ParametersToPass
+            #endregion
 
+            #region check for changes and merge or delete
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WMF : Checking if changes made"
             $checkresultsBlock = {
                 Test-Path -Path "$($driveLetter):\PsTemp\ChangesMade.txt"
                 if (Test-Path -Path "$($driveLetter):\PsTemp\ChangesMade.txt")
-                { 
-                    Remove-Item -Path "$($driveLetter):\PsTemp\ChangesMade.txt" -ErrorAction SilentlyContinue
+                {
                     Remove-Item -Path "$($driveLetter):\PsTemp\AtStartup.ps1" -ErrorAction SilentlyContinue
                 }
             }
@@ -297,6 +308,7 @@ function Update-UpdateImageWMF
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WMF : No Changes : Discarding $target"
                 Remove-Item $target
             }
+            #endregion
         }
     }
 }

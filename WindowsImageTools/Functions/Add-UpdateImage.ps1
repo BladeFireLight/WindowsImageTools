@@ -86,7 +86,7 @@ function Add-UpdateImage
         [parameter(Position = 1,Mandatory = $true,
         HelpMessage = 'Enter the path to the WIM/ISO file')]
         [ValidateScript({
-                    Test-Path -Path (get-FullFilePath -Path $_ )
+                    Test-Path -Path (Get-FullFilePath -Path $_ )
         })]
         [string]$SourcePath,
         
@@ -156,14 +156,12 @@ function Add-UpdateImage
         {
             Throw "BaseImage $Path\BaseImage\$($FriendlyName)_Base.vhdx allready exists. use -force to overwrite "
         }
-        
         #endregion
 
         #region Unattend
-        
         $unattentParam = @{
             FirstBootScriptPath = 'c:\pstemp\FirstBoot.ps1'
-            AdminCredential = $AdminCredential
+            AdminCredential     = $AdminCredential
             EnableAdministrator = $true
         }
         if ($ProductKey) 
@@ -172,12 +170,10 @@ function Add-UpdateImage
         }
         
         $UnattendPath = New-UnattendXml @unattentParam @ParametersToPass
-
         #endregion 
 
                 
         #region Create Base VHD
-
         $convertParm = @{
             DiskLayout = $DiskLayout
             SourcePath = $SourcePath
@@ -218,21 +214,23 @@ function Add-UpdateImage
         Convert-Wim2VHD @convertParm  @ParametersToPass
         #endregion
 
+        #region add firstboot script
         $FirstBootContent = {
             Start-Transcript -Path $PSScriptRoot\FirstBoot.log
             
-            get-service Schedule | start-service
+            Get-Service Schedule | Start-Service
             Start-Sleep -Seconds 20
             schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
             Start-Sleep -Seconds 20
             
-            # added test if ran on wmf2
-            if (get-command restart-computer) {
-                Restart-Computer -Verbose -Force 
+            ## Restart-Computer not present in Win7/2008. remove check when not supported
+            if (Get-Command restart-computer) 
+            {
+                Restart-Computer -Verbose -Force
             }
             else
             {
-                shutdown.exe /r /t 0 
+                shutdown.exe /r /t 0
             }
             Stop-Transcript
         }
@@ -248,5 +246,6 @@ function Add-UpdateImage
         Write-Verbose -Message "[$($MyInvocation.MyCommand)] : $target : Adding First Boot Script "
         MountVHDandRunBlock -vhd $target -block $AddScriptFilesBlock @ParametersToPass
         Write-Verbose -Message "[$($MyInvocation.MyCommand)] : $target : Finished "
+        #endregion
     }
 }

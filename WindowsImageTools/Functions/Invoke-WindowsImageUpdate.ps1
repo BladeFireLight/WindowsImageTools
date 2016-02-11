@@ -83,7 +83,7 @@ function Invoke-WindowsImageUpdate
             if (-not (Test-Path -Path "$Path\BaseImage\$($testpath)_base.vhdx" ))
             
             {
-                throw "$Path\BaseImage\$($testpath)_base.vhdx" 
+                throw "$Path\BaseImage\$($testpath)_base.vhdx"
             }
         }
         $ImageList = $ImageName
@@ -126,8 +126,7 @@ function Invoke-WindowsImageUpdate
             try 
             {
                 # if nuget needs updating this prompts 
-                # To-Do find a way to silenty update nuget
-                # cleanupFile $Path\Resource\Modules\PSWindowsUpdate
+                ### To-Do find a way to silenty update nuget ###
                 $null = Save-Module -Name PSWindowsUpdate -Path $Path\Resource\Modules -Force -ErrorAction Stop @ParametersToPass
             }
             catch 
@@ -166,7 +165,6 @@ function Invoke-WindowsImageUpdate
             $configData = Get-UpdateConfig -Path $Path
 
             $vhdData = Get-VHD -Path $BaseImage
-
             #endregion
 
             #region create Diff disk
@@ -268,8 +266,10 @@ function Invoke-WindowsImageUpdate
                         }
                     }
                     Write-Verbose 'Shuting down' -Verbose
+                    ## remove self so as to not triger updates if manual mantinance required
+                    Remove-Item "$env:SystemDrive\PsTemp\AtStartup.ps1"
                     Stop-Transcript
-                    Stop-Computer -Force
+                    Stop-Computer 
                 }
  
                 # Apply all non-language updates

@@ -28,7 +28,7 @@ function Initialize-VHDPartition
         [ValidateNotNullorEmpty()]
         [ValidatePattern(".\.vhdx?$")]
         [ValidateScript({
-                    if (get-FullFilePath -Path $_ |
+                    if (Get-FullFilePath -Path $_ |
                         Split-Path  |
                     Resolve-Path ) 
                     {
@@ -126,7 +126,7 @@ function Initialize-VHDPartition
                 $fileName = Split-Path -Leaf -Path $Path
     
                 # make paths absolute
-                $Path = $Path | get-FullFilePath
+                $Path = $Path | Get-FullFilePath
                 #endregion
  
                 # if we get this far it's ok to delete existing files

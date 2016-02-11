@@ -233,7 +233,8 @@ function MountVHDandRunBlock
     if($ReadOnly) 
     {
         $virtualDisk = Mount-VHD $vhd -ReadOnly -Passthru
-    } else 
+    }
+    else 
     {
         $virtualDisk = Mount-VHD $vhd -Passthru
     }
@@ -275,7 +276,7 @@ function createRunAndWaitVM
     
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
-    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(get-date)"  
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(Get-Date)"  
     $null = New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop
 
     If($configData.vLan -ne 0) 
@@ -303,7 +304,7 @@ function createRunAndWaitVM
     # Clean up the VM
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Stoped"
     Remove-VM $vmName -Force
-    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted at $(get-date)"
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted at $(Get-Date)"
 }
 
 function cleanupFile
