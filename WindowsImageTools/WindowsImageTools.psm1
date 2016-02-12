@@ -37,4 +37,7 @@ if ($VHDCmdlets) #only import if depended functions avalible
     . $PSScriptRoot\Functions\Add-UpdateImage.ps1
     . $PSScriptRoot\Functions\Update-WindowsImageWMF.ps1
     . $PSScriptRoot\Functions\Invoke-WindowsImageUpdate.ps1
+    . $PSScriptRoot\Functions\Mount-VhdAndRunBlock.ps1
+    . $PSScriptRoot\Functions\Invoke-CreateVmRunAndWait.ps1
+    . $PSScriptRoot\Functions\Get-VhdPartitionStyle.ps1
 }

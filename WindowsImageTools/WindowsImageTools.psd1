@@ -74,7 +74,10 @@ FunctionsToExport = 'Convert-Wim2VHD',
                     'Set-UpdateConfig', 
                     'Add-UpdateImage',
                     'Update-WindowsImageWMF',
-                    'Invoke-WindowsImageUpdate'
+                    'Invoke-WindowsImageUpdate',
+                    'Invoke-CreateVmRunAndWait',
+                    'Mount-VhdAndRunBlock',
+                    'Get-VhdPartitionStyle'
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'
