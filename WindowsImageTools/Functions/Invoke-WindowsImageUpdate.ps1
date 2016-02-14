@@ -113,7 +113,7 @@ function Invoke-WindowsImageUpdate
     {
         if (-not (Test-Path -Path $Path\Resource\Modules)) 
         {
-            mkdir -Path $Path\Resource\Modules
+            $null = mkdir -Path $Path\Resource\Modules
         }
         if (-not (Get-Command Save-Module))
         {
