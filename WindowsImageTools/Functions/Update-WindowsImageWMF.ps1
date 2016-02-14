@@ -190,20 +190,45 @@ function Update-WindowsImageWMF
                     {
                         Write-Error -Message '.Net 4.6 :  install attempted but failed!'
                         Start-Sleep -Seconds 30
-                        Stop-Computer -Force
+                        # Stop-Computer does not have -force in 2008/win7 WMF2
+                        if ((get-command Stop-Computer -Syntax) -like "*[force]*") 
+                        {
+                            Stop-Computer -Verbose -Force
+                        }
+                        else
+                        {
+                            shutdown.exe /s /t 0 /f
+                        }
+                        Stop-Transcript
                     }
                 }
                 else 
                 {
                     Get-Date | Out-File -FilePath c:\PsTemp\dotNET\Verified.txt
                     Write-Verbose -Message '.Net 4.6 : detected shuting down' -Verbose
+                    # Stop-Computer does not have -force in 2008/win7 WMF2
+                    if ((get-command Stop-Computer -Syntax) -like "*[force]*") 
+                    {
+                        Stop-Computer -Verbose -Force
+                    }
+                    else
+                    {
+                        shutdown.exe /s /t 0 /f
+                    }
                     Stop-Transcript
-                    Stop-Computer -Force
                 }
                 Start-Sleep -Seconds 30
                 Write-Verbose -Message 'Rebooting computer' -Verbose
+                # Restart-Computer does not have -force in 2008/win7 WMF2
+                if ((get-command Restart-Computer -Syntax) -like "*[force]*") 
+                {
+                    Restart-Computer -Verbose -Force
+                }
+                else
+                {
+                    shutdown.exe /r /t 0 /f
+                }
                 Stop-Transcript
-                Restart-Computer -Force
             }
 
             $AddDotNetFilesBlock = {

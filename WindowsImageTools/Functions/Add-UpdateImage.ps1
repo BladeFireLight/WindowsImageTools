@@ -223,14 +223,14 @@ function Add-UpdateImage
             schtasks.exe /Create /TN 'AtStartup' /RU 'SYSTEM' /SC ONSTART /TR "'%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -NoProfile -ExecutionPolicy Bypass -File C:\PsTemp\AtStartup.ps1"
             Start-Sleep -Seconds 20
             
-            ## Restart-Computer not present in Win7/2008. remove check when not supported
-            if (Get-Command restart-computer) 
+            # Restart-Computer does not have -force in 2008/win7 WMF2
+            if ((get-command Restart-Computer -Syntax) -like "*[force]*") 
             {
                 Restart-Computer -Verbose -Force
             }
             else
             {
-                shutdown.exe /r /t 0
+                shutdown.exe /r /t 0 /f
             }
             Stop-Transcript
         }
