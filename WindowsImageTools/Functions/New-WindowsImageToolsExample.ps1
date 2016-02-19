@@ -1,4 +1,5 @@
-﻿<#
+﻿#requires -Version 3 -Modules BitsTransfer, PowerShellGet, ScheduledTasks
+<#
         .Synopsis
         Create folders and script examples on the use of Windows Image Tools
         .DESCRIPTION
@@ -109,7 +110,8 @@ function New-WindowsImageToolsExample
             }
         }
         $BasicExampleContent = {
-            Write-Warning "You need to edit the configuration in $PSCommandPath and then commend out or delete line 1" ; break
+            Write-Warning -Message "You need to edit the configuration in $PSCommandPath and then commend out or delete line 1" 
+            break
             # Delete or comment out the above line
             Write-Verbose -Message 'This example creates a no frils updated images of various windows versions' -Verbose
             Write-Verbose -Message 'Win7 if found will be updated to WMF4' -Verbose
@@ -263,7 +265,8 @@ function New-WindowsImageToolsExample
             Invoke-WindowsImageUpdate -Path $PSScriptRoot -verbose
         }
         $AdvancedExampleContent = {
-            Write-Warning "You need to edit the configuration in $PSCommandPath and then commend out or delete line 1" ; break
+            Write-Warning -Message "You need to edit the configuration in $PSCommandPath and then commend out or delete line 1" 
+            break
             # Delete or comment out the above line
             Import-Module -Name WindowsImageTools -Force
 
@@ -310,15 +313,131 @@ function New-WindowsImageToolsExample
             $action2 = New-ScheduledTaskAction -ID 2 -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument " -Command `"& {Start-Transcript $env:ALLUSERSPROFILE\WITUpdate.log -Append; import-module WindowsImageTools -erroraction stop; Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_Core -ReduceImageSize ; Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_source -output WIM }`"" 
               
             $Paramaters = @{
-              Action   = $action1, $action2
-              Trigger  = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Wednesday -At 11pm
-              Settings = New-ScheduledTaskSettingsSet
+                Action   = $action1, $action2
+                Trigger  = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Wednesday -At 11pm
+                Settings = New-ScheduledTaskSettingsSet
             }
             $Name = $PSScriptRoot.Replace('\','-').Replace(':','')
             $TaskObject = New-ScheduledTask @Paramaters 
             $null = Register-ScheduledTask -InputObject $TaskObject -User 'nt authority\system' -Verbose -TaskName "Advanced-ImageUpdate-for-$Name"
 
             #endregion
+        }
+        $ConvertExampleContent = {
+            Import-Module -Name $PSScriptRoot\WindowsImageTools -Force
+
+            # Example of WIM2VHD conversion
+
+            #Initialize-VHDPartition -Path g:\temp\temp1.vhdx -Dynamic -Verbose -DiskLayout BIOS -RecoveryImage -force -Passthru |  
+            #    Set-VHDPartition -SourcePath C:\iso\Win7ent_x64.ISO -Index 1  -Confirm:$false -force -Verbose 
+
+            #Convert-Wim2VHD -Path g:\temp\test2.vhdx -SourcePath C:\iso\Server2012R2.ISO -DiskLayout UEFI -Dynamic -Index 1 -Size 60GB  -Force -Verbose -RecoveryImage
+            $commonParams = @{
+                'Dynamic'     = $true
+                'Verbose'     = $true
+                'Force'       = $true
+                'Unattend'    = (New-UnattendXml -AdminPassword 'LocalP@ssword' -LogonCount  1)
+                'filesToInject' = 'g:\temp\inject\pstemp\'
+            }
+
+            $vhds = @(
+                @{
+                    'SourcePath' = 'C:\iso\server_2016_preview_3.iso'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 1
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2016_CoreStd.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\server_2016_preview_3.iso'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 2
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2016_GUIStd.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\server_2016_preview_3.iso'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 3
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2016_CoreDC.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\server_2016_preview_3.iso'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 4
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2016_GUIDC.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\Svr_2012_R2.ISO'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 1
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2012r2_CoreStd.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\Svr_2012_R2.ISO'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 2
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2012r2_GUIStd.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\Svr_2012_R2.ISO'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 3
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2012r2_CoreDC.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\Svr_2012_R2.ISO'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 4
+                    'size'     = 40Gb
+                    'Path'     = 'G:\temp\2012r2_GUIDC.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\Win10ent_x64.ISO'
+                    'DiskLayout' = 'UEFI'
+                    'index'    = 1
+                    'size'     = 40GB
+                    'Path'     = 'G:\temp\Win10E_x64_UEFI.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\iso\Win10ent_x64.ISO'
+                    'DiskLayout' = 'BIOS'
+                    'index'    = 1
+                    'size'     = 40GB
+                    'Path'     = 'G:\temp\Win10E_x64_BIOS.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\ISO\Win10ent_x86.ISO'
+                    'DiskLayout' = 'BIOS'
+                    'index'    = 1
+                    'size'     = 40GB
+                    'Path'     = 'G:\temp\Win10E_x86_BIOS.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\ISO\Win7ent_x64.ISO'
+                    'DiskLayout' = 'BIOS'
+                    'index'    = 1
+                    'size'     = 40GB
+                    'Path'     = 'G:\temp\Win7ent_x64_BIOS.vhdx'
+                }, 
+                @{
+                    'SourcePath' = 'C:\ISO\Win7ent_x86.ISO'
+                    'DiskLayout' = 'BIOS'
+                    'Index'    = 1
+                    'size'     = 40GB
+                    'Path'     = 'G:\temp\Win7ent_x86_BIOS.vhdx'
+                }
+            )
+
+            foreach ($VhdParms in $vhds)
+            {
+                Convert-Wim2VHD @VhdParms @commonParams #-WhatIf
+            }
         }
         #endregion
 
@@ -340,10 +459,11 @@ function New-WindowsImageToolsExample
         #region create Files
         try 
         {      
-            $null =  Set-UpdateConfig -Path $Path 
-            $null =  New-Item -Path $Path -Name BasicExample.ps1 -ItemType 'file' -Value $BasicExampleContent -Force
-            $null =  New-Item -Path $Path -Name AdvancedExample.ps1 -ItemType 'file' -Value $AdvancedExampleContent -Force
-            $null =  New-Item -Path $Path -Name DownloadEvalIso.ps1 -ItemType 'file' -Value $DownloadEvalIsoContent -Force
+            $null = Set-UpdateConfig -Path $Path 
+            $null = New-Item -Path $Path -Name BasicUpdateExample.ps1 -ItemType 'file' -Value $BasicExampleContent -Force
+            $null = New-Item -Path $Path -Name AdvancedUpdateExample.ps1 -ItemType 'file' -Value $AdvancedExampleContent -Force
+            $null = New-Item -Path $Path -Name DownloadEvalIso.ps1 -ItemType 'file' -Value $DownloadEvalIsoContent -Force
+            $null = New-Item -Path $Path -Name BasicConvertExample.ps1 -ItemType 'file' -Value $ConvertExampleContent -Force
         }
         catch 
         {

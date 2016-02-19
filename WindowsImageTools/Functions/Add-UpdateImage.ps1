@@ -1,19 +1,19 @@
 ﻿function Add-UpdateImage
 {
-<#
-        .Synopsis
-        Add a Windows Image to a Windows Image Tools Update Directory
-        .DESCRIPTION
-        This command will convert a .ISO or .WIM into a VHD populated with an unattend.xml and first boot script
-        .EXAMPLE
-        Add-WitUpdateImage -Path c:\WitTools
-        .EXAMPLE
-        Another example of how to use this cmdlet
-        .INPUTS
-        System.IO.DirectoryInfo
-        .OUTPUTS
-        Custom object containing String -Path and String -Name
-#>
+    <#
+            .Synopsis
+            Add a Windows Image to a Windows Image Tools Update Directory
+            .DESCRIPTION
+            This command will convert a .ISO or .WIM into a VHD populated with an unattend.xml and first boot script
+            .EXAMPLE
+            Add-WitUpdateImage -Path c:\WitTools
+            .EXAMPLE
+            Another example of how to use this cmdlet
+            .INPUTS
+            System.IO.DirectoryInfo
+            .OUTPUTS
+            Custom object containing String -Path and String -Name
+    #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     #[OutputType([String])]
     Param
@@ -224,7 +224,7 @@
             Start-Sleep -Seconds 20
             
             # Restart-Computer does not have -force in 2008/win7 WMF2
-            if ((get-command Restart-Computer -Syntax) -like "*[force]*") 
+            if ((Get-Command Restart-Computer -Syntax) -like '*[force]*') 
             {
                 Restart-Computer -Verbose -Force
             }

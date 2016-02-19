@@ -6,18 +6,18 @@ function New-UnattendXml
             .Synopsis
             Create a new Unattend.xml 
             .DESCRIPTION
-            This Commadn Creates a new Unattend.xml that skips any prompts, and sets the administrator password
+            This Command Creates a new Unattend.xml that skips any prompts, and sets the administrator password
             Has options for: Adding user accounts
-                             Auto logon a set number of times
-                             Set the Computer Name
-                             First Boot or First Logon powersrhell script
-                             Product Key
-                             TimeZone
-                             Input, System and User Locals
-                             UI Language
-                             Registered Owner and Orginization
-                             First Boot, First Logon and Every Logon Commands
-                             Enable Administrator account without autologon (client OS)
+            Auto logon a set number of times
+            Set the Computer Name
+            First Boot or First Logon powersrhell script
+            Product Key
+            TimeZone
+            Input, System and User Locals
+            UI Language
+            Registered Owner and Orginization
+            First Boot, First Logon and Every Logon Commands
+            Enable Administrator account without autologon (client OS)
 
             If no Path is provided a the file will be created in a temp folder and the path returned.
             .EXAMPLE
@@ -729,7 +729,7 @@ function New-UnattendXml
                 $FirstLogonExecuteCommand = @(@{
                         Description = 'PowerShell First logon script'
                         order       = 1
-                        CommandLine        = "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$FirstBootScriptPath`""
+                        CommandLine = "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$FirstBootScriptPath`""
                 })
             }
      

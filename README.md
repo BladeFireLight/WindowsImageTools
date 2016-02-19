@@ -2,7 +2,7 @@
 PowerShell Tools for Generation 2 Images
 
 ## Synopsis
-This module provides tools to quickly convert a WIM into  bootable VHD/VHDX
+This module provides tools to quickly convert a WIM into bookable VHD(x) and Create fully updated WIM/VHD(x)
 
 ## Description
 Creating Patched Images or just a baseline VHDX from a CD has in the past required MDT to deploy to a machine, patch and then capture the images.
@@ -21,6 +21,9 @@ Jeffrey Hicks wrote two great articles on the process of creating a Gen2 VHDX an
 * http://www.altaro.com/hyper-v/creating-generation-2-disk-powershell/
 * http://www.altaro.com/hyper-v/customizing-generation-2-vhdx/
 
+And Benjamin Armstrong created a script for creating patched vhdx files
+* https://blogs.msdn.microsoft.com/virtual_pc_guy/2015/06/16/script-image-factory-for-hyper-v/
+
 These are the starting point for this module. 
 
 ### Requirements
@@ -31,7 +34,78 @@ On windows 10 the There are two features recommended
 * Microsoft-Hyper-V-Services
 * Microsoft-Hyper-V-Management-PowerShell
 
-## Functions (I'm bad a naming, so i'm open to better names)
+## Functions (I'm bad a naming, so I'm open to better names)
+
+```
+NAME
+    Add-UpdateImage
+    
+SYNOPSIS
+    Add a Windows Image to a Windows Image Tools Update Directory
+    
+    
+SYNTAX
+    Add-UpdateImage -Path <Object> -FriendlyName <String> -AdminCredential 
+    <PSCredential> [-ProductKey <String>] [-Size <UInt64>] [-Dynamic] -DiskLayout 
+    <String> [-SourcePath] <String> [-Index <Int32>] [-AddPayloadForRemovedFeature] 
+    [-Feature <String[]>] [-Driver <String[]>] [-Package <String[]>] [-filesToInject 
+    <String[]>] [-force] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    
+DESCRIPTION
+    This command will convert a .ISO or .WIM into a VHD populated with an unattend.xml 
+    and first boot script
+```
+
+```
+NAME
+    Convert-Wim2VHD
+    
+SYNOPSIS
+    Create a VHDX and populate it from a WIM
+    
+SYNTAX
+    Convert-Wim2VHD [-Path] <String> [-Size <UInt64>] [-Dynamic] -DiskLayout <String> 
+    [-RecoveryTools] [-RecoveryImage] [-force] [-SourcePath] <String> [-Index <Int32>] 
+    [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-Driver <String[]>] 
+    [-AddPayloadForRemovedFeature] [-Package <String[]>] [-filesToInject <String[]>] 
+    [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+DESCRIPTION
+    This command will create a VHD or VHDX formated for UEFI (Gen 2/GPT) or BIOS (Gen 
+    1/MBR)
+    You must supply the path to the VHD/VHDX file and a valid WIM/ISO. You should also
+    include the index number for the Windows Edition to install.
+```
+
+```
+NAME
+    Get-UpdateConfig
+    
+SYNOPSIS
+    Get the Windows Image Tools Update Config used for creating the temp VM
+    
+SYNTAX
+    Get-UpdateConfig [-Path] <Object> [<CommonParameters>]
+    
+DESCRIPTION
+    This command will Get the config used by Invoke-WindowsImageUpdate to build a VM 
+    and update Windows Images
+```
+
+```
+NAME
+    Get-VhdPartitionStyle
+    
+SYNOPSIS
+    Gets partition style of a VHD(x)
+    
+SYNTAX
+    Get-VhdPartitionStyle [-vhd] <String> [<CommonParameters>]
+    
+DESCRIPTION
+    Returns the partition Style of the provided VHD(x) ei. GPT or MBR
+```
 
 ```
 NAME
@@ -40,295 +114,190 @@ NAME
 SYNOPSIS
     Create VHD(X) with partitions needed to be bootable
     
-    
 SYNTAX
-    Initialize-VHDPartition [-Path] <String> [-Size <UInt64>] [-Dynamic] -DiskLayout <String> 
-    [-Passthru] [-RecoveryTools] [-RecoveryImage] [-force] [-WhatIf] [-Confirm] 
-    [<CommonParameters>]
-    
+    Initialize-VHDPartition [-Path] <String> [-Size <UInt64>] [-Dynamic] -DiskLayout 
+    <String> [-Passthru] [-RecoveryTools] [-RecoveryImage] [-force] [-WhatIf] 
+    [-Confirm] [<CommonParameters>]
     
 DESCRIPTION
     This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFO or 
     WindowsToGo. 
     
     To create a recovery partitions use -RecoveryTools and -RecoveryImage
-    
+```
 
-PARAMETERS
-    -Path <String>
-        Path to the new VHDX file (Must end in .vhdx)
-        
-    -Size <UInt64>
-        Size in Bytes (Default 40B)
-        
-    -Dynamic [<SwitchParameter>]
-        Create Dynamic disk
-        
-    -DiskLayout <String>
-        Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
-        Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
-        Windows To Go images will boot in UEFI or BIOS
-        
-    -Passthru [<SwitchParameter>]
-        Output the disk image object
-        
-    -RecoveryTools [<SwitchParameter>]
-        Create the Recovery Environment Tools Partition. Only valid on UEFI layout
-        
-    -RecoveryImage [<SwitchParameter>]
-        Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI 
-        layout
-        
-    -force [<SwitchParameter>]
-        Force the overwrite of existing files
-        
-    -WhatIf [<SwitchParameter>]
-        
-    -Confirm [<SwitchParameter>]
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
+```
+NAME
+    Invoke-CreateVmRunAndWait
     
-    -------------------------- EXAMPLE 1 --------------------------
+SYNOPSIS
+    Create a temp vm with a random name and wait for it to stop
     
-    PS C:\>Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 30GB -DiskLayout BIOS
+SYNTAX
+    Invoke-CreateVmRunAndWait [-VhdPath] <String> [-VmGeneration] <Int32> [-VmSwitch] 
+    <String> [[-vLan] <Int32>] [[-ProcessorCount] <Int32>] [[-MemoryStartupBytess] 
+    <Int64>] [<CommonParameters>]
     
-    -------------------------- EXAMPLE 2 --------------------------
+DESCRIPTION
+    This Command quickly test changes to a VHD by creating a temporary VM and ataching 
+    it to the network. VM is deleted when it enters a stoped state.
+```
+
+```
+NAME
+    Invoke-WindowsImageUpdate
     
-    PS C:\>Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 40GB -DiskLayout UEFI 
-    -RecoveryTools   
-  ```
-  
-  ```
+SYNOPSIS
+    Starts the process of applying updates to all (or selected) images in a Windows 
+    Image Tools BaseImages Folder
+    
+SYNTAX
+    Invoke-WindowsImageUpdate [-Path] <Object> [[-ImageName] <String[]>] 
+    [-ReduceImageSize] [[-output] <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+DESCRIPTION
+    This Command updates all (or selected) the images created via Add-UpdateImage in a 
+    Windows Image Tools BaseImages folder 
+    New-WindowsImageToolsExample can be use to create the structrure
+```
+
+```
+NAME
+    Mount-VhdAndRunBlock
+    
+SYNOPSIS
+    Mount a VHD(x), runs a script block and unmounts the VHD(x) driveleter stored in 
+    $driveLetter
+    
+SYNTAX
+    Mount-VhdAndRunBlock [-vhd] <String> [-block] <ScriptBlock> [-ReadOnly] 
+    [<CommonParameters>]
+    
+DESCRIPTION
+    Us this function to read / write files inside a vhd. Any objects emited by the 
+    scriptblock are returned by this function.
+```
+
+```
+NAME
+    New-UnattendXml
+    
+SYNOPSIS
+    Create a new Unattend.xml
+    
+SYNTAX
+    New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>] 
+    [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>] 
+    [-FirstLogonScriptPath <String>] [-ProductKey <String>] [-TimeZone <String>] 
+    [-InputLocale <String>] [-SystemLocale <String>] [-UserLocale <String>] 
+    [-UILanguage <String>] [-RegisteredOwner <String>] [-RegisteredOrganization 
+    <String>] [-enableAdministrator] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>] 
+    [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>] 
+    [-FirstBootScriptPath <String>] [-ProductKey <String>] [-TimeZone <String>] 
+    [-InputLocale <String>] [-SystemLocale <String>] [-UserLocale <String>] 
+    [-UILanguage <String>] [-RegisteredOwner <String>] [-RegisteredOrganization 
+    <String>] [-enableAdministrator] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+    New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>] 
+    [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>] [-ProductKey 
+    <String>] [-TimeZone <String>] [-InputLocale <String>] [-SystemLocale <String>] 
+    [-UserLocale <String>] [-UILanguage <String>] [-RegisteredOwner <String>] 
+    [-RegisteredOrganization <String>] [-FirstBootExecuteCommand <Hashtable[]>] 
+    [-FirstLogonExecuteCommand <Hashtable[]>] [-EveryLogonExecuteCommand 
+    <Hashtable[]>] [-enableAdministrator] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+DESCRIPTION
+    This Command Creates a new Unattend.xml that skips any prompts, and sets the 
+    administrator password
+    Has options for: Adding user accounts
+                     Auto logon a set number of times
+                     Set the Computer Name
+                     First Boot or First Logon powersrhell script
+                     Product Key
+                     TimeZone
+                     Input, System and User Locals
+                     UI Language
+                     Registered Owner and Orginization
+                     First Boot, First Logon and Every Logon Commands
+                     Enable Administrator account without autologon (client OS)
+    
+    If no Path is provided a the file will be created in a temp folder and the path 
+    returned.
+```
+
+```
+NAME
+    New-WindowsImageToolsExample
+    
+SYNOPSIS
+    Create folders and script examples on the use of Windows Image Tools
+    
+SYNTAX
+    New-WindowsImageToolsExample [-Path] <String> [-WhatIf] [-Confirm] 
+    [<CommonParameters>]
+    
+DESCRIPTION
+    This Command creates the folders structures and example files needed to use 
+    Windows Image Tools to auto update windows images.
+```
+
+```
+NAME
+    Set-UpdateConfig
+    
+SYNOPSIS
+    Set the Windows Image Tools Update Config used for creating the temp VM
+    
+SYNTAX
+    Set-UpdateConfig [-Path] <Object> [[-VmSwitch] <String>] [[-vLAN] <Int32>] 
+    [[-IpType] <String>] [[-IpAddress] <String>] [[-SubnetMask] <Int32>] [[-Gateway] 
+    <String>] [[-DnsServer] <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
+    
+DESCRIPTION
+    Set the config used by Invoke-WitUpdate to build a VM and update Windows Images
+```
+
+```
 NAME
     Set-VHDPartition
     
 SYNOPSIS
     Sets the content of a VHD(X) using a source WIM or ISO
     
-    
 SYNTAX
-    Set-VHDPartition [-Path] <String> [-SourcePath] <String> [-Index <Int32>] [-Unattend 
-    <String>] [-NativeBoot] [-Feature <String[]>] [-Driver <String[]>] [-Package <String[]>] 
+    Set-VHDPartition [-Path] <String> [-SourcePath] <String> [-Index <Int32>] 
+    [-Unattend <String>] [-NativeBoot] [-AddPayloadForRemovedFeature] [-Feature 
+    <String[]>] [-Driver <String[]>] [-Package <String[]>] [-filesToInject <String[]>] 
     [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
-    
     
 DESCRIPTION
     This command will copy the content of the SourcePath ISO or WIM and populate the 
     partitions found in the VHD(X) You must supply the path to the VHD(X) file and a 
     valid WIM/ISO. You should also include the index number for the Windows Edition 
-    to install. If two Recovery partitions are present the source WIM will be copied 
+    to install. If the recovery partitions are present the source WIM will be copied 
     to the recovery partition. Optionally, you can also specify an XML file to be 
     inserted into the OS partition as unattend.xml, any Drivers, WindowsUpdate (MSU)
-    or Optional Features you want installed.
+    or Optional Features you want installed. And any additional files to add.
     CAUTION: This command will replace the content partitions.
-    
+```
 
-PARAMETERS
-    -Path <String>
-        Path to VHDX
-        
-    -SourcePath <String>
-        Path to WIM or ISO used to populate VHDX
-        
-    -Index <Int32>
-        Index of image inside of WIM (Default 1)
-        
-    -Unattend <String>
-        Path to file to copy inside of VHD(X) as C:\unattent.xml
-        
-    -NativeBoot [<SwitchParameter>]
-        Native Boot does not have the boot code inside the VHD(x) it must exist on the physical 
-        disk.
-        
-    -Feature <String[]>
-        Featurs to turn on (in DISM format)
-        
-    -Driver <String[]>
-        Path to drivers to inject
-        
-    -Package <String[]>
-        Path of packages to install via DSIM
-        
-    -Force [<SwitchParameter>]
-        Bypass the warning and about lost data
-        
-    -WhatIf [<SwitchParameter>]
-        
-    -Confirm [<SwitchParameter>]
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
-    
-    -------------------------- EXAMPLE 1 --------------------------
-    
-    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
-    D:\wim\Win2012R2-Install.wim -Index 1 -verbose
-    
-    -------------------------- EXAMPLE 2 --------------------------
-    
-    PS C:\>Set-Gen2BootDiskFromWim -Path D:\vhd\demo3.vhdx -SourcePath 
-    D:\wim\Win2012R2-Install.wim -Confirm:$false -force -Verbose  
-  
-  ```
-  
-  ```
-  
+```
 NAME
-    Convert-Wim2VHD
+    Update-WindowsImageWMF
     
 SYNOPSIS
-    Create a VHDX and populate it from a WIM
-    
+    Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows 
+    Update Image
     
 SYNTAX
-    Convert-Wim2VHD [-Path] <String> [-Size <UInt64>] [-Dynamic] -DiskLayout <String> 
-    [-RecoveryTools] [-RecoveryImage] [-force] [-SourcePath] <String> [-Index <Int32>] [-Unattend 
-    <String>] [-NativeBoot] [-Feature <String[]>] [-Driver <String[]>] [-Package <String[]>] 
+    Update-WindowsImageWMF [-Path] <Object> [-ImageName] <String[]> [-Wmf4] [-Wmf5pp] 
     [-WhatIf] [-Confirm] [<CommonParameters>]
     
-    
 DESCRIPTION
-    This command will update partitions for a Generate 2 VHDX file, configured for UEFI. 
-    You must supply the path to the VHDX file and a valid WIM. You should also
-    include the index number for the Windows Edition to install.
-    
-
-PARAMETERS
-    -Path <String>
-        Path to the new VHDX file (Must end in .vhdx)
-        
-    -Size <UInt64>
-        Size in Bytes (Default 40B)
-        
-    -Dynamic [<SwitchParameter>]
-        Create Dynamic disk
-        
-    -DiskLayout <String>
-        Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
-        Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
-        Windows To Go images will boot in UEFI or BIOS
-        
-    -RecoveryTools [<SwitchParameter>]
-        Create the Recovery Environment Tools Partition. Only valid on UEFI layout
-        
-    -RecoveryImage [<SwitchParameter>]
-        Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI 
-        layout
-        
-    -force [<SwitchParameter>]
-        Force the overwrite of existing files
-        
-    -SourcePath <String>
-        Path to WIM or ISO used to populate VHDX
-        
-    -Index <Int32>
-        Index of image inside of WIM (Default 1)
-        
-    -Unattend <String>
-        Path to file to copy inside of VHD(X) as C:\unattent.xml
-        
-    -NativeBoot [<SwitchParameter>]
-        Native Boot does not have the boot code inside the VHD(x) it must exist on the physical 
-        disk.
-        
-    -Feature <String[]>
-        Features to turn on (in DISM format)
-        
-    -Driver <String[]>
-        Path to drivers to inject
-        
-    -Package <String[]>
-        Path of packages to install via DSIM
-        
-    -WhatIf [<SwitchParameter>]
-        
-    -Confirm [<SwitchParameter>]
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
-    
-    -------------------------- EXAMPLE 1 --------------------------
-    
-    PS C:\>Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery
-    
-    
-    
-    
-    
-    
-    -------------------------- EXAMPLE 2 --------------------------
-    
-    PS C:\>Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 
-    -Size 40GB -force
-	```
-
-	```
-	NAME
-    New-UnattendXml
-    
-SYNOPSIS
-    Create a new basic Unattend.xml
-    
-    
-SYNTAX
-    New-UnattendXml [-AdminPassword] <String> [-Path <String>] [-LogonCount <Int32>] [-ScriptPath <String>] 
-    [-TimeZone <String>] [-WhatIf] [-Confirm] [<CommonParameters>]
-    
-    
-DESCRIPTION
-    Creates a new Unattend.xml and sets the admin password, Skips any prompts, logs in a set number of times 
-    (default 0) and starts a powershell script (default c:\pstemp\firstrun.ps1).
-    If no Path is provided a the file will be created in a temp folder and the path returned.
-    
-
-PARAMETERS
-    -AdminPassword <String>
-        The password to have unattnd.xml set the local Administrator to
-        
-    -Path <String>
-        Output Path
-        
-    -LogonCount <Int32>
-        Number of times that the local Administrator account should automaticaly login (default 1)
-        
-    -ScriptPath <String>
-        Script to run on autologin (default: %SystemDrive%\PSTemp\FirstRun.ps1 )
-        
-    -TimeZone <String>
-        set new machine to this timezone (default Central Standard Time)
-        
-    -WhatIf [<SwitchParameter>]
-        
-    -Confirm [<SwitchParameter>]
-        
-    <CommonParameters>
-        This cmdlet supports the common parameters: Verbose, Debug,
-        ErrorAction, ErrorVariable, WarningAction, WarningVariable,
-        OutBuffer, PipelineVariable, and OutVariable. For more information, see 
-        about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216). 
-    
-    -------------------------- EXAMPLE 1 --------------------------
-    
-    PS C:\>New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
-    
-    
-    
-    
-    
-    
-    -------------------------- EXAMPLE 2 --------------------------
-    
-    PS C:\>New-UnattendXml -Path c:\temp\Unattent.xml -AdminPassword 'P@ssword' -logonCount 100 -ScriptPath 
-    c:\pstemp\firstrun.ps1
-    ```
+    This Command downloads WMF 4.0, 5.0PP or 5.0 (Production Preview) and .NET 4.6 
+    offline installer
+    Creates a temp VM and updates .NET if needed and WMF
+```
 	

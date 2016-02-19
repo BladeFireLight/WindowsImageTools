@@ -439,8 +439,8 @@
                     Where-Object -FilterScript {
                         $_.driveletter
                     }  |
-                    Where-Object Type -NE -Value 'Basic' |
-                    Where-Object Type -NE -Value 'IFS' |
+                    Where-Object -Property Type -NE -Value 'Basic' |
+                    Where-Object -Property Type -NE -Value 'IFS' |
                     ForEach-Object -Process {
                         $dl = "$($_.DriveLetter):"
                         $_ |

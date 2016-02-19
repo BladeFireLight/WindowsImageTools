@@ -3,7 +3,7 @@
         Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows Update Image
         .DESCRIPTION
         This Command downloads WMF 4.0, 5.0PP or 5.0 (Production Preview) and .NET 4.6 offline installer
-        Creats a temp VM and updates .NET if needed and WMF
+        Creates a temp VM and updates .NET if needed and WMF
         .EXAMPLE
         Update-UpdateImageWMF -Path C:\WITExample
         Updates every Image in c:\WITExample\BaseImages
@@ -190,7 +190,7 @@ function Update-WindowsImageWMF
                         Write-Error -Message '.Net 4.6 :  install attempted but failed!'
                         Start-Sleep -Seconds 30
                         # Stop-Computer does not have -force in 2008/win7 WMF2
-                        if ((get-command Stop-Computer -Syntax) -like "*[force]*") 
+                        if ((Get-Command Stop-Computer -Syntax) -like '*[force]*') 
                         {
                             Stop-Computer -Verbose -Force
                         }
@@ -206,7 +206,7 @@ function Update-WindowsImageWMF
                     Get-Date | Out-File -FilePath c:\PsTemp\dotNET\Verified.txt
                     Write-Verbose -Message '.Net 4.6 : detected shuting down' -Verbose
                     # Stop-Computer does not have -force in 2008/win7 WMF2
-                    if ((get-command Stop-Computer -Syntax) -like "*[force]*") 
+                    if ((Get-Command Stop-Computer -Syntax) -like '*[force]*') 
                     {
                         Stop-Computer -Verbose -Force
                     }
@@ -219,7 +219,7 @@ function Update-WindowsImageWMF
                 Start-Sleep -Seconds 30
                 Write-Verbose -Message 'Rebooting computer' -Verbose
                 # Restart-Computer does not have -force in 2008/win7 WMF2
-                if ((get-command Restart-Computer -Syntax) -like "*[force]*") 
+                if ((Get-Command Restart-Computer -Syntax) -like '*[force]*') 
                 {
                     Restart-Computer -Verbose -Force
                 }

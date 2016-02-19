@@ -1,33 +1,34 @@
+#requires -Version 3 -Modules Hyper-V
 function Invoke-CreateVmRunAndWait 
 {
-<#
-.Synopsis
-   Create a temp vm with a random name and wait for it to stop
-.DESCRIPTION
-   This Command quickly test changes to a VHD by creating a temporary VM and ataching it to the network. VM is deleted when it enters a stoped state.
-.EXAMPLE
-   Invoke-CreateVMRunAndWait -VhdPath c:\test.vhdx -VmGeneration 2 -VmSwitch 'testlab'
-.EXAMPLE
-   Invoke-CreateVMRunAndWait -VhdPath c:\test.vhdx -VmGeneration 2 -VmSwitch 'testlab' -vLan 16023 -ProcessorCount 1 -MemorySTartupBytes 512mb
-#>
+    <#
+            .Synopsis
+            Create a temp vm with a random name and wait for it to stop
+            .DESCRIPTION
+            This Command quickly test changes to a VHD by creating a temporary VM and ataching it to the network. VM is deleted when it enters a stoped state.
+            .EXAMPLE
+            Invoke-CreateVMRunAndWait -VhdPath c:\test.vhdx -VmGeneration 2 -VmSwitch 'testlab'
+            .EXAMPLE
+            Invoke-CreateVMRunAndWait -VhdPath c:\test.vhdx -VmGeneration 2 -VmSwitch 'testlab' -vLan 16023 -ProcessorCount 1 -MemorySTartupBytes 512mb
+    #>
     [CmdletBinding()]
     param
     (
         # Path to VHD(x)
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string] 
         $VhdPath, 
         
         # VM Generation (1 = BIOS/MBR, 2 = uEFI/GPT)
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateSet(1, 2)]
         [int] 
         $VmGeneration,
 
         # name of VM switch to attach to
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [string] 
@@ -49,7 +50,7 @@ function Invoke-CreateVmRunAndWait
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(Get-Date)"  
-    $null = New-VM $vmName -MemoryStartupBytes $MemoryStartupBytess -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $VmSwitch -ErrorAction Stop
+    $null = New-VM $vmName -MemoryStartupBytes $MemoryStartupBytess -VHDPath $VhdPath -Generation $VmGeneration -SwitchName $VmSwitch -ErrorAction Stop
 
     If($configData.vLan -ne 0) 
     {
@@ -65,10 +66,10 @@ function Invoke-CreateVmRunAndWait
     # Wait for the VM to be stopped for a good solid 5 seconds
     do
     {
-        $state1 = (Get-VM | Where-Object name -EQ -Value $vmName).State
+        $state1 = (Get-VM | Where-Object -Property name -EQ -Value $vmName).State
         Start-Sleep -Seconds 5
         
-        $state2 = (Get-VM | Where-Object name -EQ -Value $vmName).State
+        $state2 = (Get-VM | Where-Object -Property name -EQ -Value $vmName).State
         Start-Sleep -Seconds 5
     } 
     until (($state1 -eq 'Off') -and ($state2 -eq 'Off'))

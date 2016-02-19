@@ -1,19 +1,19 @@
 #requires -Version 2
 function Invoke-WindowsImageUpdate
 {
-<#
-        .Synopsis
-        Starts the process of applying updates to all (or selected) images in a Windows Image Tools BaseImages Folder
-        .DESCRIPTION
-        This Command updates all (or selected) the images created via Add-UpdateImage in a Windows Image Tools BaseImages folder 
-        New-WindowsImageToolsExample can be use to create the structrure
-        .EXAMPLE
-        Invoke-WindowsImageUpdate -Path C:\WITExample
-        Update all the Images created with Add-UpdateImage located in C:\WITExample\BaseImages and place the resulting VHD and WIM in c:\WITExample\UpdatedImageShare
-        .EXAMPLE
-        Invoke-WindowsImageUpdate -Path C:\WITExample -Name 2012r2Wmf5
-        Update Image named 2012r2Wmf5_Base.vhdx  in C:\WITExample\BaseImages and place the resulting VHD and WIM in c:\WITExample\UpdatedImageShare
-#>
+    <#
+            .Synopsis
+            Starts the process of applying updates to all (or selected) images in a Windows Image Tools BaseImages Folder
+            .DESCRIPTION
+            This Command updates all (or selected) the images created via Add-UpdateImage in a Windows Image Tools BaseImages folder 
+            New-WindowsImageToolsExample can be use to create the structrure
+            .EXAMPLE
+            Invoke-WindowsImageUpdate -Path C:\WITExample
+            Update all the Images created with Add-UpdateImage located in C:\WITExample\BaseImages and place the resulting VHD and WIM in c:\WITExample\UpdatedImageShare
+            .EXAMPLE
+            Invoke-WindowsImageUpdate -Path C:\WITExample -Name 2012r2Wmf5
+            Update Image named 2012r2Wmf5_Base.vhdx  in C:\WITExample\BaseImages and place the resulting VHD and WIM in c:\WITExample\UpdatedImageShare
+    #>
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([bool])]
     Param
@@ -191,12 +191,12 @@ function Invoke-WindowsImageUpdate
                 
                 if (-not ($IpType -eq 'DHCP'))
                 {
-                    Write-Verbose 'Set Network : Getting network adaptor' -Verbose
-                    $adapter = Get-NetAdapter | Where-Object {
+                    Write-Verbose -Message 'Set Network : Getting network adaptor' -Verbose
+                    $adapter = Get-NetAdapter | Where-Object -FilterScript {
                         $_.Status -eq 'up'
                     }
                     
-                    Write-Verbose "Set Network : removing existing config on $($adaptor.Name)" -Verbose
+                    Write-Verbose -Message "Set Network : removing existing config on $($adaptor.Name)" -Verbose
                     If (($adapter | Get-NetIPConfiguration).IPv4Address.IPAddress) 
                     {
                         $adapter | Remove-NetIPAddress -AddressFamily $IpType -Confirm:$false
@@ -212,8 +212,8 @@ function Invoke-WindowsImageUpdate
                         PrefixLength = $SubnetMask
                         DefaultGateway = $Gateway
                     }
-                    Write-Verbose 'Set Network : Adding settings to adaptor'
-                    Write-Verbose $params -Verbose
+                    Write-Verbose -Message 'Set Network : Adding settings to adaptor'
+                    Write-Verbose -Message $params -Verbose
                     $adapter | New-NetIPAddress @params
                     
                     Write-Verbose "Set Network : Set DNS to $DnsServer" -Verbose
