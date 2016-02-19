@@ -1,8 +1,10 @@
-﻿<#
+﻿function Add-UpdateImage
+{
+<#
         .Synopsis
-        Add a Windows Image to the Windows Image Tools Update Directory
+        Add a Windows Image to a Windows Image Tools Update Directory
         .DESCRIPTION
-        convert a .ISO or .WIM into a VHD populated with an unattend and scripts/modules from the Resources folder locaed in -Path
+        This command will convert a .ISO or .WIM into a VHD populated with an unattend.xml and first boot script
         .EXAMPLE
         Add-WitUpdateImage -Path c:\WitTools
         .EXAMPLE
@@ -12,8 +14,6 @@
         .OUTPUTS
         Custom object containing String -Path and String -Name
 #>
-function Add-UpdateImage
-{
     [CmdletBinding(SupportsShouldProcess = $true)]
     #[OutputType([String])]
     Param

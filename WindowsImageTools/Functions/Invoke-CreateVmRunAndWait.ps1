@@ -4,7 +4,7 @@ function Invoke-CreateVmRunAndWait
 .Synopsis
    Create a temp vm with a random name and wait for it to stop
 .DESCRIPTION
-   Quickly test changes to a VHD by creating a temporary VM and ataching it to the network. VM is deleted when it enters a stoped state.
+   This Command quickly test changes to a VHD by creating a temporary VM and ataching it to the network. VM is deleted when it enters a stoped state.
 .EXAMPLE
    Invoke-CreateVMRunAndWait -VhdPath c:\test.vhdx -VmGeneration 2 -VmSwitch 'testlab'
 .EXAMPLE
@@ -33,7 +33,7 @@ function Invoke-CreateVmRunAndWait
         [string] 
         $VmSwitch, 
 
-        # vLAN to use default = 0, or dont use vLAN
+        # vLAN to use default = 0 (dont use vLAN)
         [int] 
         $vLan = 0,
         
@@ -41,7 +41,7 @@ function Invoke-CreateVmRunAndWait
         [int]
         $ProcessorCount = 2,
 
-        # MemoryStartupBytes default 2Gig
+        # MemoryStartupBytes default = 2Gig
         [long]
         $MemoryStartupBytess = 2GB
     )

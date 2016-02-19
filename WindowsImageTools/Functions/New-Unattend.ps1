@@ -6,8 +6,19 @@ function New-UnattendXml
             .Synopsis
             Create a new Unattend.xml 
             .DESCRIPTION
-            Creates a new Unattend.xml and sets the admin password and Skips any prompts
-            Can also be used to auto logon in a set number of times (default 0) and start powershell scripts or other commands
+            This Commadn Creates a new Unattend.xml that skips any prompts, and sets the administrator password
+            Has options for: Adding user accounts
+                             Auto logon a set number of times
+                             Set the Computer Name
+                             First Boot or First Logon powersrhell script
+                             Product Key
+                             TimeZone
+                             Input, System and User Locals
+                             UI Language
+                             Registered Owner and Orginization
+                             First Boot, First Logon and Every Logon Commands
+                             Enable Administrator account without autologon (client OS)
+
             If no Path is provided a the file will be created in a temp folder and the path returned.
             .EXAMPLE
             New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
@@ -45,7 +56,6 @@ function New-UnattendXml
         $LogonCount,
 
         # ComputerName (default = *)
-        [Parameter(ParameterSetName = 'Basic_FirstLogonScript')]
         [ValidateLength(1,15)]
         [string]
         $ComputerName = '*',
@@ -710,6 +720,16 @@ function New-UnattendXml
                         Description = 'PowerShell First boot script'
                         order       = 1
                         path        = "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$FirstBootScriptPath`""
+                })
+            }
+
+            if ($FirstLogonScriptPath)
+            {
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding PowerShell script to First Logon command"
+                $FirstLogonExecuteCommand = @(@{
+                        Description = 'PowerShell First logon script'
+                        order       = 1
+                        CommandLine        = "%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$FirstBootScriptPath`""
                 })
             }
      

@@ -2,7 +2,7 @@
         .Synopsis
         Create folders and script examples on the use of Windows Image Tools
         .DESCRIPTION
-        Creates the folders structures and example files needed to use Windows Image Tools to auto update windows images.
+        This Command creates the folders structures and example files needed to use Windows Image Tools to auto update windows images.
         .EXAMPLE
         New-WitExample -Path c:\WitExample
         .NOTES
@@ -260,7 +260,7 @@ function New-WindowsImageToolsExample
                 Write-Warning -Message "$ISOPath does not exist skipping"
             }
 
-            Invoke-WindowsImageUpdate -Path $PSScriptRoot
+            Invoke-WindowsImageUpdate -Path $PSScriptRoot -verbose
         }
         $AdvancedExampleContent = {
             Write-Warning "You need to edit the configuration in $PSCommandPath and then commend out or delete line 1" ; break
@@ -305,8 +305,12 @@ function New-WindowsImageToolsExample
             Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_source -output WIM
 
             # create scedualed task to update images once a week on Wednesday night
+            # First action solves prompting of nuget updates, and must be in a seporate process.
+            $action1 = New-ScheduledTaskAction -ID 1 -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument " -Command `"& {get-packageprovider -name nuget -forcebootstrap }`"" 
+            $action2 = New-ScheduledTaskAction -ID 2 -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument " -Command `"& {Start-Transcript $env:ALLUSERSPROFILE\WITUpdate.log -Append; import-module WindowsImageTools -erroraction stop; Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_Core -ReduceImageSize ; Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_source -output WIM }`"" 
+              
             $Paramaters = @{
-              Action   = New-ScheduledTaskAction -Execute '%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument " -Command `"& {import-module WindowsImageTools -erroraction stop; Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_Core -ReduceImageSize ; Invoke-WindowsImageUpdate -Path $PSScriptRoot -Verbose -ImageName Srv2012r2_source -output WIM }`""
+              Action   = $action1, $action2
               Trigger  = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Wednesday -At 11pm
               Settings = New-ScheduledTaskSettingsSet
             }

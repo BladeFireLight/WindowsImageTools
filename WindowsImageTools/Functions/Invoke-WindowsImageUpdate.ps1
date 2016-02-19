@@ -1,10 +1,12 @@
 #requires -Version 2
+function Invoke-WindowsImageUpdate
+{
 <#
         .Synopsis
         Starts the process of applying updates to all (or selected) images in a Windows Image Tools BaseImages Folder
         .DESCRIPTION
-        Use Invoke-WindowsImageUpdate to update all (or selected) the images created via Add-UpdateImage in a Windows Image Tools BaseImages folder 
-        New-WindowsImageTools can be use to create the structrure
+        This Command updates all (or selected) the images created via Add-UpdateImage in a Windows Image Tools BaseImages folder 
+        New-WindowsImageToolsExample can be use to create the structrure
         .EXAMPLE
         Invoke-WindowsImageUpdate -Path C:\WITExample
         Update all the Images created with Add-UpdateImage located in C:\WITExample\BaseImages and place the resulting VHD and WIM in c:\WITExample\UpdatedImageShare
@@ -12,8 +14,6 @@
         Invoke-WindowsImageUpdate -Path C:\WITExample -Name 2012r2Wmf5
         Update Image named 2012r2Wmf5_Base.vhdx  in C:\WITExample\BaseImages and place the resulting VHD and WIM in c:\WITExample\UpdatedImageShare
 #>
-function Invoke-WindowsImageUpdate
-{
     [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([bool])]
     Param

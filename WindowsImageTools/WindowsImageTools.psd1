@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.3'
+ModuleVersion = '1.0.4'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -72,6 +72,7 @@ FunctionsToExport = 'Convert-Wim2VHD',
                     'New-UnattendXml', 
                     'New-WindowsImageToolsExample', 
                     'Set-UpdateConfig', 
+                    'Get-UpdateConfig', 
                     'Add-UpdateImage',
                     'Update-WindowsImageWMF',
                     'Invoke-WindowsImageUpdate',

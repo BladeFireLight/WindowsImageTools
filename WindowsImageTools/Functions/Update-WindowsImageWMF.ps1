@@ -1,10 +1,9 @@
 <#
         .Synopsis
-        Updates WMF to 5.0 (and .NET to 4.6) in a Windows Update Image
+        Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows Update Image
         .DESCRIPTION
-        Downloads WMF 5.0 (Production Preview) and .NET 4.6 offline installer
-        If no Image Name is provided, it will update WMF on all Base images in the Windows Image Tools
-        Update Folder (Created with New-WindowsImageUpdateExmaple)
+        This Command downloads WMF 4.0, 5.0PP or 5.0 (Production Preview) and .NET 4.6 offline installer
+        Creats a temp VM and updates .NET if needed and WMF
         .EXAMPLE
         Update-UpdateImageWMF -Path C:\WITExample
         Updates every Image in c:\WITExample\BaseImages

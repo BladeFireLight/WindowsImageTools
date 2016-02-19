@@ -7,10 +7,10 @@
             This command will copy the content of the SourcePath ISO or WIM and populate the 
             partitions found in the VHD(X) You must supply the path to the VHD(X) file and a 
             valid WIM/ISO. You should also include the index number for the Windows Edition 
-            to install. If two Recovery partitions are present the source WIM will be copied 
+            to install. If the recovery partitions are present the source WIM will be copied 
             to the recovery partition. Optionally, you can also specify an XML file to be 
             inserted into the OS partition as unattend.xml, any Drivers, WindowsUpdate (MSU)
-            or Optional Features you want installed.
+            or Optional Features you want installed. And any additional files to add.
             CAUTION: This command will replace the content partitions.
             .EXAMPLE
             PS C:\> Set-VHDPartition -Path D:\vhd\demo3.vhdx -SourcePath D:\wim\Win2012R2-Install.wim -Index 1 
