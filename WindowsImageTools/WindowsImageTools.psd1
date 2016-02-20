@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.4'
+ModuleVersion = '1.0.5'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -48,7 +48,7 @@ Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
 # ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-# RequiredModules = @()
+# RequiredModules = @('storage')
 
 # Assemblies that must be loaded prior to importing this module
 # RequiredAssemblies = @()
@@ -81,13 +81,13 @@ FunctionsToExport = 'Convert-Wim2VHD',
                     'Get-VhdPartitionStyle'
 
 # Cmdlets to export from this module
-CmdletsToExport = '*'
+# CmdletsToExport = '*'
 
 # Variables to export from this module
-VariablesToExport = '*'
+# VariablesToExport = '*'
 
 # Aliases to export from this module
-AliasesToExport = '*'
+# AliasesToExport = '*'
 
 # DSC resources to export from this module
 # DscResourcesToExport = @()
@@ -104,19 +104,19 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        # Tags = @()
+        Tags = @('WIM', 'VHDX')
 
         # A URL to the license for this module.
-        # LicenseUri = ''
+        LicenseUri = 'https://github.com/BladeFireLight/WindowsImageTools/blob/master/LICENSE'
 
         # A URL to the main website for this project.
-        # ProjectUri = ''
+        ProjectUri = 'https://github.com/BladeFireLight/WindowsImageTools'
 
         # A URL to an icon representing this module.
         # IconUri = ''
 
         # ReleaseNotes of this module
-        # ReleaseNotes = ''
+        ReleaseNotes = 'Fixed issue with #require casusing other functions to be exported as part of this module'
 
     } # End of PSData hashtable
 

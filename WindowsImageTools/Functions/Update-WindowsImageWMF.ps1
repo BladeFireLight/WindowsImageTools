@@ -1,3 +1,5 @@
+function Update-WindowsImageWMF
+{
 <#
         .Synopsis
         Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows Update Image
@@ -11,8 +13,6 @@
         Update-UpdateImageWMF -Path C:\WitExample -Name Server2012R2Core
         Updates only C:\WitExample\BaseImages\Server2012R2Core_Base.vhdx
 #>
-function Update-WindowsImageWMF
-{
     [CmdletBinding(SupportsShouldProcess = $true)]
     #[OutputType([String])]
     Param

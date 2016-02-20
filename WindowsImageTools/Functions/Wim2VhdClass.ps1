@@ -1,4 +1,3 @@
-#requires -Version 2
 $code      = @"
 using System;
 using System.Collections.Generic;

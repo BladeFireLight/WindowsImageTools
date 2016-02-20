@@ -1,5 +1,4 @@
-﻿#requires -Version 2
-function Set-UpdateConfig
+﻿function Set-UpdateConfig
 {
     <#
             .Synopsis

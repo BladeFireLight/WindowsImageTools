@@ -1,4 +1,5 @@
-﻿#requires -Version 3 -Modules BitsTransfer, PowerShellGet, ScheduledTasks
+﻿function New-WindowsImageToolsExample
+{
 <#
         .Synopsis
         Create folders and script examples on the use of Windows Image Tools
@@ -9,8 +10,6 @@
         .NOTES
         This is a work in progress
 #>
-function New-WindowsImageToolsExample
-{
     [CmdletBinding(SupportsShouldProcess = $true
     )]
     [OutputType([System.IO.DirectoryInfo])]

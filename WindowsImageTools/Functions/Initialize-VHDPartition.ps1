@@ -1,6 +1,4 @@
-﻿#requires -Version 2 -Modules Storage
-
-function Initialize-VHDPartition
+﻿function Initialize-VHDPartition
 {
     <#
             .Synopsis

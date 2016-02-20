@@ -1,4 +1,3 @@
-#requires -Version 2 -Modules Storage
 #requires -RunAsAdministrator
 
 # Check for New-VHD

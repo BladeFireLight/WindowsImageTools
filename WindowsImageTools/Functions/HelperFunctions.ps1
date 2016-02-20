@@ -1,5 +1,3 @@
-#requires -Version 1
-
 function Get-FullFilePath
 {
     <#

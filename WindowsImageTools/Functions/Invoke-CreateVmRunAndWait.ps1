@@ -1,4 +1,3 @@
-#requires -Version 3 -Modules Hyper-V
 function Invoke-CreateVmRunAndWait 
 {
     <#

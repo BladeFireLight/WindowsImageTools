@@ -1,4 +1,3 @@
-#requires -Version 2
 function Invoke-WindowsImageUpdate
 {
     <#

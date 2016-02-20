@@ -1,5 +1,3 @@
-#requires -Version 3
-
 function New-UnattendXml
 {
     <#
