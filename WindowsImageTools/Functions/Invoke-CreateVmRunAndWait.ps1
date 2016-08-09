@@ -51,9 +51,9 @@ function Invoke-CreateVmRunAndWait
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(Get-Date)"  
     $null = New-VM $vmName -MemoryStartupBytes $MemoryStartupBytess -VHDPath $VhdPath -Generation $VmGeneration -SwitchName $VmSwitch -ErrorAction Stop
 
-    If($configData.vLan -ne 0) 
+    If($vLan -ne 0) 
     {
-        Get-VMNetworkAdapter -VMName $vmName | Set-VMNetworkAdapterVlan -Access -VlanId $configData.vLan
+        Get-VMNetworkAdapter -VMName $vmName | Set-VMNetworkAdapterVlan -Access -VlanId $vLan
     }
 
     Set-VM -Name $vmName -ProcessorCount $ProcessorCount
