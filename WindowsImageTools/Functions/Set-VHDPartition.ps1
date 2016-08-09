@@ -63,9 +63,23 @@
         # Add payload for all removed features
         [switch]$AddPayloadForRemovedFeature,
 
-        # Featurs to turn on (in DISM format)
+        # Feature to turn on (in DISM format)
         [ValidateNotNullOrEmpty()]
         [string[]]$Feature,
+
+        # Feature to remove (in DISM format)
+        [ValidateNotNullOrEmpty()]
+        [string[]]$RemoveFeature,
+
+        # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched 
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    Test-Path -Path $(Resolve-Path $_)
+        })]
+        [string]$FeatureSource,
+
+        # Feature Source index. If the source is a .wim provide an index Default =1 
+        [int]$FeatureSourceIndex = 1,
 
         # Path to drivers to inject
         [ValidateNotNullOrEmpty()]
@@ -232,7 +246,7 @@
 
                     #endregion
 
-                    # region Recovery Image
+                    #region Recovery Image
                     if ($RecoveryImagePartition)
                     {
                         #copy the WIM to recovery image partition as Install.wim
@@ -252,7 +266,7 @@
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] Windows Partition [$($WindowsPartition.partitionNumber)] : Applying image from [$SourcePath] to [$WinPath] using Index [$Index]"
                         $null = Expand-WindowsImage -ImagePath $SourcePath -Index $Index -ApplyPath $WinPath -ErrorAction Stop
 
-                        #region Modify the OS with Drivers, Active Featurs and Packages
+                        #region Modify the OS with Drivers, Active Features and Packages
                         if ($Driver) 
                         {
                             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Adding Windows Drivers to the Image"
@@ -302,23 +316,49 @@
                             { 
                                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Colecting posible source paths"
                                 $FeatureSourcePath = @()
-                                if ($driveLetter) #ISO
-                                {
-                                    $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
-                                }
-
-                                $images = Get-WindowsImage -ImagePath $SourcePath
                                 $MountFolderList = @()
-                                foreach ($image in $images)
+                                if ($FeatureSource)
                                 {
-                                    #$image | fl *
-                                    $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
-                                    $MountFolderList += $MountFolder.FullName
-                                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Mounting Source $($image.ImageIndex) $($image.ImageName)"
-                                    $null = Mount-WindowsImage -ImagePath $SourcePath -Index $image.ImageIndex -Path  $MountFolder.FullName -ReadOnly
-                                    $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
+                                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Source Path provided [$FeatureSource]"
+                                    if (($FeatureSource | Resolve-Path | Get-Item ).PSIsContainer -eq $true )
+                                    {
+                                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Source Path [$FeatureSource] in folder"
+                                        $FeatureSourcePath += $FeatureSource
+                                    }
+                                    elseif (($FeatureSource | Resolve-Path | Get-Item ).extension -like '.wim')
+                                    { 
+                                        #$FeatureSourcePath += Convert-Path $FeatureSource
+                                        $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+                                        $MountFolderList += $MountFolder.FullName
+                                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Mounting Source [$FeatureSource] Index [$FeatureSourceIndex]"
+                                        $null = Mount-WindowsImage -ImagePath $FeatureSource -Index $FeatureSourceIndex -Path  $MountFolder.FullName -ReadOnly
+                                        $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
+                                    }
+                                    else
+                                    {
+                                        Write-Warning "$FeatureSource is not a .wim or folder"
+                                    } 
+                                    
                                 }
-                                #$FeatureSourcePath = Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                                else 
+                                {
+                                    if ($driveLetter) #ISO
+                                    {
+                                        $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                                    }
+
+                                    $images = Get-WindowsImage -ImagePath $SourcePath
+                                    
+                                    foreach ($image in $images)
+                                    {
+                                        #$image | fl *
+                                        $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+                                        $MountFolderList += $MountFolder.FullName
+                                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Mounting Source $($image.ImageIndex) $($image.ImageName)"
+                                        $null = Mount-WindowsImage -ImagePath $SourcePath -Index $image.ImageIndex -Path  $MountFolder.FullName -ReadOnly
+                                        $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
+                                    }
+                                } #end if FeatureSource
                                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
                                 $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
                             }
@@ -343,6 +383,23 @@
                             $Package | ForEach-Object -Process {
                                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Package path: [$PSItem]"
                                 $Dism = Add-WindowsPackage -Path $WinPath -PackagePath $PSItem
+                            }
+                        }
+                        if ($RemoveFeature) 
+                        {
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Removing Windows Features from the Image"
+            
+                            $Package | ForEach-Object -Process {
+                                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Package path: [$PSItem]"
+                                try 
+                                { 
+                                    $null = Disable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature 
+                                }
+                                catch 
+                                {
+                                    Write-Error -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Error Removeing Windows Feature "
+                                    throw $_.Exception.Message
+                                }
                             }
                         }
                         #endregion
@@ -409,7 +466,7 @@
                             )
                         }
                     }
-                                    
+                    #endregion               
 
                     #region Recovery Tools
                     if ($RecoveryToolsPartition)

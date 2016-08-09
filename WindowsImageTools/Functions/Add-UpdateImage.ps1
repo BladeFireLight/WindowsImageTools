@@ -100,6 +100,20 @@
         [ValidateNotNullOrEmpty()]
         [string[]]$Feature,
 
+        # Feature to remove (in DISM format)
+        [ValidateNotNullOrEmpty()]
+        [string[]]$RemoveFeature,
+
+        # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched 
+        [ValidateNotNullOrEmpty()]
+        [ValidateScript({
+                    Test-Path -Path $(Resolve-Path $_)
+        })]
+        [string[]]$FeatureSource,
+
+        # Feature Source index. If the source is a .wim provide an index Default =1 
+        [int]$FeatureSourceIndex,
+
         # Path to drivers to inject
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
@@ -192,6 +206,18 @@
         if ($Feature) 
         {
             $convertParm.add('Feature',$Feature)
+        }
+        if ($RemoveFeature)
+        {
+            $SetVHDPartitionParam.add('RemoveFeature', $RemoveFeature)
+        }
+        if ($FeatureSource)
+        {
+            $SetVHDPartitionParam.add('FeatureSource', $FeatureSource)
+        }
+        if ($FeatureSourceIndex)
+        {
+            $SetVHDPartitionParam.add('FeatureSourceIndex', $FeatureSourceIndex)
         }
         if ($Driver) 
         {
