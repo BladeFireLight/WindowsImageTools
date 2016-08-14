@@ -15,13 +15,13 @@
             .NOTES
             General notes
     #>
-    [CmdletBinding(SupportsShouldProcess = $true, 
+    [CmdletBinding(SupportsShouldProcess, 
             PositionalBinding = $false,
     ConfirmImpact = 'Medium')]
     Param
     (
         # Path to the new VHDX file (Must end in .vhdx)
-        [Parameter(Position = 0,Mandatory = $true,
+        [Parameter(Position = 0,Mandatory,
         HelpMessage = 'Enter the path for the new VHD/VHDX file')]
         [ValidateNotNullorEmpty()]
         [ValidatePattern(".\.vhdx?$")]
@@ -49,7 +49,7 @@
         # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
         # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
         # Windows To Go images will boot in UEFI or BIOS
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [Alias('Layout')]
         [string]
         [ValidateNotNullOrEmpty()]
@@ -140,14 +140,15 @@
                     if ($VHDCmdlets)
                     {
                         $vhdParams = @{
-                            ErrorAction = 'Stop'
-                            Path        = $Path
-                            SizeBytes   = $Size
-                            Dynamic     = $Dynamic
+                            ErrorAction    = 'Stop'
+                            Path           = $Path
+                            SizeBytes      = $Size
+                            Dynamic        = $Dynamic
+                            BlockSizeBytes = $BlockSize
                         }
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : @vhdParms"
                         Write-Verbose -Message ($vhdParams | Out-String)
-                        $null = New-VHD @vhdParams
+                        $null = New-VHD @vhdParams 
                     }
                     else 
                     {
@@ -216,8 +217,7 @@
                                 $systemPartition = $windowsPartition
     
                                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Formatting windows volume"
-                                $windowsVolume = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
-                                $systemVolume = $windowsVolume
+                                $null = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
                             } 
                 
                             'UEFI' 
@@ -235,7 +235,7 @@
                                     Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery tools : Creating partition of [$RESize] bytes"
                                     $recoveryToolsPartition = New-Partition -DiskNumber $disk.Number -Size $RESize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
                                     Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery tools : Formatting NTFS"
-                                    $recoveryToolsVolume = Format-Volume -Partition $recoveryToolsPartition -FileSystem NTFS -NewFileSystemLabel 'Windows RE Tools' -Force -Confirm:$false
+                                    $null = Format-Volume -Partition $recoveryToolsPartition -FileSystem NTFS -NewFileSystemLabel 'Windows RE Tools' -Force -Confirm:$false
                                     #run diskpart to set GPT attribute to prevent partition removal
                                     #the here string must be left justified
                                     $null = @"
@@ -253,14 +253,14 @@ exit
                                 $systemPartition = New-Partition -DiskNumber $disk.Number -Size $SysSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
                 
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Formatting FAT32"
-                                $windowsVolume = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
+                                $null = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
 
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Setting system partition as ESP"
                                 $systemPartition | Set-Partition -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}'
                 
                                 # Create the reserved partition 
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : MSR : Creating partition of [$MSRSize] bytes"
-                                $reservedPartition = New-Partition -DiskNumber $disk.Number -Size $MSRSize -GptType '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
+                                $null = New-Partition -DiskNumber $disk.Number -Size $MSRSize -GptType '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
         
                     
                                 # Create the Windows partition
@@ -269,14 +269,14 @@ exit
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Creating partition of [$($disk.LargestFreeExtent - $RecoverySize)] bytes"
                                 $windowsPartition = New-Partition -DiskNumber $disk.Number -Size ($disk.LargestFreeExtent - $RecoverySize) -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Formatting volume NTFS"
-                                $windowsVolume = Format-Volume -Partition $windowsPartition -NewFileSystemLabel 'OS' -FileSystem NTFS -Force -Confirm:$false
+                                $null = Format-Volume -Partition $windowsPartition -NewFileSystemLabel 'OS' -FileSystem NTFS -Force -Confirm:$false
                     
                                 if ($RecoveryImage)
                                 {
                                     Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Creating partition using remaing free space"
                                     $recoveryImagePartition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
                                     Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Recovery Image : Formatting volume NTFS"
-                                    $RecoveryImageVolume = Format-Volume -Partition $recoveryImagePartition -NewFileSystemLabel 'Windows Recovery' -FileSystem NTFS -Force -Confirm:$false
+                                    $null = Format-Volume -Partition $recoveryImagePartition -NewFileSystemLabel 'Windows Recovery' -FileSystem NTFS -Force -Confirm:$false
                                     #run diskpart to set GPT attribute to prevent partition removal
                                     #the here string must be left justified
                                     $null = @"
@@ -304,14 +304,14 @@ exit
                                 $systemPartition = New-Partition -DiskNumber $disk.Number -Size $SysSize -MbrType FAT32 -IsActive 
         
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : EFI system : Formatting FAT32"
-                                $systemVolume    = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
+                                $null    = Format-Volume -Partition $systemPartition -FileSystem FAT32 -Force -Confirm:$false
             
                                 # Create the Windows partition
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Creating partition useing remaning space"
                                 $windowsPartition = New-Partition -DiskNumber $disk.Number -Size $disk.LargestFreeExtent -MbrType IFS
         
                                 Write-Verbose "[$($MyInvocation.MyCommand)] [$fileName] : Windows : Formatting volume NTFS"
-                                $windowsVolume    = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
+                                $null    = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
                             }
                         }
                     }

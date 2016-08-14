@@ -139,7 +139,7 @@
                     if (Test-IsNetworkLocation -Path $SourcePath) 
                     {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying ISO [$(Split-Path -Path $SourcePath -Leaf)] to [$env:temp]"
-                        $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
+                        $null = & "$env:windir\system32\robocopy.exe" $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
                         $SourcePath = "$($env:temp)\$(Split-Path -Path $SourcePath -Leaf)"
             
                         $tempSource = $SourcePath
@@ -171,7 +171,7 @@
                 if (Test-IsNetworkLocation -Path $SourcePath) 
                 {
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Copying WIM $(Split-Path -Path $SourcePath -Leaf) to [$env:temp]"
-                    $null = Robocopy.exe $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
+                    $null = & "$env:windir\system32\robocopy.exe" $(Split-Path -Path $SourcePath -Parent) $env:temp $(Split-Path -Path $SourcePath -Leaf)
                     $SourcePath = "$($TempDirectory)\$(Split-Path -Path $SourcePath -Leaf)"
             
                     $tempSource = $SourcePath
@@ -320,12 +320,16 @@
                                 if ($FeatureSource)
                                 {
                                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Source Path provided [$FeatureSource]"
-                                    if (($FeatureSource | Resolve-Path | Get-Item ).PSIsContainer -eq $true )
+                                    if (($FeatureSource |
+                                            Resolve-Path |
+                                    Get-Item ).PSIsContainer -eq $true )
                                     {
                                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Installing Windows Feature(s) : Source Path [$FeatureSource] in folder"
                                         $FeatureSourcePath += $FeatureSource
                                     }
-                                    elseif (($FeatureSource | Resolve-Path | Get-Item ).extension -like '.wim')
+                                    elseif (($FeatureSource |
+                                            Resolve-Path |
+                                    Get-Item ).extension -like '.wim')
                                     { 
                                         #$FeatureSourcePath += Convert-Path $FeatureSource
                                         $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
@@ -336,9 +340,8 @@
                                     }
                                     else
                                     {
-                                        Write-Warning "$FeatureSource is not a .wim or folder"
-                                    } 
-                                    
+                                        Write-Warning -Message "$FeatureSource is not a .wim or folder"
+                                    }
                                 }
                                 else 
                                 {
@@ -392,8 +395,8 @@
                             $Package | ForEach-Object -Process {
                                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Package path: [$PSItem]"
                                 try 
-                                { 
-                                    $null = Disable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature 
+                                {
+                                    $null = Disable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature
                                 }
                                 catch 
                                 {

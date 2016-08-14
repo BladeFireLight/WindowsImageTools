@@ -15,17 +15,17 @@ function Get-FullFilePath
     Param
     (
         # Path to file
-        [Parameter(Mandatory = $true,
-                ValueFromPipeline = $true,
+        [Parameter(Mandatory,HelpMessage = 'Path to file',
+                ValueFromPipeline,
         Position = 0)]
-        $Path
+        [String]$Path
     )
 
-    if (-not (Test-Path $Path))
+    if (-not (Test-Path -Path $Path))
     {
-        if (Test-Path (Split-Path -Path $Path -Parent ))
+        if (Test-Path -Path (Split-Path -Path $Path -Parent ))
         {
-            $Parent = Resolve-Path (Split-Path -Path $Path -Parent )
+            $Parent = Resolve-Path -Path (Split-Path -Path $Path -Parent )
             $Leaf = Split-Path -Path $Path -Leaf
             
             if ($Parent.path[-1] -eq '\') 
@@ -44,7 +44,7 @@ function Get-FullFilePath
     }
     else 
     {
-        $Path = Resolve-Path $Path
+        $Path = Resolve-Path -Path $Path
     }
     
     return $Path
@@ -95,19 +95,19 @@ Run-Executable
 
     [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory,HelpMessage = 'Path to Executable')]
         [string]
         [ValidateNotNullOrEmpty()]
         $Executable,
 
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory,HelpMessage = 'aray of arguments to pass to executable')]
         [string[]]
         [ValidateNotNullOrEmpty()]
         $Arguments,
 
         [Parameter()]
         [int]
-        [ValidateNotNullOrEmpty()]
+        [ValidateNotNullOrEmpty(HelpMessage = 'Expected errorCode if successful')]
         $SuccessfulErrorCode = 0
 
     )
@@ -127,7 +127,7 @@ Run-Executable
     Write-Verbose -Message ($Params | Out-String)
     $ret = Start-Process @Params
 
-    Write-Verbose "[$($MyInvocation.MyCommand)] : Return code was [$($ret.ExitCode)]"
+    Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Return code was [$($ret.ExitCode)]"
 
     if ($ret.ExitCode -ne $SuccessfulErrorCode) 
     {
@@ -151,7 +151,7 @@ Function Test-IsNetworkLocation
     
     [CmdletBinding()]
     param(
-        [Parameter(ValueFromPipeLine = $true)]
+        [Parameter(ValueFromPipeLine)]
         [string]
         [ValidateNotNullOrEmpty()]
         $Path
@@ -165,7 +165,7 @@ Function Test-IsNetworkLocation
     } 
     else 
     {
-        $driveInfo = [IO.DriveInfo]((Resolve-Path $Path).Path)
+        $driveInfo = [IO.DriveInfo]((Resolve-Path -Path $Path).Path)
 
         if ($driveInfo.DriveType -eq 'Network') 
         {
@@ -186,7 +186,7 @@ function New-TemporaryDirectory
             .EXAMPLE
             $TempDirPath = NewTemporaryDirectory
     #>
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    [CmdletBinding(SupportsShouldProcess)]
     [OutputType([System.IO.DirectoryInfo])]
     Param
     (
@@ -200,7 +200,7 @@ function New-TemporaryDirectory
         {
             if($PSCmdlet.ShouldProcess($env:temp))
             {
-                $tempDirPath = [System.IO.Directory]::CreateDirectory((Join-Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
+                $tempDirPath = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
             }
         }
         catch
@@ -212,7 +212,7 @@ function New-TemporaryDirectory
 
         if($tempDirPath)
         {
-            Get-Item $env:temp\$tempDirPath
+            Get-Item -Path $env:temp\$tempDirPath
         }
     }
 }
@@ -230,11 +230,11 @@ function MountVHDandRunBlock
     # Drive letter of the mounted VHD is stored in $driveLetter - can be used by script blocks
     if($ReadOnly) 
     {
-        $virtualDisk = Mount-VHD $vhd -ReadOnly -Passthru
+        $virtualDisk = Mount-VHD -Path $vhd -ReadOnly -Passthru
     }
     else 
     {
-        $virtualDisk = Mount-VHD $vhd -Passthru
+        $virtualDisk = Mount-VHD -Path $vhd -Passthru
     }
     # Workarround for new drive letters in script modules                  
     $null = Get-PSDrive
@@ -244,7 +244,7 @@ function MountVHDandRunBlock
     Get-Volume).DriveLetter
     & $block
 
-    Dismount-VHD $vhd
+    Dismount-VHD -Path $vhd
 
     # Wait 2 seconds for activity to clean up
     Start-Sleep -Seconds 2
@@ -256,8 +256,8 @@ Function GetVHDPartitionStyle
     (
         [string]$vhd 
     )
-    $PartitionStyle = (Mount-VHD $vhd -ReadOnly -Passthru | Get-Disk).PartitionStyle
-    Dismount-VHD $vhd
+    $PartitionStyle = (Mount-VHD -Path $vhd -ReadOnly -Passthru | Get-Disk).PartitionStyle
+    Dismount-VHD -Path $vhd
     Start-Sleep -Seconds 2
     return $PartitionStyle
 }         
@@ -275,7 +275,7 @@ function createRunAndWaitVM
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(Get-Date)"  
-    $null = New-VM $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop
+    $null = New-VM -Name $vmName -MemoryStartupBytes 2048mb -VHDPath $vhdPath -Generation $vmGeneration -SwitchName $configData.vmSwitch -ErrorAction Stop
 
     If($configData.vLan -ne 0) 
     {
@@ -283,7 +283,7 @@ function createRunAndWaitVM
     }
 
     Set-VM -Name $vmName -ProcessorCount 2
-    Start-VM $vmName
+    Start-VM -Name $vmName
 
     # Give the VM a moment to start before we start checking for it to stop
     Start-Sleep -Seconds 10
@@ -301,7 +301,7 @@ function createRunAndWaitVM
 
     # Clean up the VM
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Stoped"
-    Remove-VM $vmName -Force
+    Remove-VM -Name $vmName -Force
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VM $vmName Deleted at $(Get-Date)"
 }
 
@@ -314,9 +314,9 @@ function cleanupFile
     
     foreach ($target in $file) 
     { 
-        if (Test-Path $target) 
+        if (Test-Path -Path $target) 
         {
-            Remove-Item $target -Recurse -Force
+            Remove-Item -Path $target -Recurse -Force
         }
     }
 }

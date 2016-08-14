@@ -38,7 +38,7 @@
         
         # Size in Bytes (Default 40B)
         [ValidateRange(25GB,64TB)]
-        [uint64]$Size = 40GB,
+        [long]$Size = 40GB,
         
         # Create Dynamic disk
         [switch]$Dynamic,
@@ -93,7 +93,7 @@
         [ValidateNotNullOrEmpty()]
         [string[]]$Feature,
 
-         # Feature to remove (in DISM format)
+        # Feature to remove (in DISM format)
         [ValidateNotNullOrEmpty()]
         [string[]]$RemoveFeature,
 
@@ -107,7 +107,7 @@
         # Feature Source index. If the source is a .wim provide an index Default =1 
         [int]$FeatureSourceIndex = 1,
 
-       # Path to drivers to inject
+        # Path to drivers to inject
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
                     Test-Path -Path $(Resolve-Path $_)

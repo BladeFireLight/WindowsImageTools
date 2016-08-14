@@ -1,15 +1,15 @@
 ﻿function New-WindowsImageToolsExample
 {
-<#
-        .Synopsis
-        Create folders and script examples on the use of Windows Image Tools
-        .DESCRIPTION
-        This Command creates the folders structures and example files needed to use Windows Image Tools to auto update windows images.
-        .EXAMPLE
-        New-WitExample -Path c:\WitExample
-        .NOTES
-        This is a work in progress
-#>
+    <#
+            .Synopsis
+            Create folders and script examples on the use of Windows Image Tools
+            .DESCRIPTION
+            This Command creates the folders structures and example files needed to use Windows Image Tools to auto update windows images.
+            .EXAMPLE
+            New-WitExample -Path c:\WitExample
+            .NOTES
+            This is a work in progress
+    #>
     [CmdletBinding(SupportsShouldProcess = $true
     )]
     [OutputType([System.IO.DirectoryInfo])]

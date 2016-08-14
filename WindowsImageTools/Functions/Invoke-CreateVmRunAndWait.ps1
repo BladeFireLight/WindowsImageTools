@@ -49,7 +49,7 @@ function Invoke-CreateVmRunAndWait
     $vmName = [System.IO.Path]::GetRandomFileName().split('.')[0]
      
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Creating VM $vmName at $(Get-Date)"  
-    $null = New-VM $vmName -MemoryStartupBytes $MemoryStartupBytess -VHDPath $VhdPath -Generation $VmGeneration -SwitchName $VmSwitch -ErrorAction Stop
+    $null = New-VM -Name $vmName -MemoryStartupBytes $MemoryStartupBytess -VHDPath $VhdPath -Generation $VmGeneration -SwitchName $VmSwitch -ErrorAction Stop
 
     If($vLan -ne 0) 
     {

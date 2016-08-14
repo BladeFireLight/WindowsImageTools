@@ -1,25 +1,25 @@
 function Update-WindowsImageWMF
 {
-<#
-        .Synopsis
-        Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows Update Image
-        .DESCRIPTION
-        This Command downloads WMF 4.0, 5.0PP or 5.0 (Production Preview) and .NET 4.6 offline installer
-        Creates a temp VM and updates .NET if needed and WMF
-        .EXAMPLE
-        Update-UpdateImageWMF -Path C:\WITExample
-        Updates every Image in c:\WITExample\BaseImages
-        .EXAMPLE
-        Update-UpdateImageWMF -Path C:\WitExample -Name Server2012R2Core
-        Updates only C:\WitExample\BaseImages\Server2012R2Core_Base.vhdx
-#>
-    [CmdletBinding(SupportsShouldProcess = $true)]
+    <#
+            .Synopsis
+            Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows Update Image
+            .DESCRIPTION
+            This Command downloads WMF 4.0, 5.0PP or 5.0 (Production Preview) and .NET 4.6 offline installer
+            Creates a temp VM and updates .NET if needed and WMF
+            .EXAMPLE
+            Update-UpdateImageWMF -Path C:\WITExample
+            Updates every Image in c:\WITExample\BaseImages
+            .EXAMPLE
+            Update-UpdateImageWMF -Path C:\WitExample -Name Server2012R2Core
+            Updates only C:\WitExample\BaseImages\Server2012R2Core_Base.vhdx
+    #>
+    [CmdletBinding(SupportsShouldProcess)]
     #[OutputType([String])]
     Param
     (
         # Path to the Windows Image Tools Update Folders (created via New-WindowsImageToolsExample)
-        [Parameter(Mandatory = $true, 
-        ValueFromPipelineByPropertyName = $true)]
+        [Parameter(Mandatory, 
+        ValueFromPipelineByPropertyName)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [ValidateScript({
@@ -36,7 +36,7 @@ function Update-WindowsImageWMF
         $Path,
  
         # Name of the Image to update
-        [Parameter(Mandatory = $true)]
+        [Parameter(Mandatory)]
         [ValidateNotNull()]
         [ValidateNotNullOrEmpty()]
         [Alias('FriendlyName')]
@@ -108,7 +108,7 @@ function Update-WindowsImageWMF
             { 
                 if (-not (Test-Path -Path $wmfPath)) 
                 {
-                    $nul = mkdir -Path $wmfPath
+                    $null = mkdir -Path $wmfPath
                 } 
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for the latest WMF in $wmfPath"
                 $confirmationPage = 'http://www.microsoft.com/en-us/download/' +  $((Invoke-WebRequest -Uri $wmfDownloadUrl -UseBasicParsing).links | 
@@ -124,7 +124,7 @@ function Update-WindowsImageWMF
                     if (-not (Test-Path -Path "$wmfPath\$filename" ))
                     { 
                         Write-Warning -Message "[$($MyInvocation.MyCommand)] : Checking for the latest WMF : $filename Missing, Downloading"
-                        $download = Invoke-WebRequest -Uri $directURL -OutFile "$wmfPath\$filename" 
+                        $null = Invoke-WebRequest -Uri $directURL -OutFile "$wmfPath\$filename" 
                     }
                     else
                     {
@@ -154,7 +154,7 @@ function Update-WindowsImageWMF
                 if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename" ))
                 { 
                     Write-Warning -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6 : Missing : Downloading"
-                    $download = Invoke-WebRequest -Uri $directURL -OutFile "$Path\Resource\dotNET\$filename" 
+                    $null = Invoke-WebRequest -Uri $directURL -OutFile "$Path\Resource\dotNET\$filename" 
                 }    
             }
             catch 
@@ -196,7 +196,7 @@ function Update-WindowsImageWMF
                         }
                         else
                         {
-                            shutdown.exe /s /t 0 /f
+                            & "$env:windir\system32\shutdown.exe" /s /t 0 /f
                         }
                         Stop-Transcript
                     }
@@ -212,7 +212,7 @@ function Update-WindowsImageWMF
                     }
                     else
                     {
-                        shutdown.exe /s /t 0 /f
+                        & "$env:windir\system32\shutdown.exe" /s /t 0 /f
                     }
                     Stop-Transcript
                 }
@@ -225,7 +225,7 @@ function Update-WindowsImageWMF
                 }
                 else
                 {
-                    shutdown.exe /r /t 0 /f
+                    & "$env:windir\system32\shutdown.exe" /r /t 0 /f
                 }
                 Stop-Transcript
             }
