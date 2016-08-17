@@ -1,3 +1,3 @@
-﻿Import-Module -Name $PSScriptRoot\WindowsImageTools -Force
+﻿Import-Module -Name WindowsImageTools
 
-New-WindowsImageToolsExample -Path g:\WitExample 
+New-WindowsImageToolsExample -Path C:\WitExample 
