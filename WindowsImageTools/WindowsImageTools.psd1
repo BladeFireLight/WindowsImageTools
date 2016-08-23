@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.6'
+ModuleVersion = '1.0.7'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -116,7 +116,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'Fixed issue with #require casusing other functions to be exported as part of this module'
+        ReleaseNotes = 'Fixed but with BCDBoot ran fine but PowerShell thought it threw and error'
 
     } # End of PSData hashtable
 
