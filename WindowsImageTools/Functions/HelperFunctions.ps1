@@ -107,7 +107,6 @@ Run-Executable
 
         [Parameter()]
         [int]
-        [ValidateNotNullOrEmpty(HelpMessage = 'Expected errorCode if successful')]
         $SuccessfulErrorCode = 0
 
     )
@@ -125,7 +124,7 @@ Run-Executable
     }
 
     Write-Verbose -Message ($Params | Out-String)
-    $ret = Start-Process @Params
+    $ret = Start-Process @Params -ErrorAction SilentlyContinue
 
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Return code was [$($ret.ExitCode)]"
 

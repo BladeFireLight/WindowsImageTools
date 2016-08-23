@@ -448,7 +448,7 @@
                             }
                         }
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] System Partition [$($SystemPartition.partitionNumber)] : Running [$windir\System32\bcdboot.exe] -> $bcdBootArgs" 
-                        Run-Executable -Executable 'bcdboot.exe' -Arguments $bcdBootArgs @ParametersToPass
+                        Run-Executable -Executable "$windir\System32\bcdboot.exe" -Arguments $bcdBootArgs @ParametersToPass
 
                         # The following is added to mitigate the VMM diff disk handling
                         # We're going to change from MBRBootOption to LocateBootOption.
