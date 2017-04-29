@@ -2,10 +2,12 @@ function Update-WindowsImageWMF
 {
     <#
             .Synopsis
-            Updates WMF to 4.0, 5.0 Production Preview or 5.0 (and .NET to 4.6) in a Windows Update Image
+            Updates WMF to 4.0, 5.0 or 5.1 preview (and .NET to 4.6) in a Windows Update Image
             .DESCRIPTION
-            This Command downloads WMF 4.0, 5.0PP or 5.0 (Production Preview) and .NET 4.6 offline installer
-            Creates a temp VM and updates .NET if needed and WMF
+            This Command downloads WMF 4.0, 5.0 or 5.1 (Production Preview) and .NET 4.6 offline installer and installes them in the target Update Image
+            Creates a temp VM and updates .NET (if needed) and WMF
+            The default is to install the latest stable (currently 5.0)
+            Windows 7 and 2008 Need WMF4 before WMF 5.x 
             .EXAMPLE
             Update-UpdateImageWMF -Path C:\WITExample
             Updates every Image in c:\WITExample\BaseImages
@@ -43,13 +45,17 @@ function Update-WindowsImageWMF
         [string[]]
         $ImageName,
 
-        # Use WMF 4 instead of the default WMF 5
+        # Use WMF 4 instead of the default WMF 5.0
         [switch]
         $Wmf4,
 
-        # Use WMF5 Production Preview instead of the default WMF 5 (overrides -vmf4)
+        # Use WMF 5 instead of the default WMF 5.0
         [switch]
-        $Wmf5pp
+        $Wmf5,
+
+        # Use Production Preview instead of the default WMF 5.0 (overrides -vmf4)
+        [switch]
+        $preview
 
     )
 
@@ -91,17 +97,27 @@ function Update-WindowsImageWMF
 
             #region Update Resource Folder
             ## download WMF
+
+            # Set defaults
             $wmfPath = "$Path\Resource\WMF\5"
-            $wmfDownloadUrl = 'http://aka.ms/wmf5latest'
-        
+            #$wmfDownloadUrl = 'http://aka.ms/wmf5latest'
+            $wmfDownloadUrl = 'https://www.microsoft.com/en-us/download/details.aspx?id=50395'
+ 
+            if ($Wmf5)
+            {
+                $wmfPath = "$Path\Resource\WMF\5"
+                
+                $wmfDownloadUrl = 'https://www.microsoft.com/en-us/download/details.aspx?id=50395'
+            }
             if ($Wmf4)
             {
                 $wmfPath = "$Path\Resource\WMF\4"
                 $wmfDownloadUrl = 'http://www.microsoft.com/en-us/download/details.aspx?id=40855'
             }
-            if ($Wmf5pp)
+            if ($preview)
             {
-                $wmfPath = "$Path\Resource\WMF\5pp"
+                Write-Warning 'Preview versions are not fully supported, and will have to be unisntalled before installing the release version.'
+                $wmfPath = "$Path\Resource\WMF\preview"
                 $wmfDownloadUrl = 'https://www.microsoft.com/en-us/download/details.aspx?id=48729'
             }
             try
@@ -146,14 +162,14 @@ function Update-WindowsImageWMF
             {
                 if (-not (Test-Path -Path $Path\Resource\dotNET)) 
                 {
-                    mkdir -Path $Path\Resource\dotNET
+                    $null = mkdir -Path $Path\Resource\dotNET
                 } 
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6"
-                $directURL = 'https://download.microsoft.com/download/C/3/A/C3A5200B-D33C-47E9-9D70-2F7C65DAAD94/NDP46-KB3045557-x86-x64-AllOS-ENU.exe'
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6.1 installer"
+                $directURL = 'https://download.microsoft.com/download/E/4/1/E4173890-A24A-4936-9FC9-AF930FE3FA40/NDP461-KB3102436-x86-x64-AllOS-ENU.exe'
                 $filename = 'dotNet4-6.exe'
                 if (-not (Test-Path -Path "$Path\Resource\dotNET\$filename" ))
                 { 
-                    Write-Warning -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6 : Missing : Downloading"
+                    Write-Warning -Message "[$($MyInvocation.MyCommand)] : Checking for .NET 4.6 installer : Missing : Downloading"
                     $null = Invoke-WebRequest -Uri $directURL -OutFile "$Path\Resource\dotNET\$filename" 
                 }    
             }
