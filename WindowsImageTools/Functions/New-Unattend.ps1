@@ -4,17 +4,19 @@ function New-UnattendXml {
     Create a new Unattend.xml 
     .DESCRIPTION
     This Command Creates a new Unattend.xml that skips any prompts, and sets the administrator password
-    Has options for: Adding user accounts
-    Auto logon a set number of times
-    Set the Computer Name
-    First Boot or First Logon powersrhell script
-    Product Key
-    TimeZone
-    Input, System and User Locals
-    UI Language
-    Registered Owner and Orginization
-    First Boot, First Logon and Every Logon Commands
-    Enable Administrator account without autologon (client OS)
+    Has options for: 
+      Joining domain
+      Adding user accounts
+      Auto logon a set number of times
+      Set the Computer Name
+      First Boot or First Logon powersrhell script
+      Product Key
+      TimeZone
+      Input, System and User Locals
+      UI Language
+      Registered Owner and Orginization
+      First Boot, First Logon and Every Logon Commands
+      Enable Administrator account without autologon (client OS)
 
     If no Path is provided a the file will be created in a temp folder and the path returned.
     .EXAMPLE
