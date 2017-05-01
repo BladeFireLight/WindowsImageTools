@@ -22,7 +22,7 @@ function Initialize-DiskPartition
     ConfirmImpact = 'Medium')]
   Param
   (
-    # Path to the new VHD(x,s) file (Must end in .vhdx)
+    # Disk number, disk must exist
     [Parameter(Position = 0, Mandatory,
       HelpMessage = 'Disk Number based on Get-Disk')]
     [ValidateNotNullorEmpty()]
