@@ -167,8 +167,10 @@
             throw $_.Exception.Message
           }
           #endregion
-        }else {
-          Throw "Failed to create vhd" }
+        }
+        else {
+          Throw "Failed to create vhd" 
+        }
 
         #region Create partitions
         try { 
@@ -202,3 +204,4 @@
       }
     }
   }
+}
