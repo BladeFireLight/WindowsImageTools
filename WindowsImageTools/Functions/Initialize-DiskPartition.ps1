@@ -38,12 +38,9 @@ function Initialize-DiskPartition
       })]
     [string]$DiskNumber,
         
-    # Size in Bytes (Default 40B)
-    [ValidateRange(25GB, 64TB)]
-    [uint64]$Size = 40GB,
-    
-    # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
-    # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
+    # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), Data (GPT), or WindowsToGo (MBR).
+    # Generation 1 VMs require BIOS (MBR) images and have one partition. Generation 2 VMs require 
+    # UEFI (GPT) images and have 3-5 partitions.
     # Windows To Go images will boot in UEFI or BIOS
     [Parameter(Mandatory)]
     [Alias('Layout')]
@@ -58,7 +55,7 @@ function Initialize-DiskPartition
     [ValidateSet('NTFS', 'ReFS')]
     $DataFormat = 'ReFS',
 
-    # Output the disk image object
+    # Output the disk object
     [switch]$Passthru,
          
     # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
