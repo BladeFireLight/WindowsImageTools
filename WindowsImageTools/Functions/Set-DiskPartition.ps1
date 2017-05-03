@@ -168,9 +168,12 @@
         #endregion
                 
               
-        try {                   
+        try {      
+          # Workarround for new drive letters in script modules             
+          $null = Get-PSDrive
           #region Assign Drive Letters
           foreach ($partition in (Get-Partition -DiskNumber $DiskNumber | 
+                Where-Object -Property DriveLetter -EQ 0x00 |
                 Where-Object -Property Type -NE -Value Reserved)) {
             $partition | Add-PartitionAccessPath -AssignDriveLetter -ErrorAction Stop
           } 
@@ -219,7 +222,7 @@
           if ($RecoveryImagePartition) {
             #copy the WIM to recovery image partition as Install.wim
             $recoverfolder = Join-Path -Path "$($RecoveryImagePartition.DriveLetter):" -ChildPath 'Recovery'
-            $null = mkdir -Path $recoverfolder
+            $null = mkdir -Path $recoverfolder -ErrorAction SilentlyContinue
             $recoveryPath = Join-Path -Path $recoverfolder -ChildPath 'install.wim'
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Image Partition [$($RecoveryImagePartition.PartitionNumber)] : copying [$SourcePath] to [$recoveryPath]"
             Copy-Item -Path $SourcePath -Destination $recoveryPath -ErrorAction Stop
@@ -283,7 +286,8 @@
                 $notWinPE = $true
                 if ((Resolve-Path -Path $env:temp).drive.name -eq 'X') {
                   $notWinPE = $false
-                  Write-Warning "WinPE does not support Mounting WIM, Feature sources must be present in the image OR -FeatureSource must be a Folder"}
+                  Write-Warning "WinPE does not support Mounting WIM, Feature sources must be present in the image OR -FeatureSource must be a Folder"
+                }
                 if ($FeatureSource) {
                   Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Source Path provided [$FeatureSource]"
                   if (($FeatureSource |
@@ -293,8 +297,8 @@
                     $FeatureSourcePath += $FeatureSource
                   }
                   elseif ((($FeatureSource |
-                        Resolve-Path |
-                        Get-Item ).extension -like '.wim') -and $notWinPE) { 
+                          Resolve-Path |
+                          Get-Item ).extension -like '.wim') -and $notWinPE) { 
                     #$FeatureSourcePath += Convert-Path $FeatureSource
                     $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
                     $MountFolderList += $MountFolder.FullName
@@ -306,7 +310,8 @@
                     Write-Warning -Message "$FeatureSource is not a .wim or folder"
                   }
                 }
-                elseif ($notWinPE) { #NO $FeatureSource
+                elseif ($notWinPE) {
+                  #NO $FeatureSource
                   
                   $images = Get-WindowsImage -ImagePath $SourcePath
                                     
@@ -323,7 +328,7 @@
                   $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
                 }
                 else { 
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : No Source Path"
+                  Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : No Source Path"
                   $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature 
                 }
               }
@@ -426,7 +431,7 @@
             Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setosimage /path $recoverfolder /index $Index /target $windir" 
                         
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Creating Recovery\WindowsRE folder [$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE]"
-            $repath = mkdir -Path "$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE"
+            $repath = mkdir -Path "$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE" -ErrorAction SilentlyContinue
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Copying [$($WindowsPartition.DriveLetter):\Windows\System32\recovery\winre.wim] to [$($repath.fullname)]"
             #the winre.wim file is hidden
             Get-ChildItem -Path "$($WindowsPartition.DriveLetter):\Windows\System32\recovery\winre.wim" -Hidden |
