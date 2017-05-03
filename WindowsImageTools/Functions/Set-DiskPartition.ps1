@@ -423,7 +423,7 @@
           if ($RecoveryToolsPartition) {
             $recoverfolder = Join-Path -Path "$($RecoveryToolsPartition.DriveLetter):" -ChildPath 'Recovery'
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Register Reovery Image "
-            Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setosimage /path $recoverfolder /index $Index /target $windir"  -NoNewWindow
+            Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setosimage /path $recoverfolder /index $Index /target $windir" 
                         
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Creating Recovery\WindowsRE folder [$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE]"
             $repath = mkdir -Path "$($RecoveryToolsPartition.driveletter):\Recovery\WindowsRE"
