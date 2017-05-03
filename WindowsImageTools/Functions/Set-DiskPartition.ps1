@@ -18,7 +18,7 @@
     #>
   [CmdletBinding(SupportsShouldProcess = $true, 
     PositionalBinding = $true,
-    ConfirmImpact = 'High')]
+    ConfirmImpact = 'Medium')]
   Param
   (
     # Disk number, disk must exist
@@ -274,6 +274,16 @@
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Colecting posible source paths"
                 $FeatureSourcePath = @()
                 $MountFolderList = @()
+                
+                # ISO
+                if ($driveLetter) {
+                  $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
+                }
+                
+                $notWinPE = $true
+                if ((Resolve-Path -Path $env:temp).drive.name -eq 'X') {
+                  $notWinPE = $false
+                  Write-Warning "WinPE does not support Mounting WIM, Feature sources must be present in the image OR -FeatureSource must be a Folder"}
                 if ($FeatureSource) {
                   Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Source Path provided [$FeatureSource]"
                   if (($FeatureSource |
@@ -282,9 +292,9 @@
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Source Path [$FeatureSource] in folder"
                     $FeatureSourcePath += $FeatureSource
                   }
-                  elseif (($FeatureSource |
+                  elseif ((($FeatureSource |
                         Resolve-Path |
-                        Get-Item ).extension -like '.wim') { 
+                        Get-Item ).extension -like '.wim') -and $notWinPE) { 
                     #$FeatureSourcePath += Convert-Path $FeatureSource
                     $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
                     $MountFolderList += $MountFolder.FullName
@@ -296,25 +306,26 @@
                     Write-Warning -Message "$FeatureSource is not a .wim or folder"
                   }
                 }
-                else {
-                  # ISO
-                  if ($driveLetter) {
-                    $FeatureSourcePath += Join-Path -Path "$($driveLetter):" -ChildPath 'sources\sxs'
-                  }
-
+                elseif ($notWinPE) { #NO $FeatureSource
+                  
                   $images = Get-WindowsImage -ImagePath $SourcePath
                                     
                   foreach ($image in $images) {
-                    #$image | fl *
                     $MountFolder = [System.IO.Directory]::CreateDirectory((Join-Path -Path $env:temp -ChildPath ([System.IO.Path]::GetRandomFileName().split('.')[0])))
                     $MountFolderList += $MountFolder.FullName
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Mounting Source $($image.ImageIndex) $($image.ImageName)"
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Mounting Source [$SourcePath] [$($image.ImageIndex)] [$($image.ImageName)] to [$($MountFolder.FullName)] "
                     $null = Mount-WindowsImage -ImagePath $SourcePath -Index $image.ImageIndex -Path  $MountFolder.FullName -ReadOnly
                     $FeatureSourcePath += Join-Path -Path $MountFolder.FullName -ChildPath 'Windows\WinSxS'
                   }
                 } #end if FeatureSource
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
-                $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
+                if ($FeatureSourcePath.count -gt 0) { 
+                  Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
+                  $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
+                }
+                else { 
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : No Source Path"
+                  $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature 
+                }
               }
               catch {
                 Write-Error -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Error Installing Windows Feature "
@@ -323,6 +334,7 @@
               finally { 
                 foreach ($MountFolder in $MountFolderList) {
                   $null = Dismount-WindowsImage -Path $MountFolder -Discard
+                  Remove-Item $MountFolder
                 }
               }
             }
@@ -341,10 +353,10 @@
               $Package | ForEach-Object -Process {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Package path: [$PSItem]"
                 try {
-                  $null = Disable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature
+                  $null = Disable-WindowsOptionalFeature -Path $WinPath -FeatureName $Feature @ParametersToPass
                 }
                 catch {
-                  Write-Error -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Error Removeing Windows Feature "
+                  Write-Error -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Error Removeing Windows Feature [$Feature] "
                   throw $_.Exception.Message
                 }
               }
