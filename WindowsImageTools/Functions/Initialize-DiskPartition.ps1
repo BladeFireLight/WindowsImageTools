@@ -263,7 +263,7 @@ exit
               $systemPartition = $windowsPartition
     
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Formatting Data volume as [$dataFormat]"
-              $null = Format-Volume -Partition $windowsPartition -FileSystem $dataFormat -Force -Confirm:$false
+              $null = Format-Volume -Partition $windowsPartition -FileSystem $dataFormat -Force -Confirm:$false -NewFileSystemLabel 'Data' 
             } 
           }
         }
