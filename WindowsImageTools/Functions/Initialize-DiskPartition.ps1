@@ -1,5 +1,4 @@
-function Initialize-DiskPartition
-{
+function Initialize-DiskPartition {
   <#
     .Synopsis
     Initialize a disk and create partitions
@@ -27,12 +26,10 @@ function Initialize-DiskPartition
       HelpMessage = 'Disk Number based on Get-Disk')]
     [ValidateNotNullorEmpty()]
     [ValidateScript( {
-        if (Get-Disk -Number $_)
-        {
+        if (Get-Disk -Number $_) {
           $true
         }
-        else
-        {
+        else {
           Throw "Disk number $_ does not exist."
         }
       })]
@@ -67,23 +64,19 @@ function Initialize-DiskPartition
     # Force the overwrite of existing files
     [switch]$force
   )
-  Begin
-  { 
+  Begin { 
 
  
     if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create [$DiskLayout] partition structure on Disk [$DiskNumber]",
         "Replace existing Partitions on disk [$DiskNumber] ? ",
-        'Overwrite WARNING!'))
-    {
+        'Overwrite WARNING!')) {
       if (-not (Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -Or 
         $force -Or 
-        ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -and $pscmdlet.ShouldContinue("Target Disk [$DiskNumber] has existing partitions! Any existing data will be lost! (suppress with -force)", 'Warning')))
-      {
+        ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -and $pscmdlet.ShouldContinue("Target Disk [$DiskNumber] has existing partitions! Any existing data will be lost! (suppress with -force)", 'Warning'))) {
         #region Validate input
 
         # Recovery Image requires the Recovery Tools
-        if ($RecoveryImage)
-        {
+        if ($RecoveryImage) {
           $RecoveryTools = $true
         }
           
@@ -91,23 +84,18 @@ function Initialize-DiskPartition
         $MSRSize = 128MB
         $RESize = 0 
         $RecoverySize = 0
-        if ($RecoveryTools)
-        {
+        if ($RecoveryTools) {
           $RESize = 350MB
         }
-        if ($RecoveryImage)
-        {
+        if ($RecoveryImage) {
           $RecoverySize = 15GB
         }
                 
 
         #region create partitions
-        try
-        {
-          switch ($DiskLayout)
-          {             
-            'BIOS'
-            {
+        try {
+          switch ($DiskLayout) {             
+            'BIOS' {
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk"
               Clear-disk -Number $disknumber -RemoveData -Confirm:$false -ErrorAction SilentlyContinue
 
@@ -116,8 +104,7 @@ function Initialize-DiskPartition
 
               $initiaPartition = Get-Disk -Number $disknumber -ErrorAction Stop |
                 Get-Partition -ErrorAction SilentlyContinue
-              if ($initiaPartition)
-              {
+              if ($initiaPartition) {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk to start all over"
                 Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
               }
@@ -133,8 +120,7 @@ function Initialize-DiskPartition
               $null = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
             } 
                 
-            'UEFI'
-            {
+            'UEFI' {
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk"
               Clear-disk -Number $disknumber -RemoveData -Confirm:$false  -ErrorAction SilentlyContinue
 
@@ -143,14 +129,12 @@ function Initialize-DiskPartition
 
               $initiaPartition = Get-Disk -Number $disknumber -ErrorAction Stop |
                 Get-Partition -ErrorAction SilentlyContinue
-              if ($initiaPartition)
-              {
+              if ($initiaPartition) {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk to start all over"
                 Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
               }
 
-              if ($RecoveryTools)
-              {
+              if ($RecoveryTools) {
                 Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Recovery tools : Creating partition of [$RESize] bytes"
                 $recoveryToolsPartition = New-Partition -DiskNumber $disknumber -Size $RESize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
                 Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Recovery tools : Formatting NTFS"
@@ -189,8 +173,7 @@ exit
               Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Windows : Formatting volume NTFS"
               $null = Format-Volume -Partition $windowsPartition -NewFileSystemLabel 'OS' -FileSystem NTFS -Force -Confirm:$false
                     
-              if ($RecoveryImage)
-              {
+              if ($RecoveryImage) {
                 Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Recovery Image : Creating partition using remaing free space"
                 $recoveryImagePartition = New-Partition -DiskNumber $diskNumber -UseMaximumSize -GptType '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}'
                 Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Recovery Image : Formatting volume NTFS"
@@ -207,8 +190,7 @@ exit
               }
             }
 
-            'WindowsToGo'
-            {                
+            'WindowsToGo' {                
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk"
               Clear-disk -Number $disknumber -RemoveData -Confirm:$false -ErrorAction SilentlyContinue
 
@@ -217,8 +199,7 @@ exit
                     
               $initiaPartition = Get-Disk -Number $disknumber -ErrorAction Stop |
                 Get-Partition -ErrorAction SilentlyContinue
-              if ($initiaPartition)
-              {
+              if ($initiaPartition) {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk to start all over"
                 Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
               }
@@ -237,8 +218,7 @@ exit
               Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Windows : Formatting volume NTFS"
               $null = Format-Volume -Partition $windowsPartition -FileSystem NTFS -Force -Confirm:$false
             }
-            'Data'
-            {
+            'Data' {
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk"
               Clear-disk -Number $disknumber -RemoveData -Confirm:$false  -ErrorAction SilentlyContinue
 
@@ -247,8 +227,7 @@ exit
 
               $initiaPartition = Get-Disk -Number $disknumber -ErrorAction Stop |
                 Get-Partition -ErrorAction SilentlyContinue
-              if ($initiaPartition)
-              {
+              if ($initiaPartition) {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk to start all over"
                 Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
               }
@@ -264,21 +243,18 @@ exit
             } 
           }
         }
-        catch
-        {
+        catch {
           Write-Error -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Creating Partitions"
           throw $_.Exception.Message
         }
         #endregion create partitions
                    
-        if ($Passthru)
-        {
+        if ($Passthru) {
           #write the new disk object to the pipeline
           Get-Disk -Number $DiskNumber
         }
       }
-      else 
-      {
+      else {
         Throw "[$($MyInvocation.MyCommand)] Aborted by user"
       }
     }
