@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.7'
+ModuleVersion = '1.0.8'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -24,7 +24,7 @@ Author = 'David Jones'
 CompanyName = 'BladeFireLight'
 
 # Copyright statement for this module
-Copyright = '2015'
+Copyright = '2017'
 
 # Description of the functionality provided by this module
 Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
@@ -68,7 +68,9 @@ Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
 # Functions to export from this module
 FunctionsToExport = 'Convert-Wim2VHD',
                     'Initialize-VHDPartition',
+                    'Initialize-DiskPartition',
                     'Set-VHDPartition',
+                    'Set-DiskPartition',
                     'New-UnattendXml', 
                     'New-WindowsImageToolsExample', 
                     'Set-UpdateConfig', 
@@ -78,7 +80,8 @@ FunctionsToExport = 'Convert-Wim2VHD',
                     'Invoke-WindowsImageUpdate',
                     'Invoke-CreateVmRunAndWait',
                     'Mount-VhdAndRunBlock',
-                    'Get-VhdPartitionStyle'
+                    'Get-VhdPartitionStyle',
+                    'Install-WindowsFromWim'
 
 # Cmdlets to export from this module
 # CmdletsToExport = '*'
@@ -116,7 +119,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'Fixed but with BCDBoot ran fine but PowerShell thought it threw and error'
+        ReleaseNotes = 'Added *-Disk* functions for phisical deployment'
 
     } # End of PSData hashtable
 
