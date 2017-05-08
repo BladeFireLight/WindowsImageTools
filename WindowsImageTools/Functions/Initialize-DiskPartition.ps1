@@ -240,6 +240,7 @@ exit
     
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Formatting Data volume as [$dataFormat]"
               $null = Format-Volume -Partition $windowsPartition -FileSystem $dataFormat -Force -Confirm:$false -NewFileSystemLabel 'Data' 
+              $windowsPartition | Add-PartitionAccessPath -AssignDriveLetter -ErrorAction Stop
             } 
           }
         }
