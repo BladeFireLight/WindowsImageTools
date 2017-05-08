@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.10'
+ModuleVersion = '1.0.11'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
