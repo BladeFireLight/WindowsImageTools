@@ -235,12 +235,11 @@ exit
               # Refresh $disk to update free space
               $disk = Get-Disk -Number $disknumber | Get-Disk
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Creating single partition of [$($disk.LargestFreeExtent)] bytes"
-              $windowsPartition = New-Partition -DiskNumber $disknumber -UseMaximumSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
-              $systemPartition = $windowsPartition
+              $dataPartition = New-Partition -DiskNumber $disknumber -UseMaximumSize -GptType '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}'
     
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Formatting Data volume as [$dataFormat]"
-              $null = Format-Volume -Partition $windowsPartition -FileSystem $dataFormat -Force -Confirm:$false -NewFileSystemLabel 'Data' 
-              $windowsPartition | Add-PartitionAccessPath -AssignDriveLetter -ErrorAction Stop
+              $null = Format-Volume -Partition $dataPartition -FileSystem $dataFormat -Force -Confirm:$false -NewFileSystemLabel 'Data' 
+              $dataPartition | Add-PartitionAccessPath -AssignDriveLetter -ErrorAction Stop
             } 
           }
         }
