@@ -122,10 +122,10 @@ function Initialize-DiskPartition {
                 
             'UEFI' {
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk"
-              Clear-disk -Number $disknumber -RemoveData -Confirm:$false  -ErrorAction SilentlyContinue
+              Clear-disk -Number $disknumber -RemoveData -RemoveOEM -Confirm:$false  -ErrorAction SilentlyContinue
 
               Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Initializing disk [$disknumber] as GPT"
-              Initialize-Disk -Number $disknumber -PartitionStyle GPT -ErrorAction Stop
+              Initialize-Disk -Number $disknumber -PartitionStyle GPT -ErrorAction SilentlyContinue
 
               $initiaPartition = Get-Disk -Number $disknumber -ErrorAction Stop |
                 Get-Partition -ErrorAction SilentlyContinue

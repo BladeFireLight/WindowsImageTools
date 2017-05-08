@@ -1,45 +1,35 @@
-﻿function Convert-Wim2VHD {
+﻿function Install-WindowsFromWim {
   <#
     .Synopsis
-    Create a VHDX and populate it from a WIM
+    Populate a Disk it from a WIM
     .DESCRIPTION
-    This command will create a VHD or VHDX formated for UEFI (Gen 2/GPT) or BIOS (Gen 1/MBR)
-    You must supply the path to the VHD/VHDX file and a valid WIM/ISO. You should also
+    This command will Format the disk and install Windows from a WIM/ISO
+    You must supply the path to a valid WIM/ISO. You should also
     include the index number for the Windows Edition to install.
     .EXAMPLE
-    Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
+    Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
     .EXAMPLE
-    Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 -Size 40GB -force -DiskLayout UEFI
+    Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -index 3 -force -DiskLayout UEFI
     #>
   [CmdletBinding(SupportsShouldProcess = $true, 
     PositionalBinding = $false,
     ConfirmImpact = 'Medium')]
   Param
   (
-    # Path to the new VHDX file (Must end in .vhdx)
-    [Parameter(Position = 0, Mandatory = $true,
-      HelpMessage = 'Enter the path for the new VHDX file')]
+    # Disk number, disk must exist
+    [Parameter(Position = 0, Mandatory,
+      HelpMessage = 'Disk Number based on Get-Disk')]
     [ValidateNotNullorEmpty()]
-    [ValidatePattern(".\.vhdx?$")]
     [ValidateScript( {
-        if (Get-FullFilePath -Path $_ |
-            Split-Path  |
-            Resolve-Path ) {
+        if (Get-Disk -Number $_) {
           $true
         }
         else {
-          Throw "Parent folder for $_ does not exist."
+          Throw "Disk number $_ does not exist."
         }
       })]
-    [string]$Path,
+    [string]$DiskNumber,
         
-    # Size in Bytes (Default 40B)
-    [ValidateRange(25GB, 64TB)]
-    [long]$Size = 40GB,
-        
-    # Create Dynamic disk
-    [switch]$Dynamic,
-
     # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
     # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
     # Windows To Go images will boot in UEFI or BIOS
@@ -132,15 +122,12 @@
     [string[]]$filesToInject
 
   )
-  $Path = $Path | Get-FullFilePath 
   $SourcePath = $SourcePath | Get-FullFilePath
 
-  $VhdxFileName = Split-Path -Leaf -Path $Path
-
-  if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
-      "Overwrite partitions inside [$Path] with contentce of [$SourcePath]? ",
+  if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions on disk [$DiskNumber] with content of [$SourcePath]",
+      "Overwrite partitions on disk [$DiskNumber] with contentce of [$SourcePath]? ",
       'Overwrite WARNING!')) {
-    if ((-not (Test-Path $Path)) -Or $force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning')) {
+    if ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -Or $force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning')) {
       $ParametersToPass = @{}
       foreach ($key in ('Whatif', 'Verbose', 'Debug')) {
         if ($PSBoundParameters.ContainsKey($key)) {
@@ -148,68 +135,67 @@
         }
       }
         
-      $InitializeVHDPartitionParam = @{
-        'Size' = $Size
-        'Path' = $Path
+      $InitializeDiskPartitionParam = @{
+        'DiskNumber' = $DiskNumber
         'force' = $true
         'DiskLayout' = $DiskLayout
       }
       if ($RecoveryTools) {
-        $InitializeVHDPartitionParam.add('RecoveryTools', $true)
+        $InitializeDiskPartitionParam.add('RecoveryTools', $true)
       }
       if ($RecoveryImage) {
-        $InitializeVHDPartitionParam.add('RecoveryImage', $true)
+        $InitializeDiskPartitionParam.add('RecoveryImage', $true)
       }
       if ($Dynamic) {
-        $InitializeVHDPartitionParam.add('Dynamic', $true)
+        $InitializeDiskPartitionParam.add('Dynamic', $true)
       }
-      $SetVHDPartitionParam = @{
+      $SetDiskPartitionParam = @{
         'SourcePath' = $SourcePath
-        'Path' = $Path
+        'DiskNumber' = $DiskNumber
         'Index' = $Index
         'force' = $true
         'Confirm' = $false
       }
       if ($Unattend) {
-        $SetVHDPartitionParam.add('Unattend', $Unattend)
+        $SetDiskPartitionParam.add('Unattend', $Unattend)
       }
       if ($NativeBoot) {
-        $SetVHDPartitionParam.add('NativeBoot', $NativeBoot)
+        $SetDiskPartitionParam.add('NativeBoot', $NativeBoot)
       }
       if ($Feature) {
-        $SetVHDPartitionParam.add('Feature', $Feature)
+        $SetDiskPartitionParam.add('Feature', $Feature)
       }
       if ($RemoveFeature) {
-        $SetVHDPartitionParam.add('RemoveFeature', $RemoveFeature)
+        $SetDiskPartitionParam.add('RemoveFeature', $RemoveFeature)
       }
       if ($FeatureSource) {
-        $SetVHDPartitionParam.add('FeatureSource', $FeatureSource)
+        $SetDiskPartitionParam.add('FeatureSource', $FeatureSource)
       }
       if ($FeatureSourceIndex) {
-        $SetVHDPartitionParam.add('FeatureSourceIndex', $FeatureSourceIndex)
+        $SetDiskPartitionParam.add('FeatureSourceIndex', $FeatureSourceIndex)
       }
       if ($AddPayloadForRemovedFeature) {
-        $SetVHDPartitionParam.add('AddPayloadForRemovedFeature', $AddPayloadForRemovedFeature)
+        $SetDiskPartitionParam.add('AddPayloadForRemovedFeature', $AddPayloadForRemovedFeature)
       }
       if ($Driver) {
-        $SetVHDPartitionParam.add('Driver', $Driver)
+        $SetDiskPartitionParam.add('Driver', $Driver)
       }
       if ($Package) {
-        $SetVHDPartitionParam.add('Package', $Package)
+        $SetDiskPartitionParam.add('Package', $Package)
       }
       if ($filesToInject) {
-        $SetVHDPartitionParam.add('filesToInject', $filesToInject)
+        $SetDiskPartitionParam.add('filesToInject', $filesToInject)
       }
-      Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeVHDPartitionParam"
+      Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeDiskPartitionParam"
       Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)
-      Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SetVHDPartitionParam"
-      Write-Verbose -Message ($SetVHDPartitionParam | Out-String)
+      Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SetDiskPartitionParam"
+      Write-Verbose -Message ($SetDiskPartitionParam | Out-String)
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : ParametersToPass"
       Write-Verbose -Message ($ParametersToPass | Out-String)
             
       Try {
-        Initialize-VHDPartition @InitializeVHDPartitionParam @ParametersToPass 
-        Set-VHDPartition @SetVHDPartitionParam @ParametersToPass
+        Initialize-DiskPartition @InitializeDiskPartitionParam @ParametersToPass 
+        Set-DiskPartition @SetDiskPartitionParam @ParametersToPass
       }
       Catch {
         throw "$($_.Exception.Message) at $($_.Exception.InvocationInfo.ScriptLineNumber)"

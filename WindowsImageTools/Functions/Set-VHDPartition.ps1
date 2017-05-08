@@ -81,14 +81,18 @@
     # Path to drivers to inject
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
-        Test-Path -Path $(Resolve-Path $_)
+        foreach ($Path in $_) {
+          Test-Path -Path $(Resolve-Path $Path)
+        }
       })]
     [string[]]$Driver,
 
     # Path of packages to install via DSIM
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
-        foreach ($Path in $_) { Test-Path -Path $(Resolve-Path $Path) }
+        foreach ($Path in $_) {
+          Test-Path -Path $(Resolve-Path $Path)
+        }
       })]
     [string[]]$Package,
 
