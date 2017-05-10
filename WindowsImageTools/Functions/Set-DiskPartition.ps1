@@ -357,15 +357,13 @@
               }
             }
             if ($RemoveFeature) {
-              Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Removing Windows Features from the Image"
+              Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Removing Windows Features from the Image [$WinPath]"
             
-              $Package | ForEach-Object -Process {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Package path: [$PSItem]"
-                try {
-                  $null = Disable-WindowsOptionalFeature -Path $WinPath -FeatureName $Feature @ParametersToPass
+                             try {
+                  $null = Disable-WindowsOptionalFeature -Path $WinPath -FeatureName $RemoveFeature @ParametersToPass
                 }
                 catch {
-                  Write-Error -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Error Removeing Windows Feature [$Feature] "
+                  Write-Error -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Error Removeing Windows Feature [$RemoveFeature] "
                   throw $_.Exception.Message
                 }
               }
