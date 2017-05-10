@@ -328,11 +328,11 @@
                   }
                 } #end if FeatureSource
                 if ($FeatureSourcePath.count -gt 0) { 
-                  Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : Search Source Path [$FeatureSourcePath]"
+                  Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image [$WinPath] : Search Source Path [$FeatureSourcePath]"
                   $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature -Source $FeatureSourcePath
                 }
                 else { 
-                  Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image : No Source Path"
+                  Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) [$Feature] to the Image [$WinPath] : No Source Path"
                   $null = Enable-WindowsOptionalFeature -Path $WinPath -All -FeatureName $Feature 
                 }
               }
