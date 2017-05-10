@@ -12,7 +12,7 @@
 RootModule = '.\WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.11'
+ModuleVersion = '1.0.13'
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -27,7 +27,7 @@ CompanyName = 'BladeFireLight'
 Copyright = '2017'
 
 # Description of the functionality provided by this module
-Description = 'Tools for creating bootable virtual disks from an ISO or WIM'
+Description = 'Tools for creating bootable phisical/virtual disks from an ISO or WIM'
 
 # Minimum version of the Windows PowerShell engine required by this module
 # PowerShellVersion = ''
@@ -107,7 +107,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('WIM', 'VHDX')
+        Tags = @('WIM', 'VHDX', 'Install Windows')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/BladeFireLight/WindowsImageTools/blob/master/LICENSE'
