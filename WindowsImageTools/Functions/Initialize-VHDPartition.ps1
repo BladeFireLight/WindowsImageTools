@@ -189,7 +189,7 @@
           if ($RecoveryTools) {$InitializeDiskParam.add('RecoveryTools', $RecoveryTools)}
           if ($RecoveryImage) {$InitializeDiskParam.add('RecoveryImage', $RecoveryImage)}
        
-          Initialize-VHDPartition @ParametersToPass @InitializeDiskParam
+          Initialize-DiskPartition @ParametersToPass @InitializeDiskParam
           #endregion
         }
         
