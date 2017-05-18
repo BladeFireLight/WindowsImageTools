@@ -33,7 +33,7 @@
           Throw "Disk number $_ does not exist."
         }
       })]
-    [string]$DiskNumber,
+    [int]$DiskNumber,
         
     # Path to WIM or ISO used to populate VHDX
     [parameter(Position = 1, Mandatory = $true,

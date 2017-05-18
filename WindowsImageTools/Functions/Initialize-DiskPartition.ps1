@@ -33,7 +33,7 @@ function Initialize-DiskPartition {
           Throw "Disk number $_ does not exist."
         }
       })]
-    [string]$DiskNumber,
+    [int]$DiskNumber,
         
     # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), Data (GPT), or WindowsToGo (MBR).
     # Generation 1 VMs require BIOS (MBR) images and have one partition. Generation 2 VMs require 
