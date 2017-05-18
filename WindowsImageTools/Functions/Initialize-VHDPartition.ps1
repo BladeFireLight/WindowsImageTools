@@ -54,6 +54,12 @@
     [ValidateSet('BIOS', 'UEFI', 'WindowsToGo', 'Data')]
     $DiskLayout,
 
+    # Format drive as NTFS or ReFS (Only applies when DiskLayout = Data)
+    [string]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet('NTFS', 'ReFS')]
+    $DataFormat = 'ReFS',
+
     # Output the disk image object
     [switch]$Passthru,
          
