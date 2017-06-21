@@ -229,7 +229,7 @@ exit
                 Get-Partition -ErrorAction SilentlyContinue
               if ($initiaPartition) {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk to start all over"
-                Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
+                $initiaPartition | Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
               }
 
               # Refresh $disk to update free space

@@ -3,7 +3,7 @@
     .Synopsis
     Create VHD(X) with partitions needed to be bootable
     .DESCRIPTION
-    This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFO or WindowsToGo. 
+    This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFI, Data or WindowsToGo. 
 
     To create a recovery partitions use -RecoveryTools and -RecoveryImage
 
