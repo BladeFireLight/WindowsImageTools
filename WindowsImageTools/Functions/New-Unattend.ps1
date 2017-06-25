@@ -758,8 +758,8 @@ function New-UnattendXml {
         }
       }
       else {
-        if (-not ($UserAccount) ) {
-          Write-Warning -Message "$Path only usable on a server SKU, for a client OS, use either -EnableAdministrator or -UserAccount"
+        if ((-not ($UserAccount)) -or (-not($EnableAdministrator)) -or ( (-not ($domain)) -and (-not ($JoinAccount)) -and (-not ($OU)) ) ) {
+          Write-Warning -Message "$Path only usable on a server SKU, for a client OS, use either -EnableAdministrator or -UserAccount, or (-Domain and -JoinAccount and -OU)"
         }
       }
 
