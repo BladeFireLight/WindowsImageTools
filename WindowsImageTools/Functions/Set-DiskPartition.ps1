@@ -74,7 +74,7 @@
     # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched 
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
-        Test-Path -Path $(Resolve-Path $_)
+        (Test-Path -Path $(Resolve-Path $_) -or ($_ -eq 'NONE') )
       })]
     [string]$FeatureSource,
 
@@ -219,7 +219,6 @@
               Where-Object -Property Type -EQ -Value FAT32 ) {
             $DiskLayout = 'WindowsToGo'
           }
-
           #endregion
 
           #region Recovery Image
@@ -292,7 +291,7 @@
                   $notWinPE = $false
                   Write-Warning "WinPE does not support Mounting WIM, Feature sources must be present in the image OR -FeatureSource must be a Folder"
                 }
-                if ($FeatureSource) {
+                if (($FeatureSource) -and ($FeatureSource -ne 'NONE')) {
                   Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] : Installing Windows Feature(s) : Source Path provided [$FeatureSource]"
                   if (($FeatureSource |
                         Resolve-Path |
