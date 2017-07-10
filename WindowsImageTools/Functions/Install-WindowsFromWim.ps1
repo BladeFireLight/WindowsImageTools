@@ -85,7 +85,7 @@
     # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched 
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
-        Test-Path -Path $(Resolve-Path $_)
+         (Test-Path -Path $(Resolve-Path $_) -or ($_ -eq 'NONE') )
       })]
     [string]$FeatureSource,
 
