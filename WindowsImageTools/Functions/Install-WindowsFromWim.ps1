@@ -112,7 +112,7 @@
         }
       })]
     [string[]]$Package,
-    # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
+    # Files/Folders to copy to root of Windows Drive (to place files in directories mimic the direcotry structure off of C:\)
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
         foreach ($Path in $_) {

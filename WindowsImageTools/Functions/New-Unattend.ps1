@@ -76,7 +76,7 @@ function New-UnattendXml {
     [string]
     $FirstLogonScriptPath,
 
-    # PowerShell Script to run on FirstBoot (ie.: %SystemDrive%\PSTemp\FirstRun.ps1 ) Executed in system context dureing specialize phase
+    # PowerShell Script to run on FirstBoot (ie.: %SystemDrive%\PSTemp\FirstRun.ps1 ) Executed in system context during specialize phase
     [Parameter(ParameterSetName = 'Basic_FirstBootScript')]
     [string]
     $FirstBootScriptPath,
