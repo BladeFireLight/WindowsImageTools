@@ -6,12 +6,12 @@ if ($env:SystemRoot -eq 'X:\windows') {
   Write-Warning '[Module : WindowsImageTools] WinPE detected'
   $VHDCmdlets = $false
 }
-else { 
+else {
   if (-not (Get-Module -Name hyper-v -ListAvailable)) {
     $VHDCmdlets = $false
     Write-Warning -Message '[Module : WindowsImageTools] Hyper-V Module Not Installed: '
   }
-  if ([environment]::OSVersion.Version.Major -ge 10 -and 
+  if ([environment]::OSVersion.Version.Major -ge 10 -and
     (Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-Services).state -eq 'Disabled') {
     $VHDCmdlets = $false
     Write-Warning -Message '[Module : WindowsImageTools] Hyper-v Services on windows 10 not installed'
@@ -20,7 +20,7 @@ else {
 
 if (-not ($VHDCmdlets)) {
   Write-Warning -Message '[Module : WindowsImageTools] *-VHD cmdlets not avalible '
-  Write-Warning -Message '                             Loading WIN2VHD Class'    
+  Write-Warning -Message '                             Loading WIN2VHD Class'
   . $PSScriptRoot\Functions\Wim2VHDClass.ps1
   Write-Warning -Message '                             Windows Image Update function not loaded'
 }
@@ -36,7 +36,7 @@ if (-not ($VHDCmdlets)) {
 . $PSScriptRoot\Functions\New-Unattend.ps1
 
 if ($VHDCmdlets) {
-  #only import if dependencies avalible 
+  #only import if dependencies avalible
   . $PSScriptRoot\Functions\New-WindowsImageToolsExample.ps1
   . $PSScriptRoot\Functions\Set-UpdateConfig.ps1
   . $PSScriptRoot\Functions\Add-UpdateImage.ps1
@@ -46,3 +46,6 @@ if ($VHDCmdlets) {
   . $PSScriptRoot\Functions\Invoke-CreateVmRunAndWait.ps1
   . $PSScriptRoot\Functions\Get-VhdPartitionStyle.ps1
 }
+
+
+Export-ModuleMember -Function *-*
