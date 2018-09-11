@@ -6,7 +6,7 @@
     Set the config used by Invoke-WitUpdate to build a VM and update Windows Images
     .EXAMPLE
     Set-WitUpdateConfig -Path C:\WitUpdate -VmSwitch 'VM' -IpType DCHP
-    Set the temp VM to attach to siwth "VM" and use DCHP for IP addresses 
+    Set the temp VM to attach to siwth "VM" and use DCHP for IP addresses
     .EXAMPLE
     Set-WitUPdateConfig -Path C:\WitUpdate -VmSwitch CorpIntAccess -vLAN 1752 -IpType 'IPv4' -IPAddress '172.17.52.100' -SubnetMask 24 -Gateway '172.17.52.254' -DNS '208.67.222.123'
     Setup the temp VM to attache to swithc CorpIntAccess, tag the packets with vLAN id 1752, and set the statis IPv4 Address, mask, gateway and DNS
@@ -20,7 +20,7 @@
   Param
   (
     # Path to the Windows Image Tools Update Folders (created via New-WitExample)
-    [Parameter(Mandatory = $true, 
+    [Parameter(Mandatory = $true,
       ValueFromPipelineByPropertyName = $true)]
     [ValidateNotNull()]
     [ValidateNotNullOrEmpty()]
@@ -32,7 +32,7 @@
           throw "Path $_ does not exist"
         }
       })]
-    [Alias('FullName')] 
+    [Alias('FullName')]
     $Path,
 
     # Existing VM Switch
@@ -54,7 +54,7 @@
         $isValidIP = [System.Net.IPAddress]::tryparse([string]$_, [ref]$ipObj)
         if ($isValidIP) {
           $true
-        } 
+        }
         else {
           throw 'IpAddress must be a valid IPv4 or IPv6 address'
         }
@@ -72,7 +72,7 @@
         $isValidIP = [System.Net.IPAddress]::tryparse([string]$_, [ref]$ipObj)
         if ($isValidIP) {
           $true
-        } 
+        }
         else {
           throw 'Gateway must be a valid IPv4 or IPv6 address'
         }
@@ -86,7 +86,7 @@
         $isValidIP = [System.Net.IPAddress]::tryparse([string]$_, [ref]$ipObj)
         if ($isValidIP) {
           $true
-        } 
+        }
         else {
           throw 'DNSServer must be a valid IPv4 or IPv6 address'
         }
@@ -142,7 +142,7 @@
     If (-not ($ConfigData.ContainsKey('DnsServer'))) {
       $ConfigData.add('DnsServer', '192.168.0.1')
     }
-      
+
     # update values
     if ($VmSwitch) {
       $ConfigData.VmSwitch = $VmSwitch
@@ -165,7 +165,7 @@
     if ($DnsServer) {
       $ConfigData.DnsServer = $DnsServer
     }
-    
+
     Write-Verbose -Message 'New Configuration'
     Write-Verbose -Message ($ConfigData | Out-String)
 
@@ -179,44 +179,3 @@
   }
 }
 
-function Get-UpdateConfig {
-  <#
-    .Synopsis
-    Get the Windows Image Tools Update Config used for creating the temp VM
-    .DESCRIPTION
-    This command will Get the config used by Invoke-WindowsImageUpdate to build a VM and update Windows Images
-    .EXAMPLE
-    Set-WitUpdateConfig -Path C:\WitUpdate -VmSwitch 'VM' -IpType DCHP
-    Set the temp VM to attach to siwth "VM" and use DCHP for IP addresses 
-    .EXAMPLE
-    Set-WitUPdateConfig -Path C:\WitUpdate -VmSwitch CorpIntAccess -vLAN 1752 -IpType 'IPv4' -IPAddress '172.17.52.100' -SubnetMask 24 -Gateway '172.17.52.254' -DNS '208.67.222.123'
-    Setup the temp VM to attache to swithc CorpIntAccess, tag the packets with vLAN id 1752, and set the statis IPv4 Address, mask, gateway and DNS
-    .INPUTS
-    System.IO.DirectoryInfo
-    .OUTPUTS
-    System.IO.DirectoryInfo
-    #>
-  [CmdletBinding()]
-  [Alias()]
-  [OutputType([Hashtable])]
-  Param
-  (
-    # Path to the Windows Image Tools Update Folders (created via New-WitExample)
-    [Parameter(Mandatory = $true, 
-      ValueFromPipelineByPropertyName = $true)]
-    [ValidateNotNull()]
-    [ValidateNotNullOrEmpty()]
-    [ValidateScript( {
-        if (Test-Path $_) {
-          $true
-        }
-        else {
-          throw "Path $_ does not exist"
-        }
-      })]
-    [Alias('FullName')] 
-    $Path
-  )
-
-  return (Import-Clixml -Path "$Path\config.xml")
-}

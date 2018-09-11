@@ -41,7 +41,7 @@ Properties {
 
     # Enable/disable use of PSScriptAnalyzer to perform script analysis.
     [System.Diagnostics.CodeAnalysis.SuppressMessage('PSUseDeclaredVarsMoreThanAssigments', '')]
-    $ScriptAnalysisEnabled = $flase
+    $ScriptAnalysisEnabled = $true
 
     # When PSScriptAnalyzer is enabled, control which severity level will generate a build failure.
     # Valid values are Error, Warning, Information and None.  "None" will report errors but will not

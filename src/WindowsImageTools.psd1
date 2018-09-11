@@ -12,7 +12,7 @@
 RootModule = 'WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.18.0'
+ModuleVersion = '1.9.19.0'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -70,20 +70,20 @@ Description = 'Tools for creating bootable phisical/virtual disks from an ISO or
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 FunctionsToExport = 'Convert-Wim2VHD',
-                    'Initialize-VHDPartition',
-                    'Initialize-DiskPartition',
-                    'Set-VHDPartition',
-                    'Set-DiskPartition',
+                   # 'Initialize-VHDPartition',
+                   # 'Initialize-DiskPartition',
+                   # 'Set-VHDPartition',
+                   # 'Set-DiskPartition',
                     'New-UnattendXml',
-                    'New-WindowsImageToolsExample',
-                    'Set-UpdateConfig',
-                    'Get-UpdateConfig',
-                    'Add-UpdateImage',
-                    'Update-WindowsImageWMF',
-                    'Invoke-WindowsImageUpdate',
-                    'Invoke-CreateVmRunAndWait',
-                    'Mount-VhdAndRunBlock',
-                    'Get-VhdPartitionStyle',
+                   # 'New-WindowsImageToolsExample',
+                   # 'Set-UpdateConfig',
+                   # 'Get-UpdateConfig',
+                   # 'Add-UpdateImage',
+                   # 'Update-WindowsImageWMF',
+                   # 'Invoke-WindowsImageUpdate',
+                   # 'Invoke-CreateVmRunAndWait',
+                   # 'Mount-VhdAndRunBlock',
+                   # 'Get-VhdPartitionStyle',
                     'Install-WindowsFromWim'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -135,5 +135,3 @@ PrivateData = @{
 # DefaultCommandPrefix = ''
 
 }
-
-

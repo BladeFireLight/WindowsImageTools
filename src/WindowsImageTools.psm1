@@ -1,5 +1,6 @@
 #requires -RunAsAdministrator
 
+<#
 # Check for New-VHD
 $VHDCmdlets = $true
 if ($env:SystemRoot -eq 'X:\windows') {
@@ -46,6 +47,10 @@ if ($VHDCmdlets) {
   . $PSScriptRoot\Functions\Invoke-CreateVmRunAndWait.ps1
   . $PSScriptRoot\Functions\Get-VhdPartitionStyle.ps1
 }
+#>
+#Get-ChildItem -Path $psScriptRoot\Functions\*.ps1 | ForEach-Object { . $_.fullname}
+Get-ChildItem -Path $psScriptRoot\private\*.ps1 | ForEach-Object { . $_.fullname}
+Get-ChildItem -Path $psScriptRoot\public\*.ps1 | ForEach-Object { . $_.fullname; Export-ModuleMember -Function ([IO.PATH]::GetFileNameWithoutExtension($_.fullname)) }
 
 
 Export-ModuleMember -Function *-*
