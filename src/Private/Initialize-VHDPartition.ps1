@@ -3,7 +3,7 @@
     .Synopsis
     Create VHD(X) with partitions needed to be bootable
     .DESCRIPTION
-    This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFI, Data or WindowsToGo. 
+    This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFI, Data or WindowsToGo.
 
     To create a recovery partitions use -RecoveryTools and -RecoveryImage
 
@@ -14,16 +14,16 @@
     .NOTES
     General notes
     #>
-  [CmdletBinding(SupportsShouldProcess, 
+  [CmdletBinding(SupportsShouldProcess,
     PositionalBinding = $false,
     ConfirmImpact = 'Medium')]
   Param
   (
-    # Path to the new VHDX file (Must end in .vhdx)
+    # Path to the new VHDX file (Must end in .vhd, or .vhdx)
     [Parameter(Position = 0, Mandatory,
-      HelpMessage = 'Enter the path for the new VHD/VHDX/VHDS file')]
+      HelpMessage = 'Enter the path for the new VHD/VHDX file')]
     [ValidateNotNullorEmpty()]
-    [ValidatePattern(".\.vhdx?s?$")]
+    [ValidatePattern(".\.vhdx?$")]
     [ValidateScript( {
         if (Get-FullFilePath -Path $_ |
             Split-Path  |
@@ -35,16 +35,16 @@
         }
       })]
     [string]$Path,
-        
+
     # Size in Bytes (Default 40B)
     [ValidateRange(25GB, 64TB)]
     [uint64]$Size = 40GB,
-        
+
     # Create Dynamic disk
     [switch]$Dynamic,
 
     # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), Data (GPT), or WindowsToGo (MBR).
-    # Generation 1 VMs require BIOS (MBR) images and have one partition. Generation 2 VMs require 
+    # Generation 1 VMs require BIOS (MBR) images and have one partition. Generation 2 VMs require
     # UEFI (GPT) images and have 3-5 partitions.
     # Windows To Go images will boot in UEFI or BIOS
     [Parameter(Mandatory)]
@@ -62,7 +62,7 @@
 
     # Output the disk image object
     [switch]$Passthru,
-         
+
     # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
     [switch]$RecoveryTools,
 
@@ -72,14 +72,14 @@
     # Force the overwrite of existing files
     [switch]$force
   )
-  Begin { 
+  Begin {
 
- 
+
     if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create partition structure for Bootable vhd(x) on [$Path]",
         "Replace existing file [$Path] ? ",
         'Overwrite WARNING!')) {
-      if ((-not (Test-Path $Path)) -Or 
-        $force -Or 
+      if ((-not (Test-Path $Path)) -Or
+        $force -Or
         ((Test-Path $Path) -and $pscmdlet.ShouldContinue("TargetFile [$Path] exists! Any existin data will be lost!", 'Warning'))) {
 
         $ParametersToPass = @{}
@@ -91,13 +91,13 @@
         #region Validate input
 
         # Recovery Image requires the Recovery Tools
-         
+
         $VHDFormat = ([IO.FileInfo]$Path).Extension.split('.')[-1]
-                
+
         if (($DiskLayout -eq 'UEFI') -and ($VHDFormat -eq 'VHD')) {
           throw 'UEFI disks must be in VHDX format. Please change the path to end in VHDX'
         }
-          
+
         # Choose smallest supported block size for dynamic VHD(X)
         $BlockSize = 1MB
 
@@ -112,20 +112,21 @@
         }
 
         $fileName = Split-Path -Leaf -Path $Path
-    
+
         # make paths absolute
         $Path = $Path | Get-FullFilePath
         #endregion
- 
+
         # if we get this far it's ok to delete existing files
         if (Test-Path -Path $Path) {
           Remove-Item -Path $Path
         }
         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating"
-            
-        #region Create VHD 
+
+        #region Create VHD
         Try {
-          if ($VHDCmdlets) {
+          <#
+         # if ($VHDCmdlets) {
             $vhdParams = @{
               ErrorAction = 'Stop'
               Path = $Path
@@ -135,9 +136,10 @@
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : @vhdParms"
             Write-Verbose -Message ($vhdParams | Out-String)
-            $null = New-VHD @vhdParams 
+            $null = New-VHD @vhdParams
           }
           else {
+            #>
             $vhdParams = @{
               VHDFormat = $VHDFormat
               Path = $Path
@@ -146,21 +148,21 @@
 
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
             Write-Verbose -Message ($vhdParams | Out-String)
-                        
+
             [WIM2VHD.VirtualHardDisk]::CreateSparseDisk(
               $VHDFormat,
               $Path,
               $Size,
               $true
             )
-          } 
-        } 
+         # }
+        }
         catch {
           Throw "Failed to create $Path. $($_.Exception.Message)"
         }
-                  
+
         #endregion
-                
+
         if (Test-Path -Path $Path) {
           #region Mount Image
           try {
@@ -175,11 +177,11 @@
           #endregion
         }
         else {
-          Throw "Failed to create vhd" 
+          Throw "Failed to create vhd"
         }
 
         #region Create partitions
-        try { 
+        try {
           $InitializeDiskParam = @{
             DiskNumber = $disk.Number
             DiskLayout = $DiskLayout
@@ -188,11 +190,11 @@
           if ($DataFormat) {$InitializeDiskParam.add('DataFormat', $DataFormat)}
           if ($RecoveryTools) {$InitializeDiskParam.add('RecoveryTools', $RecoveryTools)}
           if ($RecoveryImage) {$InitializeDiskParam.add('RecoveryImage', $RecoveryImage)}
-       
+
           Initialize-DiskPartition @ParametersToPass @InitializeDiskParam
           #endregion
         }
-        
+
         catch {
           Write-Error -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating Partitions"
           throw $_.Exception.Message
@@ -200,7 +202,7 @@
         #region Dismount
         finally {
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Dismounting disk image"
-          Dismount-DiskImage -ImagePath $Path 
+          Dismount-DiskImage -ImagePath $Path
         }
         #endregion
         if ($Passthru) {

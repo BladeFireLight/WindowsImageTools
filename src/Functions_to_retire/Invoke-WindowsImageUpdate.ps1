@@ -3,7 +3,7 @@ function Invoke-WindowsImageUpdate {
     .Synopsis
     Starts the process of applying updates to all (or selected) images in a Windows Image Tools BaseImages Folder
     .DESCRIPTION
-    This Command updates all (or selected) the images created via Add-UpdateImage in a Windows Image Tools BaseImages folder 
+    This Command updates all (or selected) the images created via Add-UpdateImage in a Windows Image Tools BaseImages folder
     New-WindowsImageToolsExample can be use to create the structrure
     .EXAMPLE
     Invoke-WindowsImageUpdate -Path C:\WITExample
@@ -17,7 +17,7 @@ function Invoke-WindowsImageUpdate {
   Param
   (
     # Path to the Windows Image Tools Update Folders (created via New-WindowsImageToolsExample)
-    [Parameter(Mandatory = $true, 
+    [Parameter(Mandatory = $true,
       ValueFromPipelineByPropertyName = $true)]
     [ValidateNotNull()]
     [ValidateNotNullOrEmpty()]
@@ -29,7 +29,7 @@ function Invoke-WindowsImageUpdate {
           throw "Path $_ does not exist"
         }
       })]
-    [Alias('FullName')] 
+    [Alias('FullName')]
     $Path,
     # Name of the Image to update
     [ValidateNotNull()]
@@ -37,7 +37,7 @@ function Invoke-WindowsImageUpdate {
     [Alias('FriendlyName')]
     [string[]]
     $ImageName,
-        
+
     # Reduce output file by removing feature sources
     [switch]
     $ReduceImageSize,
@@ -66,7 +66,7 @@ function Invoke-WindowsImageUpdate {
   catch {
     throw "$Path folder structure incorrect, see New-WindowsImageToolsExample for an example"
   }
-    
+
   if ($ImageName) {
     foreach ($testpath in $ImageName) {
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Validateing [$testpath]"
@@ -93,7 +93,7 @@ function Invoke-WindowsImageUpdate {
   }
 
   #endregion
-    
+
   #region update resorces folder
   if ($pscmdlet.ShouldProcess('PowerShell Gallery', 'Download required Modules')) {
     if (-not (Test-Path -Path $Path\Resource\Modules)) {
@@ -106,7 +106,7 @@ function Invoke-WindowsImageUpdate {
     else {
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Geting latest PSWindowsUpdate"
       try {
-        # if nuget needs updating this prompts 
+        # if nuget needs updating this prompts
         ### To-Do find a way to silenty update nuget ###
         $null = Save-Module -Name PSWindowsUpdate -Path $Path\Resource\Modules -Force -ErrorAction Stop @ParametersToPass
       }
@@ -123,7 +123,7 @@ function Invoke-WindowsImageUpdate {
   #endregion
 
   #region Process Images
-  foreach ($TargetImage in $ImageList) { 
+  foreach ($TargetImage in $ImageList) {
     if ($pscmdlet.ShouldProcess($TargetImage, 'Invoke Windows Updates on Image')) {
       #region setup enviroment
       $BaseImage = "$Path\BaseImage\$($TargetImage)_base.vhdx"
@@ -133,7 +133,7 @@ function Invoke-WindowsImageUpdate {
       $OutputWim = "$Path\UpdatedImageShare\$($TargetImage).wim"
 
       $vmGeneration = 1
-      $PartitionStyle = GetVHDPartitionStyle -vhd $BaseImage
+      $PartitionStyle = Get-VHDPartitionStyle -vhd $BaseImage
       if ($PartitionStyle -eq 'GPT') {
         $vmGeneration = 2
       }
@@ -143,7 +143,7 @@ function Invoke-WindowsImageUpdate {
       #endregion
 
       #region create Diff disk
-      try { 
+      try {
         Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : New Diff Disk : Creating $UpdateImage from $BaseImage"
         $null = New-VHD -Path $UpdateImage -ParentPath $BaseImage -ErrorAction Stop @ParametersToPass
       }
@@ -155,19 +155,19 @@ function Invoke-WindowsImageUpdate {
       #region Inject files
       $RunWindowsUpdateAtStartup = {
         Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
-                
+
         $IpType = 'IPTYPEPLACEHOLDER'
         $IPAddress = 'IPADDRESSPLACEHOLDER'
         $SubnetMask = 'SUBNETMASKPLACEHOLDER'
         $Gateway = 'GATEWAYPLACEHOLDER'
         $DnsServer = 'DNSPLACEHOLDER'
-                
+
         if (-not ($IpType -eq 'DHCP')) {
           Write-Verbose -Message 'Set Network : Getting network adaptor' -Verbose
           $adapter = Get-NetAdapter | Where-Object -FilterScript {
             $_.Status -eq 'up'
           }
-                    
+
           Write-Verbose -Message "Set Network : removing existing config on $($adaptor.Name)" -Verbose
           If (($adapter | Get-NetIPConfiguration).IPv4Address.IPAddress) {
             $adapter | Remove-NetIPAddress -AddressFamily $IpType -Confirm:$false
@@ -175,7 +175,7 @@ function Invoke-WindowsImageUpdate {
           If (($adapter | Get-NetIPConfiguration).Ipv4DefaultGateway) {
             $adapter | Remove-NetRoute -AddressFamily $IpType -Confirm:$false
           }
-                    
+
           $params = {
             AddressFamily = $IpType
             IPAddress = $IPAddress
@@ -185,9 +185,9 @@ function Invoke-WindowsImageUpdate {
           Write-Verbose -Message 'Set Network : Adding settings to adaptor'
           Write-Verbose -Message $params -Verbose
           $adapter | New-NetIPAddress @params
-                    
+
           Write-Verbose "Set Network : Set DNS to $DnsServer" -Verbose
-          $adapter | Set-DnsClientServerAddress -ServerAddresses $DnsServer  
+          $adapter | Set-DnsClientServerAddress -ServerAddresses $DnsServer
         }
 
         try {
@@ -198,7 +198,7 @@ function Invoke-WindowsImageUpdate {
           Stop-Transcript
           Stop-Computer -Force
         }
-                
+
         # Run pre-update script if it exists
         if (Test-Path "$env:SystemDrive\PsTemp\PreUpdateScript.ps1") {
           Write-Verbose "Pre-Upate script : found $env:SystemDrive\PsTemp\PreUpdateScript.ps1"
@@ -211,7 +211,7 @@ function Invoke-WindowsImageUpdate {
         }
         else {
           Write-Verbose 'Windows updates : No further updates' -Verbose
-                
+
           if (-not ($IpType -eq 'DHCP')) {
             $adapter = Get-NetAdapter | Where-Object {
               $_.Status -eq 'up'
@@ -231,9 +231,9 @@ function Invoke-WindowsImageUpdate {
           ## remove self so as to not triger updates if manual mantinance required
           Remove-Item "$env:SystemDrive\PsTemp\AtStartup.ps1"
           Stop-Transcript
-          Stop-Computer 
+          Stop-Computer
         }
- 
+
         # Apply all non-language updates
         Write-Verbose 'Windows updates : installing updates' -Verbose
         Get-WUInstall -AcceptAll -IgnoreReboot -IgnoreUserInput -NotCategory 'Language packs' -Verbose
@@ -244,10 +244,10 @@ function Invoke-WindowsImageUpdate {
           & "$env:SystemDrive\PsTemp\PostUpdateScript.ps1"
         }
 
- 
+
         if (Get-WURebootStatus -Silent) {
           Write-Verbose 'Windows updates : Reboot required to finish restarting' -Verbose
-        } 
+        }
         else {
           Write-Verbose 'Windows updates : Restarting to check for additional updates' -Verbose
         }
@@ -257,16 +257,16 @@ function Invoke-WindowsImageUpdate {
 
       #region add configuration data into block
       $block = $RunWindowsUpdateAtStartup | Out-String -Width 400
-    
+
       $block = $block.Replace('IPTYPEPLACEHOLDER', $configData.IpType)
       $block = $block.Replace('IPADDRESSPLACEHOLDER', $configData.IPAddress)
       $block = $block.Replace('SUBNETMASKPLACEHOLDER', $configData.SubnetMask)
       $block = $block.Replace('GATEWAYPLACEHOLDER', $configData.Gateway)
       $block = $block.Replace('DNSPLACEHOLDER', $configData.DnsServer)
-            
+
       $RunWindowsUpdateAtStartup = [scriptblock]::Create($block)
       #endregion
-            
+
       $CopyInUpdateFilesBlock = {
         if (-not (Test-Path -Path "$($driveLetter):\PsTemp")) {
           $null = mkdir -Path "$($driveLetter):\PsTemp"
@@ -280,15 +280,15 @@ function Invoke-WindowsImageUpdate {
 
         if ((Get-ChildItem "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" -File).count -eq 0) {
           Write-Verbose -Message 'Sidebyside detected in PSWindowsUpdate : switching to v4 compatability'
-          $newest = (Get-ChildItem "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" -Directory | Sort-Object LastWriteTime)[0] 
+          $newest = (Get-ChildItem "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" -Directory | Sort-Object LastWriteTime)[0]
           Copy-Item -Path $newest.fullname -Destination "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate_temp" -Recurse
           cleanupFile "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate"
-          Rename-Item -Path "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate_temp" -NewName "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate" 
+          Rename-Item -Path "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate_temp" -NewName "$($driveLetter):\PsTemp\Modules\PSWindowsUpdate"
         }
       }
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : Adding PSWindowsUpdate Module to $UpdateImage"
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : updateting AtStartup script"
-      MountVHDandRunBlock -vhd $UpdateImage -block $CopyInUpdateFilesBlock 
+      MountVHDandRunBlock -vhd $UpdateImage -block $CopyInUpdateFilesBlock
       #endregion
 
       #region create vm and run updates
@@ -306,15 +306,15 @@ function Invoke-WindowsImageUpdate {
         Merge-VHD -Path $UpdateImage -DestinationPath $BaseImage @ParametersToPass
       }
       else {
-        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : No changes, discarding $UpdateImage" 
+        Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Windows Update : No changes, discarding $UpdateImage"
         cleanupFile $UpdateImage
       }
       #endregion
-      
-      if ($output -ne 'none') { 
+
+      if ($output -ne 'none') {
         #region Sysprep if changes or missing output vhd
         if (($ChangesMade) -or (-not (Test-Path $OutputVhd))) {
-          try { 
+          try {
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : New Diff Disk : Creating $SysprepImage from $BaseImage"
             cleanupFile $SysprepImage
             $null = New-VHD -Path $SysprepImage -ParentPath $BaseImage -ErrorAction Stop @ParametersToPass
@@ -322,16 +322,16 @@ function Invoke-WindowsImageUpdate {
           catch {
             throw "error creating differencing disk $SysprepImage from $BaseImage"
           }
-                
-      
+
+
           $sysprepAtStartup = {
             Start-Transcript -Path $PSScriptRoot\AtStartup.log -Append
             # Run pre-sysprep script if it exists
             if (Test-Path "$env:SystemDrive\PsTemp\PreSysprepScript.ps1") {
               & "$env:SystemDrive\PsTemp\PreSysprepScript.ps1"
             }
-                    
-      
+
+
             # Remove Scedualed task
             Write-Verbose -Message 'SysPrep : Removeing AtStartup task' -Verbose
             if (Get-Command -Name Unregister-ScheduledTask -ErrorAction SilentlyContinue) {
@@ -349,33 +349,33 @@ function Invoke-WindowsImageUpdate {
               'RedirectStandardError' = "$($env:temp)\$($exeName)-StandardError.txt"
               'PassThru' = $true
             }
-      
+
             Write-Verbose -Message 'SysPrep : starting Sysprep' -Verbose
             $ret = Start-Process @params
             Start-Sleep -Seconds 30
             Get-Date | Out-File c:\sysprepfail.txt
           }
-      
+
           $CopyInSysprepFilesBlock = {
             $null = New-Item -Path "$($driveLetter):\PsTemp" -Name AtStartup.ps1 -ItemType 'file' -Value $sysprepAtStartup -Force
           }
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : updateting AtStartup script"
-          MountVHDandRunBlock -vhd $SysprepImage -block $CopyInSysprepFilesBlock 
+          MountVHDandRunBlock -vhd $SysprepImage -block $CopyInSysprepFilesBlock
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] : SysPrep : Creating temp vm and waiting"
           createRunAndWaitVM -vhdPath $SysprepImage -vmGeneration $vmGeneration -configData $configData @ParametersToPass
-             
+
           MountVHDandRunBlock -vhd $SysprepImage -block {
             if (Test-Path "$($driveLetter):\sysprepfail.txt") {
               throw 'Sysprep Failed!'
             }
           }
-                
+
           $CleanupVhdBlock = {
             cleanupFile "$($driveLetter):\Unattend.xml"
             cleanupFile "$($driveLetter):\PsTemp"
             attrib.exe -s -h "$($driveLetter):\pagefile.sys"
             cleanupFile "$($driveLetter):\pagefile.sys"
-            if ($ReduceImageSize) { 
+            if ($ReduceImageSize) {
               $null = Dism.exe /image:$($driveLetter):\ /Cleanup-Image /StartComponentCleanup /ResetBase
               $null = Get-WindowsOptionalFeature -Path "$($driveLetter):\" |
                 Where-Object State -EQ -Value 'Disabled' |
@@ -387,9 +387,9 @@ function Invoke-WindowsImageUpdate {
           MountVHDandRunBlock -vhd $SysprepImage -block $CleanupVhdBlock
         }
         #endregion
-      
+
         #region export WIM
-        if (($ChangesMade) -or (-not (Test-Path $OutputWim)) -or (-not (Test-Path $OutputVhd))) { 
+        if (($ChangesMade) -or (-not (Test-Path $OutputWim)) -or (-not (Test-Path $OutputVhd))) {
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WIM : Creating $OutputWim"
           cleanupFile $OutputWim
           MountVHDandRunBlock -ReadOnly $SysprepImage -block {
@@ -398,9 +398,9 @@ function Invoke-WindowsImageUpdate {
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] : WIM : removing $SysprepImage"
           cleanupFile $SysprepImage
         }
-            
+
         #endregion
-      
+
         #region create output VHD
         if ((($ChangesMade) -or (-not (Test-Path $OutputVhd))) -and $output -eq 'both') {
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] : VHD : Creating $OutputVhd from $OutputWim"
@@ -421,7 +421,7 @@ function Invoke-WindowsImageUpdate {
             force = $true
             SourcePath = "$OutputWim"
           }
-          $nul = Convert-Wim2VHD @param @ParametersToPass 
+          $nul = Convert-Wim2VHD @param @ParametersToPass
         }
         #endregion
       }
