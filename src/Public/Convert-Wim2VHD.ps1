@@ -53,11 +53,8 @@
         [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
         $DiskLayout,
 
-        # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
-        [switch]$RecoveryTools,
-
-        # Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI layout
-        [switch]$RecoveryImage,
+        # Skip the creation of the Recovery Environment Tools Partition.
+        [switch]$NpRecoveryTools,
 
         # Force the overwrite of existing files
         [switch]$force,
@@ -166,13 +163,9 @@
                 'force'      = $true
                 'DiskLayout' = $DiskLayout
             }
-            if ($RecoveryTools)
+            if ($NoRecoveryTools)
             {
-                $InitializeVHDPartitionParam.add('RecoveryTools', $true)
-            }
-            if ($RecoveryImage)
-            {
-                $InitializeVHDPartitionParam.add('RecoveryImage', $true)
+                $InitializeVHDPartitionParam.add('NoRecoveryTools', $true)
             }
             if ($Dynamic)
             {
