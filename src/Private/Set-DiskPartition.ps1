@@ -440,25 +440,6 @@
                         }
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] System Partition [$($SystemPartition.partitionNumber)] : Running [$windir\System32\bcdboot.exe] -> $bcdBootArgs"
                         Run-Executable -Executable "$windir\System32\bcdboot.exe" -Arguments $bcdBootArgs @ParametersToPass
-
-                        # The following is added to mitigate the VMM diff disk handling
-                        # We're going to change from MBRBootOption to LocateBootOption.
-                        if ($DiskLayout -eq 'BIOS')
-                        {
-                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] System Partition [$($SystemPartition.partitionNumber)] : Fixing the Device ID in the BCD store on [$($VHDFormat)]"
-                            Run-Executable -Executable "$windir\System32\bcdboot.exe" -Arguments (
-                                "/store $($WinDrive)boot\bcd",
-                                "/set `{bootmgr`} device locate"
-                            )
-                            Run-Executable -Executable "$windir\System32\bcdboot.exe" -Arguments (
-                                "/store $($WinDrive)boot\bcd",
-                                "/set `{default`} device locate"
-                            )
-                            Run-Executable -Executable "$windir\System32\bcdboot.exe" -Arguments (
-                                "/store $($WinDrive)boot\bcd",
-                                "/set `{default`} osdevice locate"
-                            )
-                        }
                     }
                     #endregion
 
@@ -472,7 +453,7 @@
 
                         #the winre.wim file is hidden
                         Get-ChildItem -Path "$windir\System32\recovery\winre.wim" -Hidden |
-                        Copy-Item -Destination $repath.FullName
+                        Copy-Item -Destination $WindowsRe.FullName
 
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Register Reovery Image "
                         $null = Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setreimage /path $WindowsRe /target $windir"
