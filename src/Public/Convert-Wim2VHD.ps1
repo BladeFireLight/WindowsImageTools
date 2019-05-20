@@ -54,7 +54,7 @@
         $DiskLayout,
 
         # Skip the creation of the Recovery Environment Tools Partition.
-        [switch]$NpRecoveryTools,
+        [switch]$NoRecoveryTools,
 
         # Force the overwrite of existing files
         [switch]$force,

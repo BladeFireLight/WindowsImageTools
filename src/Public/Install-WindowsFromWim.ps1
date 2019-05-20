@@ -11,7 +11,7 @@
     .EXAMPLE
     Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -index 3 -force -DiskLayout UEFI
     #>
-  [CmdletBinding(SupportsShouldProcess = $true, 
+  [CmdletBinding(SupportsShouldProcess = $true,
     PositionalBinding = $false,
     ConfirmImpact = 'Medium')]
   Param
@@ -29,7 +29,7 @@
         }
       })]
     [string]$DiskNumber,
-        
+
     # Specifies whether to build the image for BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
     # Generation 1 VMs require BIOS (MBR) images.  Generation 2 VMs require UEFI (GPT) images.
     # Windows To Go images will boot in UEFI or BIOS
@@ -40,15 +40,12 @@
     [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
     $DiskLayout,
 
-    # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
-    [switch]$RecoveryTools,
-
-    # Create the Recovery Environment Tools and Recovery Image Partitions. Only valid on UEFI layout
-    [switch]$RecoveryImage,
+    # Skip creating the Recovery Environment Tools Partition.
+    [switch]$NoRecoveryTools,
 
     # Force the overwrite of existing files
     [switch]$force,
-        
+
     # Path to WIM or ISO used to populate VHDX
     [parameter(Position = 1, Mandatory = $true,
       HelpMessage = 'Enter the path to the WIM/ISO file')]
@@ -56,10 +53,10 @@
         Test-Path -Path (Get-FullFilePath -Path $_ )
       })]
     [string]$SourcePath,
-        
+
     # Index of image inside of WIM (Default 1)
     [int]$Index = 1,
-        
+
     # Path to file to copy inside of VHD(X) as C:\unattent.xml
     [ValidateScript( {
         if ($_) {
@@ -71,7 +68,7 @@
       })]
     [string]$Unattend,
 
-    # Native Boot does not have the boot code inside the VHD(x) it must exist on the physical disk. 
+    # Native Boot does not have the boot code inside the VHD(x) it must exist on the physical disk.
     [switch]$NativeBoot,
 
     # Features to turn on (in DISM format)
@@ -82,14 +79,14 @@
     [ValidateNotNullOrEmpty()]
     [string[]]$RemoveFeature,
 
-    # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched 
+    # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
          (Test-Path -Path $(Resolve-Path $_) -or ($_ -eq 'NONE') )
       })]
     [string]$FeatureSource,
 
-    # Feature Source index. If the source is a .wim provide an index Default =1 
+    # Feature Source index. If the source is a .wim provide an index Default =1
     [int]$FeatureSourceIndex = 1,
 
     # Path to drivers to inject
@@ -134,17 +131,14 @@
           $ParametersToPass[$key] = $PSBoundParameters[$key]
         }
       }
-        
+
       $InitializeDiskPartitionParam = @{
         'DiskNumber' = $DiskNumber
         'force' = $true
         'DiskLayout' = $DiskLayout
       }
-      if ($RecoveryTools) {
-        $InitializeDiskPartitionParam.add('RecoveryTools', $true)
-      }
-      if ($RecoveryImage) {
-        $InitializeDiskPartitionParam.add('RecoveryImage', $true)
+      if ($NoRecoveryTools) {
+        $InitializeDiskPartitionParam.add('NoRecoveryTools', $true)
       }
       if ($Dynamic) {
         $InitializeDiskPartitionParam.add('Dynamic', $true)
@@ -192,9 +186,9 @@
       Write-Verbose -Message ($SetDiskPartitionParam | Out-String)
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : ParametersToPass"
       Write-Verbose -Message ($ParametersToPass | Out-String)
-            
+
       Try {
-        Initialize-DiskPartition @InitializeDiskPartitionParam @ParametersToPass 
+        Initialize-DiskPartition @InitializeDiskPartitionParam @ParametersToPass
         Set-DiskPartition @SetDiskPartitionParam @ParametersToPass
       }
       Catch {

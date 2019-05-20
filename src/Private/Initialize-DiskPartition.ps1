@@ -77,34 +77,36 @@ function Initialize-DiskPartition
                 ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -and $pscmdlet.ShouldContinue("Target Disk [$DiskNumber] has existing partitions! Any existing data will be lost! (suppress with -force)", 'Warning')))
             {
                 #region Validate input
-
+                $SystemSize = 260MB
+                $ReservedSize = 128MB
+                $RecoverySize = 905MB
                 switch ($DiskLayout)
                 {
                     'BIOS'
                     {
                         $PartitionStyle = 'MBR'
-                        $System = 260MB
+                        $System = $SystemSize
                         $MsReserved = 0
-                        $Recovery = 499mb
+                        $Recovery = $RecoverySize
                     }
                     'UEFI'
                     {
                         $PartitionStyle = 'GPT'
-                        $System = 260MB
-                        $MsReserved = 16mb
-                        $Recovery = 499mb
+                        $System = $SystemSize
+                        $MsReserved = $ReservedSize
+                        $Recovery = $RecoverySize
                     }
                     'Data'
                     {
                         $PartitionStyle = 'GPT'
                         $System = 0
-                        $MsReserved = 16mb
+                        $MsReserved = $ReservedSize
                         $Recovery = 0
                     }
                     'WindowsToGo'
                     {
                         $PartitionStyle = 'MBR'
-                        $System = 260MB
+                        $System = $SystemSize
                         $MsReserved = 0
                         $Recovery = 0
                     }

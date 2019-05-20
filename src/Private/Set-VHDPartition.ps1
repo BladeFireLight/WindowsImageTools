@@ -173,6 +173,7 @@
           $null = Dismount-DiskImage -ImagePath $Path
           if ($isoPath -and (Get-DiskImage $isoPath).Attached) {
             $null = Dismount-DiskImage -ImagePath $isoPath
+            [System.GC]::Collect()
           }
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Finished"
         }
