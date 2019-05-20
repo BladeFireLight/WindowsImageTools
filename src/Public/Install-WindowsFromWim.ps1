@@ -46,6 +46,15 @@
         # Skip creating the Recovery Environment Tools Partition.
         [switch]$NoRecoveryTools,
 
+        # System (boot loader) Partition Size (Default : 260MB)
+        [int]$SystemSize,
+
+        # MS Reserved Partition Size (Default : 128MB)
+        [int]$ReservedSize,
+
+        # Recovery Tools Partition Size (Default : 905MB)
+        [int]$RecoverySize,
+
         # Force the overwrite of existing files
         [switch]$force,
 
@@ -157,6 +166,10 @@
             {
                 $InitializeDiskPartitionParam.add('Dynamic', $true)
             }
+            if ($SystemSize) { $InitializeDiskPartitionParam.add('SystemSize', $SystemSize) }
+            if ($ReservedSize) { $InitializeDiskPartitionParam.add('ReservedSize', $ReservedSize) }
+            if ($RecoverySize) { $InitializeDiskPartitionParam.add('RecoverySize', $RecoverySize) }
+
             $SetDiskPartitionParam = @{
                 'SourcePath' = $SourcePath
                 'DiskNumber' = $DiskNumber

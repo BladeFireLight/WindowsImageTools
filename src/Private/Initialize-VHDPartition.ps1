@@ -43,6 +43,15 @@
         [ValidateRange(25GB, 64TB)]
         [uint64]$Size = 80GB,
 
+        # System (boot loader) Partition Size (Default : 260MB)
+        [int]$SystemSize,
+
+        # MS Reserved Partition Size (Default : 128MB)
+        [int]$ReservedSize,
+
+        # Recovery Tools Partition Size (Default : 905MB)
+        [int]$RecoverySize,
+
         # Create Dynamic disk
         [switch]$Dynamic,
 
@@ -128,8 +137,8 @@
                 $Acl = $null
                 if (Test-Path -Path $Path)
                 {
-                  $Acl = Get-Acl -Path $Path
-                  Remove-Item -Path $Path
+                    $Acl = Get-Acl -Path $Path
+                    Remove-Item -Path $Path
                 }
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating"
 
@@ -144,9 +153,9 @@
 
                     If ($Dynamic)
                     {
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
-                    Write-Verbose -Message ($vhdParams | Out-String)
-                    $null = [WIM2VHD.VirtualHardDisk]::CreateSparseDisk(
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
+                        Write-Verbose -Message ($vhdParams | Out-String)
+                        $null = [WIM2VHD.VirtualHardDisk]::CreateSparseDisk(
                             $VHDFormat,
                             $Path,
                             $Size,
@@ -155,10 +164,10 @@
                     }
                     else
                     {
-                      Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateFixedDisk()"
-                      Write-Verbose -Message ($vhdParams | Out-String)
-                      Write-Warning -Message 'Creating a Fixed Disk May take a long time!'
-                      $null = [WIM2VHD.VirtualHardDisk]::CreateFixedDisk(
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateFixedDisk()"
+                        Write-Verbose -Message ($vhdParams | Out-String)
+                        Write-Warning -Message 'Creating a Fixed Disk May take a long time!'
+                        $null = [WIM2VHD.VirtualHardDisk]::CreateFixedDisk(
                             $VHDFormat,
                             $Path,
                             $Size,
@@ -176,11 +185,11 @@
 
                 if (Test-Path -Path $Path)
                 {
-                  if ($Acl)
-                  {
-                    Set-Acl -Path $Path -AclObject $Acl
-                  }
-                  #region Mount Image
+                    if ($Acl)
+                    {
+                        Set-Acl -Path $Path -AclObject $Acl
+                    }
+                    #region Mount Image
                     try
                     {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Mounting disk image"
@@ -209,6 +218,9 @@
                     }
                     if ($DataFormat) { $InitializeDiskParam.add('DataFormat', $DataFormat) }
                     if ($NoRecoveryTools) { $InitializeDiskParam.add('NoRecoveryTools', $NoRecoveryTools) }
+                    if ($SystemSize) { $InitializeDiskParam.add('SystemSize', $SystemSize) }
+                    if ($ReservedSize) { $InitializeDiskParam.add('ReservedSize', $ReservedSize) }
+                    if ($RecoverySize) { $InitializeDiskParam.add('RecoverySize', $RecoverySize) }
 
                     $null = Initialize-DiskPartition @ParametersToPass @InitializeDiskParam
                     #endregion

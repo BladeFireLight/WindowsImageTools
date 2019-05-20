@@ -455,8 +455,9 @@
                         Get-ChildItem -Path "$windir\System32\recovery\winre.wim" -Hidden |
                         Copy-Item -Destination $WindowsRe.FullName
 
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Register Reovery Image "
-                        $null = Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setreimage /path $WindowsRe /target $windir"
+                        #? Windows 10 and server have this defaulted to enabled and to the same location.
+                        #Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Recovery Tools Partition [$($RecoveryToolsPartition.partitionNumber)] : Register Reovery Image "
+                        #$null = Start-Process -NoNewWindow -Wait -FilePath "$windir\System32\reagentc.exe" -ArgumentList "/setreimage /path $WindowsRe /target $windir"
 
                     }
                     #endregion

@@ -56,6 +56,15 @@
         # Skip the creation of the Recovery Environment Tools Partition.
         [switch]$NoRecoveryTools,
 
+        # System (boot loader) Partition Size (Default : 260MB)
+        [int]$SystemSize,
+
+        # MS Reserved Partition Size (Default : 128MB)
+        [int]$ReservedSize,
+
+        # Recovery Tools Partition Size (Default : 905MB)
+        [int]$RecoverySize,
+
         # Force the overwrite of existing files
         [switch]$force,
 
@@ -171,6 +180,10 @@
             {
                 $InitializeVHDPartitionParam.add('Dynamic', $true)
             }
+            if ($SystemSize) { $InitializeVHDPartitionParam.add('SystemSize', $SystemSize) }
+            if ($ReservedSize) { $InitializeVHDPartitionParam.add('ReservedSize', $ReservedSize) }
+            if ($RecoverySize) { $InitializeVHDPartitionParam.add('RecoverySize', $RecoverySize) }
+
             $SetVHDPartitionParam = @{
                 'SourcePath' = $SourcePath
                 'Path'       = $Path

@@ -37,6 +37,9 @@ function Initialize-DataDisk
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
+        # MS Reserved Partition Size (Default : 128MB)
+        [int]$ReservedSize,
+
         # Force the overwrite of existing files
         [switch]$force
     )
@@ -60,6 +63,10 @@ function Initialize-DataDisk
                 'force'      = $true
                 'DiskLayout' = 'Data'
                 'DataFormat' = $DataFormat
+            }
+            if ($ReservedSize)
+            {
+                $InitializeDiskPartitionParam.add('ReservedSize', $ReservedSize)
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeDiskPartitionParam"
             Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)

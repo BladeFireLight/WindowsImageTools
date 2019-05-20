@@ -61,6 +61,18 @@ function Initialize-DiskPartition
         # Skip Creation of the Recovery Environment Tools Partition.
         [switch]$NoRecoveryTools,
 
+        # System (boot loader) Partition Size
+        [ValidateScript({$_ -ge 100mb})]
+        [int]$SystemSize = 260MB,
+
+        # MS Reserved Partition Size
+        [ValidateScript({$_ -ge 16mb})]
+        [int]$ReservedSize = 128MB,
+
+        # Recovery Tools Partition Size
+        [ValidateScript({$_ -ge 200mb})]
+        [int]$RecoverySize = 905MB,
+
         # Force the overwrite of existing files
         [switch]$force
     )
@@ -77,9 +89,7 @@ function Initialize-DiskPartition
                 ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -and $pscmdlet.ShouldContinue("Target Disk [$DiskNumber] has existing partitions! Any existing data will be lost! (suppress with -force)", 'Warning')))
             {
                 #region Validate input
-                $SystemSize = 260MB
-                $ReservedSize = 128MB
-                $RecoverySize = 905MB
+
                 switch ($DiskLayout)
                 {
                     'BIOS'

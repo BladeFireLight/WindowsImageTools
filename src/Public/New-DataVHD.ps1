@@ -46,6 +46,9 @@ function New-DataVHD
         [ValidateRange(25GB, 64TB)]
         [long]$Size = 40GB,
 
+        # MS Reserved Partition Size (Default : 128MB)
+        [int]$ReservedSize,
+
         # Create Dynamic disk
         [switch]$Dynamic,
 
@@ -81,6 +84,10 @@ function New-DataVHD
             if ($Dynamic)
             {
                 $InitializeVHDPartitionParam.add('Dynamic', $true)
+            }
+            if ($ReservedSize)
+            {
+                $InitializeVHDPartitionParam.add('ReservedSize', $ReservedSize)
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeVHDPartitionParam"
             Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)
