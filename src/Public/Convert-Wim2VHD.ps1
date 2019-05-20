@@ -24,8 +24,8 @@
         [ValidatePattern(".\.vhdx?$")]
         [ValidateScript( {
                 if (Get-FullFilePath -Path $_ |
-                        Split-Path  |
-                        Resolve-Path )
+                    Split-Path |
+                    Resolve-Path )
                 {
                     $true
                 }
@@ -50,7 +50,7 @@
         [Alias('Layout')]
         [string]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
+        [ValidateSet('BIOS', 'UEFI', 'WindowsToGo', 'Data')]
         $DiskLayout,
 
         # Skip the creation of the Recovery Environment Tools Partition.
@@ -97,7 +97,7 @@
         # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched
         [ValidateNotNullOrEmpty()]
         [ValidateScript( {
-                ($_ -eq 'NONE') -or  (Test-Path -Path $(Resolve-Path $_))
+                ($_ -eq 'NONE') -or (Test-Path -Path $(Resolve-Path $_))
             })]
         [string]$FeatureSource,
 
@@ -148,7 +148,7 @@
     {
         if ((-not (Test-Path $Path)) -Or $force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning'))
         {
-            $ParametersToPass = @{}
+            $ParametersToPass = @{ }
             foreach ($key in ('Whatif', 'Verbose', 'Debug'))
             {
                 if ($PSBoundParameters.ContainsKey($key))
