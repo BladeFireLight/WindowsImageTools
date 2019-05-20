@@ -50,7 +50,7 @@
         [Alias('Layout')]
         [string]
         [ValidateNotNullOrEmpty()]
-        [ValidateSet('BIOS', 'UEFI', 'WindowsToGo', 'Data')]
+        [ValidateSet('BIOS', 'UEFI', 'WindowsToGo')]
         $DiskLayout,
 
         # Skip the creation of the Recovery Environment Tools Partition.
