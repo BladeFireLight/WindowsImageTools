@@ -13,11 +13,11 @@ Create a VHDX and populate it from a WIM
 ## SYNTAX
 
 ```
-Convert-Wim2VHD [-Path] <String> [-Size <Int64>] [-Dynamic] -DiskLayout <String> [-RecoveryTools]
- [-RecoveryImage] [-force] [-SourcePath] <String> [-Index <Int32>] [-Unattend <String>] [-NativeBoot]
- [-Feature <String[]>] [-RemoveFeature <String[]>] [-FeatureSource <String>] [-FeatureSourceIndex <Int32>]
- [-Driver <String[]>] [-AddPayloadForRemovedFeature] [-Package <String[]>] [-filesToInject <String[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Convert-Wim2VHD [-Path] <String> [-Size <Int64>] [-Dynamic] -DiskLayout <String> [-NoRecoveryTools]
+ [-SystemSize <Int32>] [-ReservedSize <Int32>] [-RecoverySize <Int32>] [-force] [-SourcePath] <String>
+ [-Index <Int32>] [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-RemoveFeature <String[]>]
+ [-FeatureSource <String>] [-FeatureSourceIndex <Int32>] [-Driver <String[]>] [-AddPayloadForRemovedFeature]
+ [-Package <String[]>] [-filesToInject <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -33,10 +33,14 @@ include the index number for the Windows Edition to install.
 Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
 ```
 
+Create a a VHDX of the default size with GPT partitions used by UEFI (Gen2)
+
 ### EXAMPLE 2
 ```
 Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 -Size 40GB -force -DiskLayout UEFI
 ```
+
+Create a 40GB VHDX useing index 3 with Gpt partitions used by UEFI (Gen2)
 
 ## PARAMETERS
 
@@ -103,9 +107,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -RecoveryTools
-Create the Recovery Environment Tools Partition.
-Only valid on UEFI layout
+### -NoRecoveryTools
+Skip the creation of the Recovery Environment Tools Partition.
 
 ```yaml
 Type: SwitchParameter
@@ -119,18 +122,47 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -RecoveryImage
-Create the Recovery Environment Tools and Recovery Image Partitions.
-Only valid on UEFI layout
+### -SystemSize
+System (boot loader) Partition Size (Default : 260MB)
 
 ```yaml
-Type: SwitchParameter
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value: False
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ReservedSize
+MS Reserved Partition Size (Default : 128MB)
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RecoverySize
+Recovery Tools Partition Size (Default : 905MB)
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -364,7 +396,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 

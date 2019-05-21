@@ -13,11 +13,11 @@ Populate a Disk it from a WIM
 ## SYNTAX
 
 ```
-Install-WindowsFromWim [-DiskNumber] <String> -DiskLayout <String> [-RecoveryTools] [-RecoveryImage] [-force]
- [-SourcePath] <String> [-Index <Int32>] [-Unattend <String>] [-NativeBoot] [-Feature <String[]>]
- [-RemoveFeature <String[]>] [-FeatureSource <String>] [-FeatureSourceIndex <Int32>] [-Driver <String[]>]
- [-AddPayloadForRemovedFeature] [-Package <String[]>] [-filesToInject <String[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Install-WindowsFromWim [-DiskNumber] <String> -DiskLayout <String> [-NoRecoveryTools] [-SystemSize <Int32>]
+ [-ReservedSize <Int32>] [-RecoverySize <Int32>] [-force] [-SourcePath] <String> [-Index <Int32>]
+ [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-RemoveFeature <String[]>] [-FeatureSource <String>]
+ [-FeatureSourceIndex <Int32>] [-Driver <String[]>] [-AddPayloadForRemovedFeature] [-Package <String[]>]
+ [-filesToInject <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -30,13 +30,17 @@ include the index number for the Windows Edition to install.
 
 ### EXAMPLE 1
 ```
-Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
+Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -NoRecoveryTools -DiskLayout UEFI
 ```
+
+Installs Windows to Disk Number 0 with no Recovery Partition from Index 1
 
 ### EXAMPLE 2
 ```
 Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -index 3 -force -DiskLayout UEFI
 ```
+
+Installs Windows to Disk Number 0 from with recoery partition from index 3 and overwrits any existing data.
 
 ## PARAMETERS
 
@@ -73,9 +77,8 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -RecoveryTools
-Create the Recovery Environment Tools Partition.
-Only valid on UEFI layout
+### -NoRecoveryTools
+Skip creating the Recovery Environment Tools Partition.
 
 ```yaml
 Type: SwitchParameter
@@ -89,18 +92,47 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -RecoveryImage
-Create the Recovery Environment Tools and Recovery Image Partitions.
-Only valid on UEFI layout
+### -SystemSize
+System (boot loader) Partition Size (Default : 260MB)
 
 ```yaml
-Type: SwitchParameter
+Type: Int32
 Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value: False
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ReservedSize
+MS Reserved Partition Size (Default : 128MB)
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RecoverySize
+Recovery Tools Partition Size (Default : 905MB)
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -334,7 +366,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see about_CommonParameters (http://go.microsoft.com/fwlink/?LinkID=113216).
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
