@@ -40,7 +40,6 @@
         [string]$Path,
 
         # Size in Bytes (Default 80B)
-        [ValidateRange(25GB, 64TB)]
         [uint64]$Size = 80GB,
 
         # System (boot loader) Partition Size (Default : 260MB)

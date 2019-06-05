@@ -45,7 +45,7 @@ function New-DataVHD
         $DataFormat = 'ReFS',
 
         # Size in Bytes (Default 40B)
-        [ValidateRange(25GB, 64TB)]
+        [ValidateRange(100mb, 64TB)]
         [long]$Size = 40GB,
 
         # MS Reserved Partition Size (Default : 128MB)

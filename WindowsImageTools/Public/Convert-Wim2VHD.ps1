@@ -39,7 +39,7 @@
     [string]$Path,
 
     # Size in Bytes (Default 40B)
-    [ValidateRange(25GB, 64TB)]
+    [ValidateRange(35GB, 64TB)]
     [long]$Size = 40GB,
 
     # Create Dynamic disk
