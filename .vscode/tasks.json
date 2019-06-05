@@ -33,7 +33,8 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "${cwd}/build.ps1 -Task Clean -Verbose"
+            "command": "${cwd}/build.ps1 -Task Clean -Verbose",
+            "problemMatcher": []
         },
         {
             "label": "Test",
@@ -48,7 +49,8 @@
         {
             "label": "Analyze",
             "type": "shell",
-            "command": "${cwd}/build.ps1 -Task Analyze -Verbose"
+            "command": "${cwd}/build.ps1 -Task Analyze -Verbose",
+            "problemMatcher": []
         },
         {
             "label": "Pester",
@@ -63,12 +65,14 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "Publish",
             "type": "shell",
-            "command": "${cwd}/build.ps1 -Task Publish -Verbose"
+            "command": "${cwd}/build.ps1 -Task Publish -Verbose",
+            "problemMatcher": []
         }
     ]
 }
