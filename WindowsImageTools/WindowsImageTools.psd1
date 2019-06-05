@@ -95,7 +95,7 @@ PrivateData = @{
     PSData = @{
 
         # Tags applied to this module. These help with module discovery in online galleries.
-        Tags = @('WIM', 'VHDX', 'Install Windows')
+        Tags = @('WIM', 'VHDX', 'InstallWindows')
 
         # A URL to the license for this module.
         LicenseUri = 'https://github.com/BladeFireLight/WindowsImageTools/blob/master/LICENSE'
