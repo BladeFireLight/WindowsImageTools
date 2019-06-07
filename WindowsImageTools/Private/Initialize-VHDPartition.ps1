@@ -71,6 +71,11 @@
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
+        # Alocation Unit Size to format the primary partition
+        [int]
+        [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
+        $AllocationUnitSize,
+
         # Output the disk image object
         [switch]$Passthru,
 
@@ -215,6 +220,7 @@
                     if ($SystemSize) { $InitializeDiskParam.add('SystemSize', $SystemSize) }
                     if ($ReservedSize) { $InitializeDiskParam.add('ReservedSize', $ReservedSize) }
                     if ($RecoverySize) { $InitializeDiskParam.add('RecoverySize', $RecoverySize) }
+                    if ($AllocationUnitSize) { $InitializeDiskParam.add('AllocationUnitSize', $AllocationUnitSize) }
 
                     $null = Initialize-DiskPartition @ParametersToPass @InitializeDiskParam
                     #endregion

@@ -44,6 +44,11 @@ function New-DataVHD
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
+        # Alocation Unit Size to format the primary partition
+        [int]
+        [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
+        $AllocationUnitSize,
+
         # Size in Bytes (Default 40B)
         [ValidateRange(100mb, 64TB)]
         [long]$Size = 40GB,
@@ -91,6 +96,8 @@ function New-DataVHD
             {
                 $InitializeVHDPartitionParam.add('ReservedSize', $ReservedSize)
             }
+            if ($AllocationUnitSize) { $InitializeVHDPartitionParam.add('AllocationUnitSize', $AllocationUnitSize) }
+
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeVHDPartitionParam"
             Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : ParametersToPass"

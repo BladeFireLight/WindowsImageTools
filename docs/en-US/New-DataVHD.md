@@ -13,8 +13,8 @@ Create a VHDX Data Drive with GPT partitions
 ## SYNTAX
 
 ```
-New-DataVHD [-Path] <String> [-DataFormat <String>] [-Size <Int64>] [-ReservedSize <Int32>] [-Dynamic] [-force]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-DataVHD [-Path] <String> [-DataFormat <String>] [-AllocationUnitSize <Int32>] [-Size <Int64>]
+ [-ReservedSize <Int32>] [-Dynamic] [-force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -67,6 +67,21 @@ Aliases:
 Required: False
 Position: Named
 Default value: ReFS
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -AllocationUnitSize
+Alocation Unit Size to format the primary partition
+
+```yaml
+Type: Int32
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: 0
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

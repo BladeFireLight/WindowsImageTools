@@ -37,6 +37,11 @@ function Initialize-DataDisk
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
+        # Alocation Unit Size to format the primary partition
+        [int]
+        [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
+        $AllocationUnitSize,
+
         # MS Reserved Partition Size (Default : 128MB)
         [int]$ReservedSize,
 
@@ -68,6 +73,8 @@ function Initialize-DataDisk
             {
                 $InitializeDiskPartitionParam.add('ReservedSize', $ReservedSize)
             }
+            if ($AllocationUnitSize) { $InitializeDiskPartitionParam.add('AllocationUnitSize', $AllocationUnitSize) }
+
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeDiskPartitionParam"
             Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : ParametersToPass"

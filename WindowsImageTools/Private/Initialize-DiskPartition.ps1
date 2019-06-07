@@ -55,6 +55,11 @@ function Initialize-DiskPartition
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
+        # Alocation Unit Size to format the primary partition
+        [int]
+        [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
+        $AllocationUnitSize,
+
         # Output the disk object
         [switch]$Passthru,
 
@@ -206,7 +211,13 @@ function Initialize-DiskPartition
                         $Label = 'Data'
                     }
                     Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Primary : Formatting volume [$FileSystem]"
-                    $null = Format-Volume -Partition $windowsPartition -NewFileSystemLabel $Label -FileSystem $FileSystem -Force -Confirm:$false
+                    $FormatPartitionParam = @{
+                        Partition = $windowsPartition
+                        NewFileSystemLabel = $Label
+                        FileSystem = $FileSystem
+                    }
+                    if ($AllocationUnitSize) { $FormatPartitionParam.add('AllocationUnitSize', $AllocationUnitSize) }
+                    $null = Format-Volume @FormatPartitionParam -Force -Confirm:$false
                     #endregion Primay Partiton
 
                     if ($Recovery)
