@@ -49,7 +49,7 @@ function New-UnattendXml {
         [System.Management.Automation.Credential()][PSCredential[]]
         $UserAccount,
 
-        # User account/password to join do the domain
+        # User account/password to join do the domain MUST use Domain\User or user@domain format
         [System.Management.Automation.Credential()][PSCredential]
         $JoinAccount,
 
@@ -369,7 +369,7 @@ function New-UnattendXml {
                                 $identificationElement = $component.AppendChild($unattendXml.CreateElement('Identification', 'urn:schemas-microsoft-com:unattend'))
                                 $IdCredentialElement = $identificationElement.AppendChild($unattendXml.CreateElement('Credentials', 'urn:schemas-microsoft-com:unattend'))
                                 $IdCredDomainEliment = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Domain', 'urn:schemas-microsoft-com:unattend'))
-                                $Null = $IdCredDomainEliment.AppendChild($unattendXml.CreateTextNode($domain))
+                                $Null = $IdCredDomainEliment.AppendChild($unattendXml.CreateTextNode($JoinAccount.GetNetworkCredential().Domain))
                                 $IdCredPasswordElement = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Password', 'urn:schemas-microsoft-com:unattend'))
                                 $Null = $IdCredPasswordElement.AppendChild($unattendXml.CreateTextNode($JoinAccount.GetNetworkCredential().Password))
                                 $IdCredUserNameElement = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Username', 'urn:schemas-microsoft-com:unattend'))
