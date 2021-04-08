@@ -2,6 +2,6 @@
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
     "editor.insertSpaces": true,
-    "editor.tabSize": 2,
-    "powershell.codeFormatting.preset": "Allman"
+    "editor.tabSize": 4,
+    "powershell.codeFormatting.preset": "OTBS"
 }

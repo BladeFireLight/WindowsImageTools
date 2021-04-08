@@ -7,7 +7,7 @@
     "windows": {
         "options": {
             "shell": {
-                "executable": "powershell.exe",
+                "executable": "pwsh.exe",
                 "args": [ "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command" ]
             }
         }
@@ -33,8 +33,7 @@
         {
             "label": "Clean",
             "type": "shell",
-            "command": "${cwd}/build.ps1 -Task Clean -Verbose",
-            "problemMatcher": []
+            "command": "${cwd}/build.ps1 -Task Clean -Verbose"
         },
         {
             "label": "Test",
@@ -49,8 +48,7 @@
         {
             "label": "Analyze",
             "type": "shell",
-            "command": "${cwd}/build.ps1 -Task Analyze -Verbose",
-            "problemMatcher": []
+            "command": "${cwd}/build.ps1 -Task Analyze -Verbose"
         },
         {
             "label": "Pester",
@@ -65,14 +63,12 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "problemMatcher": []
+            }
         },
         {
             "label": "Publish",
             "type": "shell",
-            "command": "${cwd}/build.ps1 -Task Publish -Verbose",
-            "problemMatcher": []
+            "command": "${cwd}/build.ps1 -Task Publish -Verbose"
         }
     ]
 }

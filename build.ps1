@@ -12,7 +12,10 @@ param(
     [switch]$Help,
 
     # Optional properties to pass to psake
-    [hashtable]$Properties
+    [hashtable]$Properties,
+
+    # Optional parameters to pass to psake
+    [hashtable]$Parameters
 )
 
 $ErrorActionPreference = 'Stop'
@@ -28,7 +31,7 @@ if ($Bootstrap.IsPresent) {
         Import-Module -Name PSDepend -Verbose:$false
         Invoke-PSDepend -Path './requirements.psd1' -Install -Import -Force -WarningAction SilentlyContinue
     } else {
-        Write-Warning "No [requirements.psd1] found. Skipping build dependency installation."
+        Write-Warning 'No [requirements.psd1] found. Skipping build dependency installation.'
     }
 }
 
@@ -39,6 +42,6 @@ if ($PSCmdlet.ParameterSetName -eq 'Help') {
         Format-Table -Property Name, Description, Alias, DependsOn
 } else {
     Set-BuildEnvironment -Force
-    Invoke-psake -buildFile $psakeFile -taskList $Task -nologo -properties $Properties
+    Invoke-psake -buildFile $psakeFile -taskList $Task -nologo -properties $Properties -parameters $Parameters
     exit ([int](-not $psake.build_success))
 }

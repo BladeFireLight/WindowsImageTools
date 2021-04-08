@@ -12,7 +12,7 @@
 RootModule = 'WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.9.19'
+ModuleVersion = '1.9.24'
 
 # Supported PSEditions
 # CompatiblePSEditions = @()
@@ -69,7 +69,7 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = '*'
+FunctionsToExport = 'Convert-Wim2VHD','Initialize-DataDisk','Install-WindowsFromWim','New-DataVHD','New-UnattendXml'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()
@@ -107,7 +107,7 @@ PrivateData = @{
         # IconUri = ''
 
         # ReleaseNotes of this module
-        ReleaseNotes = 'Reworked partiton setup to match windows 10, Fixed a number of bugs'
+        ReleaseNotes = 'Fixed Massive braking bug in Manifest'
 
     } # End of PSData hashtable
 

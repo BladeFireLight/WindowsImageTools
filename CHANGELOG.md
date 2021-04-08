@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.9.19.0] Unreleased
+## [1.9.24] Unreleased
+
+### Fixed
+  Switched to Semver : Non-SemVer version number breaks build with newer mpackage management
+  Fixes Breaking bug in function to export in manifest. this rendered the module unusable
+
+## [1.9.19.0] Released
 ### Added
   Initialize-DataDisk to format a phisical disk for GPT data. Microsfot recomends GPT drives all have an MSR partiion. so this does one MSR and then the rest a primary data drive.
   New-DataVhD. this is a wraper arround Initialize-DataDisk with the addition of creating and mounting a VHD(x)
