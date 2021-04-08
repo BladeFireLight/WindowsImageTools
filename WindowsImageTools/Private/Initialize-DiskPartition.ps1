@@ -9,13 +9,13 @@ function Initialize-DiskPartition
     To create a recovery partitions use -RecoveryTools and -RecoveryImage
 
     .EXAMPLE
-    Initialize-VDiskPartition -DiskNumber 5 -dynamic -size 30GB -DiskLayout BIOS
+    Initialize-DiskPartition -DiskNumber 5 -dynamic -size 30GB -DiskLayout BIOS
     .EXAMPLE
-    Initialize-VHDPartition -DiskNumber 4 -dynamic -size 40GB -DiskLayout UEFI -NoRecoveryTools
+    Initialize-DiskPartition -DiskNumber 4 -dynamic -size 40GB -DiskLayout UEFI -NoRecoveryTools
     .EXAMPLE
-    Initialize-VHDPartition -DiskNumber 1 -dynamic -size 40GB -DiskLayout Data -DataFormat ReFS
+    Initialize-DiskPartition -DiskNumber 1 -dynamic -size 40GB -DiskLayout Data -DataFormat ReFS
     .NOTES
-    This function is intended as a helper for Intilize-VHDDiskPartition
+    This function is intended as a helper for Intilize-DiskPartition
     #>
     [CmdletBinding(SupportsShouldProcess,
         PositionalBinding = $false,

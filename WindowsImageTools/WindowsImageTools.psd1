@@ -12,10 +12,10 @@
 RootModule = 'WindowsImageTools.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.9.24'
+ModuleVersion = '1.9.30'
 
 # Supported PSEditions
-# CompatiblePSEditions = @()
+CompatiblePSEditions = @('Desktop')
 
 # ID used to uniquely identify this module
 GUID = '6210674e-8cfa-4f61-a2fb-c54fd7ffcba1'
@@ -69,7 +69,7 @@ PowerShellVersion = '5.1'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Convert-Wim2VHD','Initialize-DataDisk','Install-WindowsFromWim','New-DataVHD','New-UnattendXml'
+FunctionsToExport = @('Convert-Wim2VHD','Initialize-DataDisk','Install-WindowsFromWim','New-DataVHD','New-UnattendXml')
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @()

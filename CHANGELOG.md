@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.9.24] Unreleased
+## [1.9.30] Released
+
+### Fixed
+  Target desktop (assembly for vhd does not work otherwise)
+  Finaly fix export of commands.
+
+## [1.9.24] Released
 
 ### Fixed
   Switched to Semver : Non-SemVer version number breaks build with newer mpackage management

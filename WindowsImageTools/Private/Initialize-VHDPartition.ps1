@@ -144,6 +144,7 @@
                 #region Create VHD
                 Try
                 {
+                    Add-WindowsImageTypes
                     $vhdParams = @{
                         VHDFormat = $VHDFormat
                         Path      = $Path
