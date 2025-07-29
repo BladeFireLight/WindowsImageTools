@@ -29,6 +29,7 @@ function New-DataVHD {
 
     .EXAMPLE
     New-DataVHD -Path c:\Data.vhdx -Size 20GB -Dynamic
+
     Creates a new 20GB dynamic Data VHDX formatted as ReFS.
 
     .EXAMPLE
