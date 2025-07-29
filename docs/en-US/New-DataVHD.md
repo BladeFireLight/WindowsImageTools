@@ -14,7 +14,8 @@ Create a VHDX Data Drive with GPT partitions
 
 ```
 New-DataVHD [-Path] <String> [-DataFormat <String>] [-AllocationUnitSize <Int32>] [-Size <Int64>]
- [-ReservedSize <Int32>] [-Dynamic] [-force] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-ReservedSize <Int32>] [-Dynamic] [-force] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,16 +29,14 @@ Use -Force to overwite existing file (ACLs will be copied to new file)
 ### EXAMPLE 1
 ```
 New-DataVHD -Path c:\Data.vhdx -Size 20GB -Dynamic
-```
-
 Creats a new 20GB Data VHDX that is dynamic, formated ReFS
+```
 
 ### EXAMPLE 2
 ```
 New-DataVHD -Path c:\data.vhdx -Size 100GB -DataFormat NTFS
-```
-
 Creats a new 100GB Data VHDX formated NTFS
+```
 
 ## PARAMETERS
 
@@ -169,6 +168,21 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

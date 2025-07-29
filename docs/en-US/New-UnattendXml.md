@@ -18,7 +18,8 @@ New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>
  [-domain <String>] [-OU <String>] [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>]
  [-FirstLogonScriptPath <String>] [-ProductKey <String>] [-TimeZone <String>] [-InputLocale <String>]
  [-SystemLocale <String>] [-UserLocale <String>] [-UILanguage <String>] [-RegisteredOwner <String>]
- [-RegisteredOrganization <String>] [-enableAdministrator] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-RegisteredOrganization <String>] [-enableAdministrator] [-ProgressAction <ActionPreference>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ### Basic_FirstBootScript
@@ -27,7 +28,8 @@ New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>
  [-domain <String>] [-OU <String>] [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>]
  [-FirstBootScriptPath <String>] [-ProductKey <String>] [-TimeZone <String>] [-InputLocale <String>]
  [-SystemLocale <String>] [-UserLocale <String>] [-UILanguage <String>] [-RegisteredOwner <String>]
- [-RegisteredOrganization <String>] [-enableAdministrator] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-RegisteredOrganization <String>] [-enableAdministrator] [-ProgressAction <ActionPreference>] [-WhatIf]
+ [-Confirm] [<CommonParameters>]
 ```
 
 ### Advanced
@@ -37,7 +39,8 @@ New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>
  [-ProductKey <String>] [-TimeZone <String>] [-InputLocale <String>] [-SystemLocale <String>]
  [-UserLocale <String>] [-UILanguage <String>] [-RegisteredOwner <String>] [-RegisteredOrganization <String>]
  [-FirstBootExecuteCommand <Hashtable[]>] [-FirstLogonExecuteCommand <Hashtable[]>]
- [-EveryLogonExecuteCommand <Hashtable[]>] [-enableAdministrator] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-EveryLogonExecuteCommand <Hashtable[]>] [-enableAdministrator] [-ProgressAction <ActionPreference>]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -63,11 +66,16 @@ If no Path is provided a the file will be created in a temp folder and the path 
 ### EXAMPLE 1
 ```
 New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
+Create an an randomly named xml in $env:temp that will set the Administrator Password and autologin 1 time. outputing the path to the file
 ```
 
 ### EXAMPLE 2
 ```
 New-UnattendXml -Path c:\temp\Unattent.xml -AdminPassword 'P@ssword' -logonCount 100 -FirstLogonScriptPath c:\pstemp\firstrun.ps1
+Create an Unattend in at c:\temp\Unattend.xml that :,
+    Sets the Administrator Password
+    Sets the auto logon count to 100 (basicly every reboot untill you manualy logoff)
+    Call c:\pstemp\firstrun.ps1 for each new user's first logon
 ```
 
 ## PARAMETERS
@@ -103,7 +111,7 @@ Accept wildcard characters: False
 ```
 
 ### -JoinAccount
-User account/password to join do the domain
+User account/password to join do the domain MUST use Domain\User or user@domain format
 
 ```yaml
 Type: PSCredential
@@ -239,7 +247,7 @@ Accept wildcard characters: False
 ```
 
 ### -TimeZone
-Timezone (default: Central Standard Time)
+Timezone (default: Timezone of the local Computer)
 
 ```yaml
 Type: String
@@ -248,13 +256,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: [System.TimeZoneInfo]::Local.Id
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -InputLocale
-Specifies the system input locale and the keyboard layout (default: en-US)
+Specifies the system input locale and the keyboard layout (default: current system language)
 
 ```yaml
 Type: String
@@ -263,13 +271,13 @@ Aliases: keyboardlayout
 
 Required: False
 Position: Named
-Default value: None
+Default value: [System.Globalization.Cultureinfo]::CurrentCulture.Name
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
 ### -SystemLocale
-Specifies the language for non-Unicode programs (default: en-US)
+Specifies the language for non-Unicode programs (default: Current system language)
 
 ```yaml
 Type: String
@@ -278,13 +286,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: [System.Globalization.Cultureinfo]::CurrentCulture.Name
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
 ### -UserLocale
-Specifies the per-user settings used for formatting dates, times, currency and numbers (default: en-US)
+Specifies the per-user settings used for formatting dates, times, currency and numbers (default: current system language)
 
 ```yaml
 Type: String
@@ -293,13 +301,13 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: [System.Globalization.Cultureinfo]::CurrentCulture.Name
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
 
 ### -UILanguage
-Specifies the system default user interface (UI) language (default: en-US)
+Specifies the system default user interface (UI) language (default: current system language)
 
 ```yaml
 Type: String
@@ -308,7 +316,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: [System.Globalization.Cultureinfo]::CurrentCulture.Name
 Accept pipeline input: True (ByPropertyName)
 Accept wildcard characters: False
 ```
@@ -429,6 +437,21 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

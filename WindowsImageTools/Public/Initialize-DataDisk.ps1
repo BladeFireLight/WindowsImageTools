@@ -7,8 +7,12 @@ function Initialize-DataDisk
     This command will Partition and Format the disk as a Data Drive.
     .EXAMPLE
     Initialize-DataDisk -DiskNumber 1 -DataFormat ReFS
+
+    Partition and Format Disk Number 1 as a Data Drive with ReFS
     .EXAMPLE
     Initialize-DataDisk -DiskNumber 1 -DataFormat NTFS
+
+    Partition and Format Disk Number 1 as a Data Drive with NTFS
     #>
     [CmdletBinding(SupportsShouldProcess = $true,
         PositionalBinding = $false,

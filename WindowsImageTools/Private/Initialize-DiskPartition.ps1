@@ -10,10 +10,16 @@ function Initialize-DiskPartition
 
     .EXAMPLE
     Initialize-DiskPartition -DiskNumber 5 -dynamic -size 30GB -DiskLayout BIOS
+
+    Create Dynamic partition on empty space on disk 5 with a size of 30GB for BIOS (MBR) layout.
     .EXAMPLE
     Initialize-DiskPartition -DiskNumber 4 -dynamic -size 40GB -DiskLayout UEFI -NoRecoveryTools
+
+    Create Dynamic partition on empty space on disk 4 with a size of 40GB for UEFI (GPT) layout without creating a recovery tools partition.
     .EXAMPLE
     Initialize-DiskPartition -DiskNumber 1 -dynamic -size 40GB -DiskLayout Data -DataFormat ReFS
+
+    Create Dynamic partition on empty space on disk 1 with a size of 40GB for Data (GPT) layout formatted as ReFS.
     .NOTES
     This function is intended as a helper for Intilize-DiskPartition
     #>

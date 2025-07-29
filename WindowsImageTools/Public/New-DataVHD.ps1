@@ -9,9 +9,11 @@ function New-DataVHD
     Use -Force to overwite existing file (ACLs will be copied to new file)
     .EXAMPLE
     New-DataVHD -Path c:\Data.vhdx -Size 20GB -Dynamic
+
     Creats a new 20GB Data VHDX that is dynamic, formated ReFS
     .EXAMPLE
     New-DataVHD -Path c:\data.vhdx -Size 100GB -DataFormat NTFS
+
     Creats a new 100GB Data VHDX formated NTFS
     #>
     [CmdletBinding(SupportsShouldProcess = $true,

@@ -9,9 +9,11 @@
     include the index number for the Windows Edition to install.
     .EXAMPLE
     Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -NoRecoveryTools -DiskLayout UEFI
+
     Installs Windows to Disk Number 0 with no Recovery Partition from Index 1
     .EXAMPLE
     Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -index 3 -force -DiskLayout UEFI
+
     Installs Windows to Disk Number 0 from with recoery partition from index 3 and overwrits any existing data.
     #>
     [CmdletBinding(SupportsShouldProcess = $true,

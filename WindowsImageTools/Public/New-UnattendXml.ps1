@@ -21,9 +21,11 @@ function New-UnattendXml {
     If no Path is provided a the file will be created in a temp folder and the path returned.
     .EXAMPLE
     New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
+
     Create an an randomly named xml in $env:temp that will set the Administrator Password and autologin 1 time. outputing the path to the file
     .EXAMPLE
     New-UnattendXml -Path c:\temp\Unattent.xml -AdminPassword 'P@ssword' -logonCount 100 -FirstLogonScriptPath c:\pstemp\firstrun.ps1
+
     Create an Unattend in at c:\temp\Unattend.xml that :,
         Sets the Administrator Password
         Sets the auto logon count to 100 (basicly every reboot untill you manualy logoff)

@@ -17,7 +17,8 @@ Convert-Wim2VHD [-Path] <String> [-Size <Int64>] [-Dynamic] -DiskLayout <String>
  [-SystemSize <Int32>] [-ReservedSize <Int32>] [-RecoverySize <Int32>] [-force] [-SourcePath] <String>
  [-Index <Int32>] [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-RemoveFeature <String[]>]
  [-FeatureSource <String>] [-FeatureSourceIndex <Int32>] [-Driver <String[]>] [-AddPayloadForRemovedFeature]
- [-Package <String[]>] [-filesToInject <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-Package <String[]>] [-filesToInject <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -31,16 +32,14 @@ include the index number for the Windows Edition to install.
 ### EXAMPLE 1
 ```
 Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
-```
-
 Create a a VHDX of the default size with GPT partitions used by UEFI (Gen2)
+```
 
 ### EXAMPLE 2
 ```
 Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 -Size 40GB -force -DiskLayout UEFI
-```
-
 Create a 40GB VHDX useing index 3 with Gpt partitions used by UEFI (Gen2)
+```
 
 ## PARAMETERS
 
@@ -387,6 +386,21 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

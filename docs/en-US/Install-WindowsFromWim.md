@@ -17,7 +17,7 @@ Install-WindowsFromWim [-DiskNumber] <String> -DiskLayout <String> [-NoRecoveryT
  [-ReservedSize <Int32>] [-RecoverySize <Int32>] [-force] [-SourcePath] <String> [-Index <Int32>]
  [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-RemoveFeature <String[]>] [-FeatureSource <String>]
  [-FeatureSourceIndex <Int32>] [-Driver <String[]>] [-AddPayloadForRemovedFeature] [-Package <String[]>]
- [-filesToInject <String[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-filesToInject <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -31,16 +31,14 @@ include the index number for the Windows Edition to install.
 ### EXAMPLE 1
 ```
 Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -NoRecoveryTools -DiskLayout UEFI
-```
-
 Installs Windows to Disk Number 0 with no Recovery Partition from Index 1
+```
 
 ### EXAMPLE 2
 ```
 Install-WindowsFromWim -DiskNumber 0 -WimPath d:\Source\install.wim -index 3 -force -DiskLayout UEFI
-```
-
 Installs Windows to Disk Number 0 from with recoery partition from index 3 and overwrits any existing data.
+```
 
 ## PARAMETERS
 
@@ -357,6 +355,21 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

@@ -14,7 +14,8 @@ Partition GPT and Fomat as a Data Drive
 
 ```
 Initialize-DataDisk [-DiskNumber] <String> [-DataFormat <String>] [-AllocationUnitSize <Int32>]
- [-ReservedSize <Int32>] [-force] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-ReservedSize <Int32>] [-force] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -132,6 +133,21 @@ Prompts you for confirmation before running the cmdlet.
 Type: SwitchParameter
 Parameter Sets: (All)
 Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -ProgressAction
+{{ Fill ProgressAction Description }}
+
+```yaml
+Type: ActionPreference
+Parameter Sets: (All)
+Aliases: proga
 
 Required: False
 Position: Named

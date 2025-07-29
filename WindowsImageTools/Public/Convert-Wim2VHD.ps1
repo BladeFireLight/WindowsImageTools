@@ -1,18 +1,32 @@
 ﻿function Convert-Wim2VHD
 {
   <#
-    .Synopsis
-    Create a VHDX and populate it from a WIM
+    .SYNOPSIS
+    Creates a VHD or VHDX and populates it from a WIM or ISO image.
+
     .DESCRIPTION
-    This command will create a VHD or VHDX formated for UEFI (Gen 2/GPT) or BIOS (Gen 1/MBR)
-    You must supply the path to the VHD/VHDX file and a valid WIM/ISO. You should also
-    include the index number for the Windows Edition to install.
+    This command creates a VHD or VHDX file formatted for UEFI (Gen 2/GPT), BIOS (Gen 1/MBR), or Windows To Go (MBR).
+    You must supply the path to the VHD/VHDX file and a valid WIM or ISO image. Optionally, specify the index number for the Windows edition to install.
+    Additional options allow customization of disk layout, partition sizes, features, drivers, and packages.
+
     .EXAMPLE
-    Convert-WIM2VHDX -Path c:\windows8.vhdx -WimPath d:\Source\install.wim -Recovery -DiskLayout UEFI
-    Create a a VHDX of the default size with GPT partitions used by UEFI (Gen2)
+    Convert-Wim2VHD -Path c:\windows8.vhdx -SourcePath d:\Source\install.wim -DiskLayout UEFI
+
+    Creates a VHDX of the default size with GPT partitions for UEFI (Gen2).
+
     .EXAMPLE
-    Convert-WIM2VHDX -Path c:\windowsServer.vhdx -WimPath d:\Source\install.wim -index 3 -Size 40GB -force -DiskLayout UEFI
-    Create a 40GB VHDX useing index 3 with Gpt partitions used by UEFI (Gen2)
+    Convert-Wim2VHD -Path c:\windowsServer.vhdx -SourcePath d:\Source\install.wim -Index 3 -Size 40GB -Force -DiskLayout UEFI
+
+    Creates a 40GB VHDX using index 3 with GPT partitions for UEFI (Gen2), overwriting any existing file.
+
+    .EXAMPLE
+    Convert-Wim2VHD -Path c:\win2go.vhd -SourcePath d:\Source\install.wim -DiskLayout WindowsToGo
+
+    Creates a Windows To Go VHD image that can boot in UEFI or BIOS mode.
+
+    .NOTES
+    Author: WindowsImageTools Team
+    Requires: Administrator privileges
     #>
   [CmdletBinding(SupportsShouldProcess = $true,
     PositionalBinding = $false,
