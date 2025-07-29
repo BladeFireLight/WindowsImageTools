@@ -7,16 +7,22 @@ Locale: en-US
 ---
 
 # WindowsImageTools Module
+
 ## Description
+
 {{ Fill in the Description }}
 
 ## WindowsImageTools Cmdlets
+
 ### [Convert-Wim2VHD](Convert-Wim2VHD.md)
+
 {{ Fill in the Description }}
 
 ### [Install-WindowsFromWim](Install-WindowsFromWim.md)
+
 {{ Fill in the Description }}
 
 ### [New-DataVHD](New-DataVHD.md)
+
 {{ Fill in the Description }}
 

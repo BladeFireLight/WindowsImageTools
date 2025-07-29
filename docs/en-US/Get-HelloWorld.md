@@ -8,21 +8,24 @@ schema: 2.0.0
 # Get-HelloWorld
 
 ## SYNOPSIS
+
 Returns Hello world
 
 ## SYNTAX
 
-```
+```PowerShell
 Get-HelloWorld [[-Value] <String>] [-ProgressAction <ActionPreference>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 Returns Hello world
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+``` PowerShell
 Get-HelloWorld
 ```
 
@@ -31,6 +34,7 @@ Runs the command
 ## PARAMETERS
 
 ### -Value
+
 Parameter description can go here or above in format: .PARAMETER  \<Parameter-Name\>
 
 ```yaml
@@ -46,6 +50,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
+
 {{ Fill ProgressAction Description }}
 
 ```yaml
@@ -61,6 +66,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
@@ -68,6 +74,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ## OUTPUTS
 
 ### System.String
+
 ## NOTES
 
 ## RELATED LINKS

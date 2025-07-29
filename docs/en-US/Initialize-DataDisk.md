@@ -8,34 +8,39 @@ schema: 2.0.0
 # Initialize-DataDisk
 
 ## SYNOPSIS
-Partition GPT and Fomat as a Data Drive
+
+Partition GPT and Format as a Data Drive
 
 ## SYNTAX
 
-```
+```PowerShell
 Initialize-DataDisk [-DiskNumber] <String> [-DataFormat <String>] [-AllocationUnitSize <Int32>]
  [-ReservedSize <Int32>] [-force] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 This command will Partition and Format the disk as a Data Drive.
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```PowerShell
 Initialize-DataDisk -DiskNumber 1 -DataFormat ReFS
 ```
 
 ### EXAMPLE 2
-```
+
+```PowerShell
 Initialize-DataDisk -DiskNumber 1 -DataFormat NTFS
 ```
 
 ## PARAMETERS
 
 ### -DiskNumber
+
 Disk number, disk must exist
 
 ```yaml
@@ -51,6 +56,7 @@ Accept wildcard characters: False
 ```
 
 ### -DataFormat
+
 Format drive as NTFS or ReFS (Only applies when DiskLayout = Data)
 
 ```yaml
@@ -66,7 +72,8 @@ Accept wildcard characters: False
 ```
 
 ### -AllocationUnitSize
-Alocation Unit Size to format the primary partition
+
+Allocation Unit Size to format the primary partition
 
 ```yaml
 Type: Int32
@@ -81,6 +88,7 @@ Accept wildcard characters: False
 ```
 
 ### -ReservedSize
+
 MS Reserved Partition Size (Default : 128MB)
 
 ```yaml
@@ -96,6 +104,7 @@ Accept wildcard characters: False
 ```
 
 ### -force
+
 Force the overwrite of existing files
 
 ```yaml
@@ -111,6 +120,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
+
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
@@ -127,6 +137,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -142,6 +153,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
+
 {{ Fill ProgressAction Description }}
 
 ```yaml
@@ -157,6 +169,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

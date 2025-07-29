@@ -8,39 +8,44 @@ schema: 2.0.0
 # New-DataVHD
 
 ## SYNOPSIS
+
 Create a VHDX Data Drive with GPT partitions
 
 ## SYNTAX
 
-```
+```PowerShell
 New-DataVHD [-Path] <String> [-DataFormat <String>] [-AllocationUnitSize <Int32>] [-Size <Int64>]
  [-ReservedSize <Int32>] [-Dynamic] [-force] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
 ```
 
 ## DESCRIPTION
+
 This command will create a VHD or VHDX with a GPT partition table
-formated ReFS(Default) or NTFS.
+formatted ReFS(Default) or NTFS.
 You must supply the path to the VHD/VHDX file
-Use -Force to overwite existing file (ACLs will be copied to new file)
+Use -Force to overwrite existing file (ACLs will be copied to new file)
 
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```PowerShell
 New-DataVHD -Path c:\Data.vhdx -Size 20GB -Dynamic
-Creats a new 20GB Data VHDX that is dynamic, formated ReFS
+Creates a new 20GB Data VHDX that is dynamic, formatted ReFS
 ```
 
 ### EXAMPLE 2
-```
+
+```PowerShell
 New-DataVHD -Path c:\data.vhdx -Size 100GB -DataFormat NTFS
-Creats a new 100GB Data VHDX formated NTFS
+Creates a new 100GB Data VHDX formatted NTFS
 ```
 
 ## PARAMETERS
 
 ### -Path
+
 Path to the new VHDX file (Must end in .vhdx)
 
 ```yaml
@@ -56,6 +61,7 @@ Accept wildcard characters: False
 ```
 
 ### -DataFormat
+
 Format drive as NTFS or ReFS (Only applies when DiskLayout = Data)
 
 ```yaml
@@ -71,7 +77,8 @@ Accept wildcard characters: False
 ```
 
 ### -AllocationUnitSize
-Alocation Unit Size to format the primary partition
+
+Allocation Unit Size to format the primary partition
 
 ```yaml
 Type: Int32
@@ -86,6 +93,7 @@ Accept wildcard characters: False
 ```
 
 ### -Size
+
 Size in Bytes (Default 40B)
 
 ```yaml
@@ -101,6 +109,7 @@ Accept wildcard characters: False
 ```
 
 ### -ReservedSize
+
 MS Reserved Partition Size (Default : 128MB)
 
 ```yaml
@@ -116,6 +125,7 @@ Accept wildcard characters: False
 ```
 
 ### -Dynamic
+
 Create Dynamic disk
 
 ```yaml
@@ -131,6 +141,7 @@ Accept wildcard characters: False
 ```
 
 ### -force
+
 Force the overwrite of existing files
 
 ```yaml
@@ -146,6 +157,7 @@ Accept wildcard characters: False
 ```
 
 ### -WhatIf
+
 Shows what would happen if the cmdlet runs.
 The cmdlet is not run.
 
@@ -162,6 +174,7 @@ Accept wildcard characters: False
 ```
 
 ### -Confirm
+
 Prompts you for confirmation before running the cmdlet.
 
 ```yaml
@@ -177,6 +190,7 @@ Accept wildcard characters: False
 ```
 
 ### -ProgressAction
+
 {{ Fill ProgressAction Description }}
 
 ```yaml
@@ -192,6 +206,7 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
