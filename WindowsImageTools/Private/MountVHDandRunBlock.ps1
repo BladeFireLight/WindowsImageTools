@@ -1,4 +1,4 @@
-function MountVHDandRunBlock
+function MountVhdAndRunBlock
 {
     param
     (
@@ -11,13 +11,13 @@ function MountVHDandRunBlock
     # Drive letter of the mounted VHD is stored in $driveLetter - can be used by script blocks
     if ($ReadOnly)
     {
-        $virtualDisk = Mount-VHD -Path $vhd -ReadOnly -Passthru
+        $virtualDisk = Mount-VHD -Path $vhd -ReadOnly -PassThru
     }
     else
     {
-        $virtualDisk = Mount-VHD -Path $vhd -Passthru
+        $virtualDisk = Mount-VHD -Path $vhd -PassThru
     }
-    # Workarround for new drive letters in script modules
+    # Workaround for new drive letters in script modules
     $null = Get-PSDrive
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")]
     $driveLetter = ($virtualDisk |

@@ -20,31 +20,33 @@ function Get-FullFilePath
         [String]$Path
     )
 
-    if (-not (Test-Path -Path $Path))
-    {
-        if (Test-Path -Path (Split-Path -Path $Path -Parent ))
+    process {
+        if (-not (Test-Path -Path $Path))
         {
-            $Parent = Resolve-Path -Path (Split-Path -Path $Path -Parent )
-            $Leaf = Split-Path -Path $Path -Leaf
-
-            if ($Parent.path[-1] -eq '\')
+            if (Test-Path -Path (Split-Path -Path $Path -Parent ))
             {
-                $Path = "$Parent" + "$Leaf"
+                $Parent = Resolve-Path -Path (Split-Path -Path $Path -Parent )
+                $Leaf = Split-Path -Path $Path -Leaf
+
+                if ($Parent.path[-1] -eq '\')
+                {
+                    $Path = "$Parent" + "$Leaf"
+                }
+                else
+                {
+                    $Path = "$Parent" + "\$Leaf"
+                }
             }
             else
             {
-                $Path = "$Parent" + "\$Leaf"
+                throw "Parent [$(Split-Path -Path $Path -Parent)] does not exist"
             }
         }
         else
         {
-            throw "Parent [$(Split-Path -Path $Path -Parent)] does not exist"
+            $Path = Resolve-Path -Path $Path
         }
-    }
-    else
-    {
-        $Path = Resolve-Path -Path $Path
-    }
 
-    return $Path
+        return $Path
+    }
 }

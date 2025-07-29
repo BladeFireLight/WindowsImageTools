@@ -5,16 +5,16 @@ function New-DataVHD
     Create a VHDX Data Drive with GPT partitions
     .DESCRIPTION
     This command will create a VHD or VHDX with a GPT partition table
-    formated ReFS(Default) or NTFS. You must supply the path to the VHD/VHDX file
-    Use -Force to overwite existing file (ACLs will be copied to new file)
+    formatted ReFS(Default) or NTFS. You must supply the path to the VHD/VHDX file
+    Use -Force to overwrite existing file (ACLs will be copied to new file)
     .EXAMPLE
     New-DataVHD -Path c:\Data.vhdx -Size 20GB -Dynamic
 
-    Creats a new 20GB Data VHDX that is dynamic, formated ReFS
+    Creates a new 20GB Data VHDX that is dynamic, formatted ReFS
     .EXAMPLE
     New-DataVHD -Path c:\data.vhdx -Size 100GB -DataFormat NTFS
 
-    Creats a new 100GB Data VHDX formated NTFS
+    Creates a new 100GB Data VHDX formatted NTFS
     #>
     [CmdletBinding(SupportsShouldProcess = $true,
         PositionalBinding = $false,
@@ -24,7 +24,7 @@ function New-DataVHD
         # Path to the new VHDX file (Must end in .vhdx)
         [Parameter(Position = 0, Mandatory = $true,
             HelpMessage = 'Enter the path for the new VHDX file')]
-        [ValidateNotNullorEmpty()]
+        [ValidateNotNullOrEmpty()]
         [ValidatePattern(".\.vhdx?$")]
         [ValidateScript( {
                 if (Get-FullFilePath -Path $_ |
@@ -46,7 +46,7 @@ function New-DataVHD
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
-        # Alocation Unit Size to format the primary partition
+        # Allocation Unit Size to format the primary partition
         [int]
         [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
         $AllocationUnitSize,
@@ -68,14 +68,14 @@ function New-DataVHD
     $Path = $Path | Get-FullFilePath
     $VhdxFileName = Split-Path -Leaf -Path $Path
 
-    if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with GPT Data Partitions",
+    if ($PsCmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with GPT Data Partitions",
             "Overwrite partitions inside [$Path] with GPT Data Partitions ? ",
             'Overwrite WARNING!'))
     {
-        if ((-not (Test-Path $Path)) -Or $force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning'))
+        if ((-not (Test-Path $Path)) -Or $force -Or $PsCmdlet.ShouldContinue('Are you sure? Any existing data will be lost!', 'Warning'))
         {
             $ParametersToPass = @{ }
-            foreach ($key in ('Whatif', 'Verbose', 'Debug'))
+            foreach ($key in ('WhatIf', 'Verbose', 'Debug'))
             {
                 if ($PSBoundParameters.ContainsKey($key))
                 {
@@ -129,18 +129,18 @@ function New-DataVHD
 
             try
             {
-                #! Workarround for new drive letters in script modules
+                #! Workaround for new drive letters in script modules
                 $null = Get-PSDrive
 
                 #region Assign Drive Letters (disable explorer popup and reset afterwords)
-                $DisableAutoPlayOldValue = (Get-ItemProperty -path hkcu:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers -name DisableAutoplay).DisableAutoplay
-                Set-ItemProperty -Path hkcu:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers -Name DisableAutoplay -Value 1
+                $DisableAutoPlayOldValue = (Get-ItemProperty -path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers -name DisableAutoplay).DisableAutoplay
+                Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers -Name DisableAutoplay -Value 1
                 foreach ($partition in (Get-Partition -DiskNumber $DiskNumber |
                         where-object -FilterScript { $_.Type -eq 'IFS' -or $_.type -eq 'basic' }))
                 {
                     $partition | Add-PartitionAccessPath -AssignDriveLetter -ErrorAction Stop
                 }
-                #! Workarround for new drive letters in script modules
+                #! Workaround for new drive letters in script modules
                 $null = Get-PSDrive
                 Set-ItemProperty -Path hkcu:\Software\Microsoft\Windows\CurrentVersion\Explorer\AutoplayHandlers -Name DisableAutoplay -Value $DisableAutoPlayOldValue
             }

@@ -4,7 +4,7 @@
     .Synopsis
     Create VHD(X) with partitions needed to be bootable
     .DESCRIPTION
-    This command will create a VHD or VHDX file. Supported layours are: BIOS, UEFI, Data or WindowsToGo.
+    This command will create a VHD or VHDX file. Supported layouts are: BIOS, UEFI, Data or WindowsToGo.
 
     To create a recovery partitions use -RecoveryTools and -RecoveryImage
 
@@ -23,7 +23,7 @@
         # Path to the new VHDX file (Must end in .vhd, or .vhdx)
         [Parameter(Position = 0, Mandatory,
             HelpMessage = 'Enter the path for the new VHD/VHDX file')]
-        [ValidateNotNullorEmpty()]
+        [ValidateNotNullOrEmpty()]
         [ValidatePattern(".\.vhdx?$")]
         [ValidateScript( {
                 if (Get-FullFilePath -Path $_ |
@@ -71,13 +71,13 @@
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
-        # Alocation Unit Size to format the primary partition
+        # Allocation Unit Size to format the primary partition
         [int]
         [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
         $AllocationUnitSize,
 
         # Output the disk image object
-        [switch]$Passthru,
+        [switch]$PassThru,
 
         # Create the Recovery Environment Tools Partition. Only valid on UEFI layout
         [switch]$NoRecoveryTools,
@@ -89,17 +89,17 @@
     {
 
 
-        if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create partition structure for Bootable vhd(x) on [$Path]",
+        if ($PsCmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create partition structure for Bootable vhd(x) on [$Path]",
                 "Replace existing file [$Path] ? ",
                 'Overwrite WARNING!'))
         {
             if ((-not (Test-Path $Path)) -Or
                 $force -Or
-                ((Test-Path $Path) -and $pscmdlet.ShouldContinue("TargetFile [$Path] exists! Any existin data will be lost!", 'Warning')))
+                ((Test-Path $Path) -and $PsCmdlet.ShouldContinue("TargetFile [$Path] exists! Any existing data will be lost!", 'Warning')))
             {
 
                 $ParametersToPass = @{ }
-                foreach ($key in ('Whatif', 'Verbose', 'Debug'))
+                foreach ($key in ('WhatIf', 'Verbose', 'Debug'))
                 {
                     if ($PSBoundParameters.ContainsKey($key))
                     {
@@ -121,7 +121,7 @@
                 {
                     if ($Size -gt 2040GB)
                     {
-                        Write-Warning -Message 'For the VHD file format, the maximum file size is ~2040GB.  Reseting size to 2040GB.'
+                        Write-Warning -Message 'For the VHD file format, the maximum file size is ~2040GB.  Resetting size to 2040GB.'
                         $Size = 2040GB
                     }
                 }
@@ -144,7 +144,7 @@
                 #region Create VHD
                 Try
                 {
-                    Add-WindowsImageTypes
+                    Add-WindowsImageType
                     $vhdParams = @{
                         VHDFormat = $VHDFormat
                         Path      = $Path
@@ -240,7 +240,7 @@
                     [System.GC]::Collect()
                 }
                 #endregion
-                if ($Passthru)
+                if ($PassThru)
                 {
                     #write the new disk object to the pipeline
                     Get-DiskImage -ImagePath $Path

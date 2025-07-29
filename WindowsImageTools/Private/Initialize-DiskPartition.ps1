@@ -4,7 +4,7 @@ function Initialize-DiskPartition
     .Synopsis
     Initialize a disk and create partitions
     .DESCRIPTION
-    This command will will create partition(s) on a give disk. Supported layours are: BIOS, UEFI, WindowsToGo, Data.
+    This command will will create partition(s) on a give disk. Supported layouts are: BIOS, UEFI, WindowsToGo, Data.
 
     To create a recovery partitions use -RecoveryTools and -RecoveryImage
 
@@ -21,7 +21,7 @@ function Initialize-DiskPartition
 
     Create Dynamic partition on empty space on disk 1 with a size of 40GB for Data (GPT) layout formatted as ReFS.
     .NOTES
-    This function is intended as a helper for Intilize-DiskPartition
+    This function is intended as a helper for Initialize-DiskPartition
     #>
     [CmdletBinding(SupportsShouldProcess,
         PositionalBinding = $false,
@@ -31,7 +31,7 @@ function Initialize-DiskPartition
         # Disk number, disk must exist
         [Parameter(Position = 0, Mandatory,
             HelpMessage = 'Disk Number based on Get-Disk')]
-        [ValidateNotNullorEmpty()]
+        [ValidateNotNullOrEmpty()]
         [ValidateScript( {
                 if (Get-Disk -Number $_)
                 {
@@ -61,13 +61,13 @@ function Initialize-DiskPartition
         [ValidateSet('NTFS', 'ReFS')]
         $DataFormat = 'ReFS',
 
-        # Alocation Unit Size to format the primary partition
+        # Allocation Unit Size to format the primary partition
         [int]
         [ValidateSet(4kb, 8kb, 16kb, 32kb, 64kb, 128kb, 256kb, 512kb, 1024kb, 2048kb)]
         $AllocationUnitSize,
 
         # Output the disk object
-        [switch]$Passthru,
+        [switch]$PassThru,
 
         # Skip Creation of the Recovery Environment Tools Partition.
         [switch]$NoRecoveryTools,
@@ -91,13 +91,13 @@ function Initialize-DiskPartition
     {
 
 
-        if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create [$DiskLayout] partition structure on Disk [$DiskNumber]",
+        if ($PsCmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create [$DiskLayout] partition structure on Disk [$DiskNumber]",
                 "Replace existing Partitions on disk [$DiskNumber] ? ",
                 'Overwrite WARNING!'))
         {
             if (-not (Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -Or
                 $force -Or
-                ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -and $pscmdlet.ShouldContinue("Target Disk [$DiskNumber] has existing partitions! Any existing data will be lost! (suppress with -force)", 'Warning')))
+                ((Get-Disk -Number $DiskNumber | Get-Partition -ErrorAction SilentlyContinue) -and $PsCmdlet.ShouldContinue("Target Disk [$DiskNumber] has existing partitions! Any existing data will be lost! (suppress with -force)", 'Warning')))
             {
                 #region Validate input
 
@@ -141,16 +141,16 @@ function Initialize-DiskPartition
                 #region create partitions
                 try
                 {
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk"
-                    Clear-disk -Number $disknumber -RemoveData -RemoveOEM -Confirm:$false -ErrorAction SilentlyContinue
-                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Initializing disk [$disknumber] as [$PartitionStyle]"
-                    $null = Initialize-Disk -Number $disknumber -PartitionStyle $PartitionStyle -ErrorAction SilentlyContinue
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$diskNumber] : Clearing disk"
+                    Clear-disk -Number $diskNumber -RemoveData -RemoveOEM -Confirm:$false -ErrorAction SilentlyContinue
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$diskNumber] : Initializing disk [$diskNumber] as [$PartitionStyle]"
+                    $null = Initialize-Disk -Number $diskNumber -PartitionStyle $PartitionStyle -ErrorAction SilentlyContinue
 
-                    $InitialPartition = Get-Disk -Number $disknumber -ErrorAction Stop |
+                    $InitialPartition = Get-Disk -Number $diskNumber -ErrorAction Stop |
                     Get-Partition -ErrorAction SilentlyContinue
                     if ($InitialPartition)
                     {
-                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Clearing disk to start all over"
+                        Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$diskNumber] : Clearing disk to start all over"
                         $InitialPartition | Remove-Partition -Confirm:$false -ErrorAction SilentlyContinue
                     }
 
@@ -166,7 +166,7 @@ function Initialize-DiskPartition
                             GPT { $NewPartitionParam.add('GptType', '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}') }
                             MBR { $NewPartitionParam.add('IsActive', $true) }
                         }
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : System : Creating partition of [$SysSize] bytes"
+                        Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : System : Creating partition of [$SysSize] bytes"
                         $systemPartition = New-Partition @NewPartitionParam
 
                         $FileSystem = 'FAT32'
@@ -174,12 +174,12 @@ function Initialize-DiskPartition
                         {
                             $FileSystem = 'NTFS'
                         }
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : System : Formatting [$FileSystem]"
+                        Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : System : Formatting [$FileSystem]"
                         $null = Format-Volume -Partition $systemPartition -NewFileSystemLabel 'System' -FileSystem $FileSystem -Force -Confirm:$false
 
                         if ($DiskLayout -eq 'UEFI')
                         {
-                            Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : System : Setting system partition as ESP"
+                            Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : System : Setting system partition as ESP"
                             $systemPartition | Set-Partition -GptType '{c12a7328-f81f-11d2-ba4b-00a0c93ec93b}'
                         }
                     }
@@ -187,25 +187,25 @@ function Initialize-DiskPartition
                     if ($MsReserved)
                     {
                         $NewPartitionParam = @{
-                            DiskNumber = $disknumber
+                            DiskNumber = $diskNumber
                             Size       = $MsReserved
                             GptType    = '{e3c9e316-0b5c-4db8-817d-f92df00215ae}'
                         }
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : MSR : Creating partition of [$MsReserved] bytes"
+                        Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : MSR : Creating partition of [$MsReserved] bytes"
                         $null = New-Partition @NewPartitionParam
 
                     }
 
-                    #region Create the Primay partition
+                    #region Create the Primary partition
                     # Refresh $disk to update free space
-                    $disk = Get-Disk -Number $disknumber | Get-Disk
+                    $disk = Get-Disk -Number $diskNumber | Get-Disk
 
                     $NewPartitionParam = @{
-                        DiskNumber = $disknumber
+                        DiskNumber = $diskNumber
                         Size       = $disk.LargestFreeExtent - $Recovery
                     }
                     if ($PartitionStyle -eq 'GPT') { $NewPartitionParam.add('GptType', '{ebd0a0a2-b9e5-4433-87c0-68b6b72699c7}') }
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Primary : Creating partition of [$($disk.LargestFreeExtent - $Recovery)] bytes"
+                    Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : Primary : Creating partition of [$($disk.LargestFreeExtent - $Recovery)] bytes"
                     Write-Verbose ($NewPartitionParam | out-string)
                     $windowsPartition = New-Partition @NewPartitionParam
 
@@ -216,7 +216,7 @@ function Initialize-DiskPartition
                         $FileSystem = $DataFormat
                         $Label = 'Data'
                     }
-                    Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Primary : Formatting volume [$FileSystem]"
+                    Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : Primary : Formatting volume [$FileSystem]"
                     $FormatPartitionParam = @{
                         Partition = $windowsPartition
                         NewFileSystemLabel = $Label
@@ -224,20 +224,20 @@ function Initialize-DiskPartition
                     }
                     if ($AllocationUnitSize) { $FormatPartitionParam.add('AllocationUnitSize', $AllocationUnitSize) }
                     $null = Format-Volume @FormatPartitionParam -Force -Confirm:$false
-                    #endregion Primay Partiton
+                    #endregion Primary Partition
 
                     if ($Recovery)
                     {
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Recovery Tools : Creating partition using remaing free space"
+                        Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : Recovery Tools : Creating partition using remaining free space"
                         $NewPartitionParam = @{
-                            DiskNumber = $disknumber
+                            DiskNumber = $diskNumber
                             Size       = $Recovery
                         }
                         if ($PartitionStyle -eq 'GPT') { $NewPartitionParam.add('GptType', '{de94bba4-06d1-4d40-a16a-bfd50179d6ac}') }
                         $recoveryImagePartition = New-Partition @NewPartitionParam
-                        Write-Verbose "[$($MyInvocation.MyCommand)] [$disknumber] : Recovery Tools : Formatting volume NTFS"
+                        Write-Verbose "[$($MyInvocation.MyCommand)] [$diskNumber] : Recovery Tools : Formatting volume NTFS"
                         $null = Format-Volume -Partition $recoveryImagePartition -NewFileSystemLabel 'Recovery Tools' -FileSystem NTFS -Force -Confirm:$false
-                        #run diskpart to set partition to hidden and prevent deletion
+                        #run diskPart to set partition to hidden and prevent deletion
                         #the here string must be left justified
                         if ($PartitionStyle -eq 'GPT')
                         {
@@ -247,7 +247,7 @@ select partition $($recoveryImagePartition.partitionNumber)
 gpt attributes=0x8000000000000001
 exit
 "@ |
-                            diskpart.exe
+                            diskPart.exe
                         }
                         else
                         {
@@ -257,19 +257,19 @@ select partition $($recoveryImagePartition.partitionNumber)
 set id=27
 exit
 "@ |
-                            diskpart.exe
+                            diskPart.exe
                         }
                     }
 
                 }
                 catch
                 {
-                    Write-Error -Message "[$($MyInvocation.MyCommand)] [$disknumber] : Creating Partitions"
+                    Write-Error -Message "[$($MyInvocation.MyCommand)] [$diskNumber] : Creating Partitions"
                     throw $_.Exception.Message
                 }
                 #endregion create partitions
 
-                if ($Passthru)
+                if ($PassThru)
                 {
                     #write the new disk object to the pipeline
                     Get-Disk -Number $DiskNumber
