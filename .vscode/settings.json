@@ -8,6 +8,7 @@
         "advapi",
         "Autoplay",
         "bootable",
+        "bootmgfw",
         "cref",
         "dacl",
         "disall",
@@ -28,11 +29,13 @@
         "PRODUCTTYPE",
         "proga",
         "psake",
+        "reagentc",
         "relen",
         "sacl",
         "serverhyper",
         "SETPOS",
         "SETRANGE",
+        "setreimage",
         "SPBUILD",
         "ssword",
         "STEPIT",
@@ -43,6 +46,7 @@
         "Undock",
         "VHDX",
         "VIRTDISK",
-        "WIMGAPI"
+        "WIMGAPI",
+        "winre"
     ]
 }

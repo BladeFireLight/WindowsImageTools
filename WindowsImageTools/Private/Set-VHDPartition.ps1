@@ -26,7 +26,7 @@
       HelpMessage = 'Enter the path to the VHDX file',
       ValueFromPipeline = $true,
       ValueFromPipelineByPropertyName = $true)]
-    [Alias('FullName', 'pspath', 'ImagePath')]
+    [Alias('FullName', 'psPath', 'ImagePath')]
     [ValidateScript( {
         Test-Path -Path (Get-FullFilePath -Path $_)
       })]
@@ -43,12 +43,11 @@
     # Index of image inside of WIM (Default 1)
     [int]$Index = 1,
 
-    # Path to file to copy inside of VHD(X/s) as C:\unattent.xml
+    # Path to file to copy inside of VHD(X/s) as C:\unattend.xml
     [ValidateScript( {
         if ($_) {
           Test-Path -Path $_
-        }
-        else {
+        } else {
           $true
         }
       })]
@@ -71,7 +70,7 @@
     # Feature Source path. If not provided, all ISO and WIM images in $sourcePath searched (unused if run on WinPE)
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
-         ($_ -eq 'NONE') -or (Test-Path -Path $(Resolve-Path $_) )
+        ($_ -eq 'NONE') -or (Test-Path -Path $(Resolve-Path $_) )
       })]
     [string]$FeatureSource,
 
@@ -87,7 +86,7 @@
       })]
     [string[]]$Driver,
 
-    # Path of packages to install via DSIM
+    # Path of packages to install via DISM
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
         foreach ($Path in $_) {
@@ -96,7 +95,7 @@
       })]
     [string[]]$Package,
 
-    # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
+    # Files/Folders to copy to root of Windows Drive (to place files in directories mimic the directory structure off of C:\)
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
         foreach ($Path in $_) {
@@ -116,12 +115,12 @@
 
     $VhdxFileName = Split-Path -Leaf -Path $Path
 
-    if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
-        "Overwrite partitions inside [$Path] with contentce of [$SourcePath]? ",
+    if ($psCmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
+        "Overwrite partitions inside [$Path] with content of [$SourcePath]? ",
         'Overwrite WARNING!')) {
-      if ($Force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning')) {
+      if ($Force -Or $psCmdlet.ShouldContinue('Are you sure? Any existing data will be lost!', 'Warning')) {
         $ParametersToPass = @{}
-        foreach ($key in ('Whatif', 'Verbose', 'Debug')) {
+        foreach ($key in ('WhatIf', 'Verbose', 'Debug')) {
           if ($PSBoundParameters.ContainsKey($key)) {
             $ParametersToPass[$key] = $PSBoundParameters[$key]
           }
@@ -132,42 +131,39 @@
         try {
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Mounting disk image [$Path]"
           $disk = Mount-DiskImage -ImagePath $Path -PassThru |
-            Get-DiskImage |
-            Get-Disk
-        }
-        catch {
+          Get-DiskImage |
+          Get-Disk
+        } catch {
           throw $_.Exception.Message
         }
         #endregion
 
         try {
-          Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Munted as disknumber [$($disk.Number)]"
+          Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Mounted as diskNumber [$($disk.Number)]"
 
           $SetDiskParam = @{
             DiskNumber = $disk.Number
             SourcePath = $SourcePath
-            Index = $Index
-            force = $force
+            Index      = $Index
+            force      = $force
           }
-          if ($Unattend) {$SetDiskParam.add('Unattend', $Unattend)}
-          if ($NativeBoot) {$SetDiskParam.add('NativeBoot', $NativeBoot)}
-          if ($AddPayloadForRemovedFeature) {$SetDiskParam.add('AddPayloadForRemovedFeature', $AddPayloadForRemovedFeature)}
-          if ($Feature) {$SetDiskParam.add('Feature', $Feature)}
-          if ($RemoveFeature) {$SetDiskParam.add('RemoveFeature', $RemoveFeature)}
-          if ($FeatureSource) {$SetDiskParam.add('FeatureSource', $FeatureSource)}
-          if ($FeatureSourceIndex) {$SetDiskParam.add('FeatureSourceIndex', $FeatureSourceIndex)}
-          if ($Driver) {$SetDiskParam.add('Driver', $Driver)}
-          if ($Package) {$SetDiskParam.add('Package', $Package)}
-          if ($filesToInject) {$SetDiskParam.add('filesToInject', $filesToInject)}
+          if ($Unattend) { $SetDiskParam.add('Unattend', $Unattend) }
+          if ($NativeBoot) { $SetDiskParam.add('NativeBoot', $NativeBoot) }
+          if ($AddPayloadForRemovedFeature) { $SetDiskParam.add('AddPayloadForRemovedFeature', $AddPayloadForRemovedFeature) }
+          if ($Feature) { $SetDiskParam.add('Feature', $Feature) }
+          if ($RemoveFeature) { $SetDiskParam.add('RemoveFeature', $RemoveFeature) }
+          if ($FeatureSource) { $SetDiskParam.add('FeatureSource', $FeatureSource) }
+          if ($FeatureSourceIndex) { $SetDiskParam.add('FeatureSourceIndex', $FeatureSourceIndex) }
+          if ($Driver) { $SetDiskParam.add('Driver', $Driver) }
+          if ($Package) { $SetDiskParam.add('Package', $Package) }
+          if ($filesToInject) { $SetDiskParam.add('filesToInject', $filesToInject) }
 
           Set-DiskPartition @ParametersToPass @SetDiskParam
 
-        }
-        catch {
+        } catch {
           Write-Error -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Error setting partition content "
           throw $_.Exception.Message
-        }
-        finally {
+        } finally {
           #dismount
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Dismounting"
           $null = Dismount-DiskImage -ImagePath $Path
@@ -177,12 +173,10 @@
           }
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Finished"
         }
-      }
-      else {
+      } else {
         Write-Warning -Message 'Process aborted by user'
       }
-    }
-    else {
+    } else {
       # Write-Warning 'Process aborted by user'
     }
 

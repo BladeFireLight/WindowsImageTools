@@ -2,13 +2,24 @@
 Function Get-HelloWorld {
     <#
     .SYNOPSIS
-        Returns Hello world
-    .DESCRIPTION
-        Returns Hello world
-    .EXAMPLE
-        PS> Get-HelloWorld
+    Returns a Hello World string or a custom value.
 
-        Runs the command
+    .DESCRIPTION
+    Returns the string 'Hello World' or a custom value if specified. This function is useful for testing or demonstration purposes.
+
+    .PARAMETER Value
+    The string value to return. Defaults to 'GetHelloWorld'.
+
+    .EXAMPLE
+    PS> Get-HelloWorld
+    Returns 'GetHelloWorld'.
+
+    .EXAMPLE
+    PS> Get-HelloWorld -Value 'Hello World!'
+    Returns 'Hello World!'.
+
+    .NOTES
+    Author: WindowsImageTools Team
     #>
     [OutputType([string])]
     [CmdletBinding()]

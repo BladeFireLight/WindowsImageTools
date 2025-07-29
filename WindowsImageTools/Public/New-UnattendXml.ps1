@@ -1,36 +1,89 @@
 function New-UnattendXml {
     <#
-    .Synopsis
-    Create a new Unattend.xml
+    .SYNOPSIS
+    Creates a new Unattend.xml file for automated Windows setup.
+
     .DESCRIPTION
-    This Command Creates a new Unattend.xml that skips any prompts, and sets the administrator password
-    Has options for:
-      Joining domain
-      Adding user accounts
-      Auto logon a set number of times
-      Set the Computer Name
-      First Boot or First Logon powershell script
-      Product Key
-      TimeZone
-      Input, System and User Locals
-      UI Language
-      Registered Owner and Organization
-      First Boot, First Logon and Every Logon Commands
-      Enable Administrator account without autoLogon (client OS)
+    This command creates a new Unattend.xml file that automates Windows setup, skipping prompts and setting the administrator password. Options include joining a domain, adding user accounts, auto logon, setting the computer name, running PowerShell scripts at first boot or logon, specifying product key, time zone, input/system/user locales, UI language, registered owner/organization, and custom commands for first boot/logon/every logon. If no path is provided, the file is created in a temp folder and the path is returned.
 
-    If no Path is provided a the file will be created in a temp folder and the path returned.
+    .PARAMETER AdminCredential
+    The credential object for the local Administrator account. Required.
+
+    .PARAMETER UserAccount
+    Array of credential objects for user accounts to create and add to Administrators group.
+
+    .PARAMETER JoinAccount
+    Credential object for joining the domain. Must use Domain\User or user@domain format.
+
+    .PARAMETER domain
+    The domain to join.
+
+    .PARAMETER OU
+    The organizational unit to place the computer account into.
+
+    .PARAMETER Path
+    Output path for the Unattend.xml file. Defaults to a temp folder.
+
+    .PARAMETER LogonCount
+    Number of times the local Administrator account should automatically log in. Default is 0.
+
+    .PARAMETER ComputerName
+    The computer name to set. Default is '*'.
+
+    .PARAMETER FirstLogonScriptPath
+    PowerShell script to run at first logon.
+
+    .PARAMETER FirstBootScriptPath
+    PowerShell script to run at first boot (specialize phase).
+
+    .PARAMETER ProductKey
+    Product key to use for unattended installation.
+
+    .PARAMETER TimeZone
+    Time zone to set. Default is the local computer's time zone.
+
+    .PARAMETER InputLocale
+    System input locale and keyboard layout. Default is current system language.
+
+    .PARAMETER SystemLocale
+    Language for non-Unicode programs. Default is current system language.
+
+    .PARAMETER UserLocale
+    Per-user settings for formatting dates, times, currency, and numbers. Default is current system language.
+
+    .PARAMETER UILanguage
+    System default user interface (UI) language. Default is current system language.
+
+    .PARAMETER RegisteredOwner
+    Registered owner name. Default is 'Valued Customer'.
+
+    .PARAMETER RegisteredOrganization
+    Registered organization name. Default is 'Valued Customer'.
+
+    .PARAMETER FirstBootExecuteCommand
+    Array of hashTables for commands to execute at first boot (system context).
+
+    .PARAMETER FirstLogonExecuteCommand
+    Array of hashTables for commands to execute at first logon (auto elevated).
+
+    .PARAMETER EveryLogonExecuteCommand
+    Array of hashTables for commands to execute at every logon (not elevated).
+
+    .PARAMETER enableAdministrator
+    Enables the local Administrator account (needed for client OS if not using autoLogon or additional admin users).
+
     .EXAMPLE
-    New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
+    New-UnattendXml -AdminCredential (Get-Credential) -LogonCount 1
+    Creates a randomly named Unattend.xml in $env:temp that sets the Administrator password and auto logon 1 time.
 
-    Create an an randomly named xml in $env:temp that will set the Administrator Password and autoLogon 1 time.
     .EXAMPLE
-    New-UnattendXml -Path c:\temp\Unattend.xml -AdminPassword 'P@ssword' -logonCount 100 -FirstLogonScriptPath c:\PsTemp\firstRun.ps1
+    New-UnattendXml -Path c:\temp\Unattend.xml -AdminCredential (Get-Credential) -LogonCount 100 -FirstLogonScriptPath c:\PsTemp\firstRun.ps1
+    Creates an Unattend.xml at c:\temp\Unattend.xml that sets the Administrator password, sets auto logon count to 100, and runs c:\PsTemp\firstRun.ps1 at each new user's first logon.
 
-    Create an Unattend in at c:\temp\Unattend.xml that :,
-        Sets the Administrator Password
-        Sets the auto logon count to 100 (basically every reboot until you manually logoff)
-        Call c:\PsTemp\firstRun.ps1 for each new user's first logon
-  #>
+    .NOTES
+    Author: WindowsImageTools Team
+    Requires: Administrator privileges
+    #>
     [CmdletBinding(DefaultParameterSetName = 'Basic_FirstLogonScript',
         SupportsShouldProcess = $true)]
     [OutputType([System.IO.FileInfo])]
@@ -95,124 +148,124 @@ function New-UnattendXml {
 
         # Timezone (default: Timezone of the local Computer)
         [ArgumentCompleter( {
-            param ( $commandName,
+                param ( $commandName,
                     $parameterName,
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
-            $possibleValues = [System.TimeZoneInfo]::GetSystemTimeZones().ID  | Where-Object {
-              $_ -like "$wordToComplete*"
-          } | Foreach-Object{
-            if ($_ -like '* *')
-              { "'{0}'" -f $_ }
-            else {$_}}
+                $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
+                $possibleValues = [System.TimeZoneInfo]::GetSystemTimeZones().ID  | Where-Object {
+                    $_ -like "$wordToComplete*"
+                } | Foreach-Object {
+                    if ($_ -like '* *')
+                    { "'{0}'" -f $_ }
+                    else { $_ } }
 
-            $possibleValues | ForEach-Object {$_}
-        } )]
+                $possibleValues | ForEach-Object { $_ }
+            } )]
         [ValidateScript({
-          trap [System.TimeZoneNotFoundException] {$false}
-          $null -ne [System.TimeZoneInfo]::FindSystemTimeZoneById($_)
-          })]
+                trap [System.TimeZoneNotFoundException] { $false }
+                $null -ne [System.TimeZoneInfo]::FindSystemTimeZoneById($_)
+            })]
         [string]
-        $TimeZone =  [System.TimeZoneInfo]::Local.Id,
+        $TimeZone = [System.TimeZoneInfo]::Local.Id,
 
         # Specifies the system input locale and the keyboard layout (default: current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
         [ArgumentCompleter( {
-            param ( $commandName,
+                param ( $commandName,
                     $parameterName,
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
-            $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
-              $_ -like '*-*'
-            }  | Where-Object {
-              $_ -like "$wordToComplete*"
-          }
+                $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
+                $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
+                    $_ -like '*-*'
+                }  | Where-Object {
+                    $_ -like "$wordToComplete*"
+                }
 
-            $possibleValues | ForEach-Object {$_}
-        } )]
-      [ValidateScript({
-      trap [System.Globalization.CultureNotFoundException] {$false}
-      $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
-      })]
+                $possibleValues | ForEach-Object { $_ }
+            } )]
+        [ValidateScript({
+                trap [System.Globalization.CultureNotFoundException] { $false }
+                $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
+            })]
         [Alias('keyboardLayout')]
         [String]
-        $InputLocale =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
+        $InputLocale = [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Specifies the language for non-Unicode programs (default: Current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
         [ArgumentCompleter( {
-            param ( $commandName,
+                param ( $commandName,
                     $parameterName,
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
-            $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
-              $_ -like '*-*'
-            }  | Where-Object {
-              $_ -like "$wordToComplete*"
-          }
+                $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
+                $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
+                    $_ -like '*-*'
+                }  | Where-Object {
+                    $_ -like "$wordToComplete*"
+                }
 
-            $possibleValues | ForEach-Object {$_}
-        } )]
-      [ValidateScript({
-      trap [System.Globalization.CultureNotFoundException] {$false}
-      $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
-      })]
+                $possibleValues | ForEach-Object { $_ }
+            } )]
+        [ValidateScript({
+                trap [System.Globalization.CultureNotFoundException] { $false }
+                $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
+            })]
         [String]
-        $SystemLocale  =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
+        $SystemLocale = [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Specifies the per-user settings used for formatting dates, times, currency and numbers (default: current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
         [ArgumentCompleter( {
-            param ( $commandName,
+                param ( $commandName,
                     $parameterName,
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
-            $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
-              $_ -like '*-*'
-            }  | Where-Object {
-              $_ -like "$wordToComplete*"
-          }
+                $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
+                $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
+                    $_ -like '*-*'
+                }  | Where-Object {
+                    $_ -like "$wordToComplete*"
+                }
 
-            $possibleValues | ForEach-Object {$_}
-        } )]
-      [ValidateScript({
-      trap [System.Globalization.CultureNotFoundException] {$false}
-      $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
-      })]
+                $possibleValues | ForEach-Object { $_ }
+            } )]
+        [ValidateScript({
+                trap [System.Globalization.CultureNotFoundException] { $false }
+                $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
+            })]
         [String]
-        $UserLocale  =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
+        $UserLocale = [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Specifies the system default user interface (UI) language (default: current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
         [ArgumentCompleter( {
-            param ( $commandName,
+                param ( $commandName,
                     $parameterName,
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
-            $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
-              $_ -like '*-*'
-            }  | Where-Object {
-              $_ -like "$wordToComplete*"
-          }
+                $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
+                $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
+                    $_ -like '*-*'
+                }  | Where-Object {
+                    $_ -like "$wordToComplete*"
+                }
 
-            $possibleValues | ForEach-Object {$_}
-        } )]
-      [ValidateScript({
-      trap [System.Globalization.CultureNotFoundException] {$false}
-      $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
-      })]
+                $possibleValues | ForEach-Object { $_ }
+            } )]
+        [ValidateScript({
+                trap [System.Globalization.CultureNotFoundException] { $false }
+                $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
+            })]
         [String]
-        $UILanguage  =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
+        $UILanguage = [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Registered Owner (default: 'Valued Customer')
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -506,7 +559,7 @@ function New-UnattendXml {
                                 $CommandDescriptionElement = $CommandElement.AppendChild($unattendXml.CreateElement('Description', 'urn:schemas-microsoft-com:unattend'))
                                 $CommandOrderElement = $CommandElement.AppendChild($unattendXml.CreateElement('Order', 'urn:schemas-microsoft-com:unattend'))
                                 $CommandCommandLineElement = $CommandElement.AppendChild($unattendXml.CreateElement('CommandLine', 'urn:schemas-microsoft-com:unattend'))
-                                $CommandRequireInputElement= $CommandElement.AppendChild($unattendXml.CreateElement('RequiresUserInput', 'urn:schemas-microsoft-com:unattend'))
+                                $CommandRequireInputElement = $CommandElement.AppendChild($unattendXml.CreateElement('RequiresUserInput', 'urn:schemas-microsoft-com:unattend'))
 
                                 $null = $CommandElement.SetAttribute('action', 'http://schemas.microsoft.com/WMIConfig/2002/State', 'add')
                                 $null = $CommandDescriptionElement.AppendChild($unattendXml.CreateTextNode($command['Description']))

@@ -5,9 +5,70 @@
     Creates a VHD or VHDX and populates it from a WIM or ISO image.
 
     .DESCRIPTION
-    This command creates a VHD or VHDX file formatted for UEFI (Gen 2/GPT), BIOS (Gen 1/MBR), or Windows To Go (MBR).
-    You must supply the path to the VHD/VHDX file and a valid WIM or ISO image. Optionally, specify the index number for the Windows edition to install.
-    Additional options allow customization of disk layout, partition sizes, features, drivers, and packages.
+    Creates a VHD or VHDX file formatted for UEFI (Gen 2/GPT), BIOS (Gen 1/MBR), or Windows To Go (MBR). You must supply the path to the VHD/VHDX file and a valid WIM or ISO image. Optionally, specify the index number for the Windows edition to install. Additional options allow customization of disk layout, partition sizes, features, drivers, packages, and more.
+
+    .PARAMETER Path
+    The path to the new VHD or VHDX file. Must end in .vhd or .vhdx.
+
+    .PARAMETER SourcePath
+    The path to the WIM or ISO file used to populate the VHD(X).
+
+    .PARAMETER DiskLayout
+    Specifies the disk layout: BIOS (MBR), UEFI (GPT), or WindowsToGo (MBR).
+
+    .PARAMETER Size
+    The size of the VHD(X) in bytes. Default is 40GB.
+
+    .PARAMETER Index
+    The index of the image inside the WIM. Default is 1.
+
+    .PARAMETER Dynamic
+    If specified, creates a dynamic disk.
+
+    .PARAMETER NoRecoveryTools
+    If specified, skips creation of the recovery tools partition.
+
+    .PARAMETER SystemSize
+    Size of the system (boot loader) partition.
+
+    .PARAMETER ReservedSize
+    Size of the MS Reserved partition.
+
+    .PARAMETER RecoverySize
+    Size of the recovery tools partition.
+
+    .PARAMETER Force
+    If specified, overwrites existing files.
+
+    .PARAMETER Unattend
+    Path to an unattend.xml file to copy into the VHD(X).
+
+    .PARAMETER NativeBoot
+    If specified, prepares the VHD(X) for native boot.
+
+    .PARAMETER Feature
+    Features to enable (in DISM format).
+
+    .PARAMETER RemoveFeature
+    Features to remove (in DISM format).
+
+    .PARAMETER FeatureSource
+    Path to feature source files or folders.
+
+    .PARAMETER FeatureSourceIndex
+    Index for feature source WIM. Default is 1.
+
+    .PARAMETER Driver
+    Paths to drivers to inject.
+
+    .PARAMETER AddPayloadForRemovedFeature
+    If specified, adds payload for all removed features.
+
+    .PARAMETER Package
+    Paths to packages to install via DISM.
+
+    .PARAMETER filesToInject
+    Files or folders to copy to the root of the Windows drive.
 
     .EXAMPLE
     Convert-Wim2VHD -Path c:\windows8.vhdx -SourcePath d:\Source\install.wim -DiskLayout UEFI
@@ -36,7 +97,7 @@
     # Path to the new VHDX file (Must end in .vhdx)
     [Parameter(Position = 0, Mandatory = $true,
       HelpMessage = 'Enter the path for the new VHDX file')]
-    [ValidateNotNullorEmpty()]
+    [ValidateNotNullOrEmpty()]
     [ValidatePattern(".\.vhdx?$")]
     [ValidateScript( {
         if (Get-FullFilePath -Path $_ |
@@ -95,7 +156,7 @@
     # Index of image inside of WIM (Default 1)
     [int]$Index = 1,
 
-    # Path to file to copy inside of VHD(X) as C:\unattent.xml
+    # Path to file to copy inside of VHD(X) as C:\unattend.xml
     [ValidateScript( {
         if ($_)
         {
@@ -142,7 +203,7 @@
     # Add payload for all removed features
     [switch]$AddPayloadForRemovedFeature,
 
-    # Path of packages to install via DSIM
+    # Path of packages to install via DISM
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
         foreach ($Path in $_)
@@ -151,7 +212,7 @@
         }
       })]
     [string[]]$Package,
-    # Files/Folders to copy to root of Winodws Drive (to place files in directories mimic the direcotry structure off of C:\)
+    # Files/Folders to copy to root of Windows Drive (to place files in directories mimic the directory structure off of C:\)
     [ValidateNotNullOrEmpty()]
     [ValidateScript( {
         foreach ($Path in $_)
@@ -167,14 +228,14 @@
 
   #$VhdxFileName = Split-Path -Leaf -Path $Path
 
-  if ($pscmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
-      "Overwrite partitions inside [$Path] with contentce of [$SourcePath]? ",
+  if ($psCmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] : Overwrite partitions inside [$Path] with content of [$SourcePath]",
+      "Overwrite partitions inside [$Path] with content of [$SourcePath]? ",
       'Overwrite WARNING!'))
   {
-    if ((-not (Test-Path $Path)) -Or $force -Or $pscmdlet.ShouldContinue('Are you sure? Any existin data will be lost!', 'Warning'))
+    if ((-not (Test-Path $Path)) -Or $force -Or $psCmdlet.ShouldContinue('Are you sure? Any existing data will be lost!', 'Warning'))
     {
       $ParametersToPass = @{ }
-      foreach ($key in ('Whatif', 'Verbose', 'Debug'))
+      foreach ($key in ('WhatIf', 'Verbose', 'Debug'))
       {
         if ($PSBoundParameters.ContainsKey($key))
         {

@@ -1,19 +1,28 @@
-﻿function Initialize-VHDPartition
-{
+﻿function Initialize-VHDPartition {
     <#
-    .Synopsis
-    Create VHD(X) with partitions needed to be bootable
+    .SYNOPSIS
+    Creates a VHD or VHDX file with partitions needed to be bootable.
+
     .DESCRIPTION
-    This command will create a VHD or VHDX file. Supported layouts are: BIOS, UEFI, Data or WindowsToGo.
-
-    To create a recovery partitions use -RecoveryTools and -RecoveryImage
+    Creates a VHD or VHDX file with the specified layout (BIOS, UEFI, Data, WindowsToGo), size, and partitioning options. Supports dynamic or fixed disks, formatting, allocation unit size, recovery partition creation, and overwrite options. Use -RecoveryTools and -RecoveryImage to create recovery partitions.
 
     .EXAMPLE
-    Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 30GB -DiskLayout BIOS
+    Initialize-VHDPartition -Path d:\disks\disk001.vhdx -Dynamic -Size 30GB -DiskLayout BIOS -SystemSize 260MB -ReservedSize 128MB -RecoverySize 905MB -DataFormat NTFS -AllocationUnitSize 64kb -PassThru -NoRecoveryTools -force
+
+    Creates a dynamic VHDX file at d:\disks\disk001.vhdx with BIOS layout, specified partition sizes, NTFS format, allocation unit size, skips recovery tools partition, outputs disk image object, and forces overwrite if file exists.
+
     .EXAMPLE
-    Initialize-VHDPartition d:\disks\disk001.vhdx -dynamic -size 40GB -DiskLayout UEFI -RecoveryTools
+    Initialize-VHDPartition -Path d:\disks\disk001.vhdx -Dynamic -Size 40GB -DiskLayout UEFI -SystemSize 260MB -ReservedSize 128MB -RecoverySize 905MB -DataFormat NTFS -AllocationUnitSize 64kb -PassThru -NoRecoveryTools -force
+
+    Creates a dynamic VHDX file at d:\disks\disk001.vhdx with UEFI layout, specified partition sizes, NTFS format, allocation unit size, skips recovery tools partition, outputs disk image object, and forces overwrite if file exists.
+
+    .EXAMPLE
+    Initialize-VHDPartition -Path d:\disks\disk001.vhdx -Dynamic -Size 40GB -DiskLayout Data -SystemSize 260MB -ReservedSize 128MB -RecoverySize 905MB -DataFormat ReFS -AllocationUnitSize 64kb -PassThru -NoRecoveryTools -force
+
+    Creates a dynamic VHDX file at d:\disks\disk001.vhdx with Data layout, specified partition sizes, ReFS format, allocation unit size, skips recovery tools partition, outputs disk image object, and forces overwrite if file exists.
+
     .NOTES
-    General notes
+    Helper for VHD(X) creation and bootable partition layout automation.
     #>
     [CmdletBinding(SupportsShouldProcess,
         PositionalBinding = $false,
@@ -28,12 +37,9 @@
         [ValidateScript( {
                 if (Get-FullFilePath -Path $_ |
                     Split-Path |
-                    Resolve-Path )
-                {
+                    Resolve-Path ) {
                     $true
-                }
-                else
-                {
+                } else {
                     Throw "Parent folder for $_ does not exist."
                 }
             })]
@@ -85,24 +91,19 @@
         # Force the overwrite of existing files
         [switch]$force
     )
-    Begin
-    {
+    Begin {
 
 
         if ($PsCmdlet.ShouldProcess("[$($MyInvocation.MyCommand)] Create partition structure for Bootable vhd(x) on [$Path]",
                 "Replace existing file [$Path] ? ",
-                'Overwrite WARNING!'))
-        {
+                'Overwrite WARNING!')) {
             if ((-not (Test-Path $Path)) -Or
                 $force -Or
-                ((Test-Path $Path) -and $PsCmdlet.ShouldContinue("TargetFile [$Path] exists! Any existing data will be lost!", 'Warning')))
-            {
+                ((Test-Path $Path) -and $PsCmdlet.ShouldContinue("TargetFile [$Path] exists! Any existing data will be lost!", 'Warning'))) {
 
                 $ParametersToPass = @{ }
-                foreach ($key in ('WhatIf', 'Verbose', 'Debug'))
-                {
-                    if ($PSBoundParameters.ContainsKey($key))
-                    {
+                foreach ($key in ('WhatIf', 'Verbose', 'Debug')) {
+                    if ($PSBoundParameters.ContainsKey($key)) {
                         $ParametersToPass[$key] = $PSBoundParameters[$key]
                     }
                 }
@@ -111,16 +112,13 @@
 
                 $VHDFormat = ([IO.FileInfo]$Path).Extension.split('.')[-1]
 
-                if (($DiskLayout -eq 'UEFI') -and ($VHDFormat -eq 'VHD'))
-                {
+                if (($DiskLayout -eq 'UEFI') -and ($VHDFormat -eq 'VHD')) {
                     throw 'UEFI disks must be in VHDX format. Please change the path to end in VHDX'
                 }
 
                 # Enforce max VHD size.
-                if ('VHD' -ilike $VHDFormat)
-                {
-                    if ($Size -gt 2040GB)
-                    {
+                if ('VHD' -ilike $VHDFormat) {
+                    if ($Size -gt 2040GB) {
                         Write-Warning -Message 'For the VHD file format, the maximum file size is ~2040GB.  Resetting size to 2040GB.'
                         $Size = 2040GB
                     }
@@ -134,16 +132,14 @@
 
                 # if we get this far it's ok to delete existing files. Save the ACL for the new file
                 $Acl = $null
-                if (Test-Path -Path $Path)
-                {
+                if (Test-Path -Path $Path) {
                     $Acl = Get-Acl -Path $Path
                     Remove-Item -Path $Path
                 }
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating"
 
                 #region Create VHD
-                Try
-                {
+                Try {
                     Add-WindowsImageType
                     $vhdParams = @{
                         VHDFormat = $VHDFormat
@@ -151,8 +147,7 @@
                         SizeBytes = $Size
                     }
 
-                    If ($Dynamic)
-                    {
+                    If ($Dynamic) {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
                         Write-Verbose -Message ($vhdParams | Out-String)
                         $null = [WIM2VHD.VirtualHardDisk]::CreateSparseDisk(
@@ -161,9 +156,7 @@
                             $Size,
                             $true
                         )
-                    }
-                    else
-                    {
+                    } else {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateFixedDisk()"
                         Write-Verbose -Message ($vhdParams | Out-String)
                         Write-Warning -Message 'Creating a Fixed Disk May take a long time!'
@@ -175,42 +168,32 @@
                         )
 
                     }
-                }
-                catch
-                {
+                } catch {
                     Throw "Failed to create $Path. $($_.Exception.Message)"
                 }
 
                 #endregion
 
-                if (Test-Path -Path $Path)
-                {
-                    if ($Acl)
-                    {
+                if (Test-Path -Path $Path) {
+                    if ($Acl) {
                         Set-Acl -Path $Path -AclObject $Acl
                     }
                     #region Mount Image
-                    try
-                    {
+                    try {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Mounting disk image"
                         $disk = Mount-DiskImage -ImagePath $Path -PassThru |
                         Get-DiskImage |
                         Get-Disk
-                    }
-                    catch
-                    {
+                    } catch {
                         throw $_.Exception.Message
                     }
                     #endregion
-                }
-                else
-                {
+                } else {
                     Throw "Failed to create vhd"
                 }
 
                 #region Create partitions
-                try
-                {
+                try {
                     $InitializeDiskParam = @{
                         DiskNumber = $disk.Number
                         DiskLayout = $DiskLayout
@@ -227,21 +210,18 @@
                     #endregion
                 }
 
-                catch
-                {
+                catch {
                     Write-Error -Message "[$($MyInvocation.MyCommand)] [$fileName] : Creating Partitions"
                     throw $_.Exception.Message
                 }
                 #region Dismount
-                finally
-                {
+                finally {
                     Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Dismounting disk image"
                     $null = Dismount-DiskImage -ImagePath $Path
                     [System.GC]::Collect()
                 }
                 #endregion
-                if ($PassThru)
-                {
+                if ($PassThru) {
                     #write the new disk object to the pipeline
                     Get-DiskImage -ImagePath $Path
                 }

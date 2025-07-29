@@ -1,5 +1,4 @@
-﻿Function Add-WindowsImageType
-{
+﻿Function Add-WindowsImageType {
     $Code = @"
 
 using System;
@@ -1804,7 +1803,7 @@ VirtualHardDisk
 }
 "@
 
-    Add-Type -TypeDefinition $code -ReferencedAssemblies "System.Xml","System.Linq","System.Xml.Linq" -ErrorAction SilentlyContinue
+    Add-Type -TypeDefinition $code -ReferencedAssemblies "System.Xml", "System.Linq", "System.Xml.Linq" -ErrorAction SilentlyContinue
 }
 
 # This is required for renewed �Mount-RegistryHive� and �Dismount-RegistryHive�
@@ -1812,10 +1811,10 @@ VirtualHardDisk
 # http://www.leeholmes.com/blog/2010/09/24/adjusting-token-privileges-in-powershell/
 
 Function Set-TokenPrivilege {
-    [CmdletBinding(SupportsShouldProcess=$true, ConfirmImpact='Medium')]
+    [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
     param(
-      # The privilege to adjust. This set is taken from
-      # http://msdn.microsoft.com/library/bb530716
+        # The privilege to adjust. This set is taken from
+        # http://msdn.microsoft.com/library/bb530716
         [ValidateSet(
             "SeAssignPrimaryTokenPrivilege",
             "SeAuditPrivilege",
@@ -1856,7 +1855,7 @@ Function Set-TokenPrivilege {
         $Privilege,
         # The process on which to adjust the privilege. Defaults to the current process.
         $ProcessId = $pid,
-      # Switch to disable the privilege, rather than enable it.
+        # Switch to disable the privilege, rather than enable it.
         [Switch]$Disable
     )
 

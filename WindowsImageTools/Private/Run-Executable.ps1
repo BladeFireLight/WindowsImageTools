@@ -1,19 +1,33 @@
-function RunExecutable
-{
+function RunExecutable {
     <#
-      .SYNOPSIS
-      Runs an external executable file, and validates the error level.
+    .SYNOPSIS
+    Runs an external executable file and validates the exit code.
 
-      .PARAMETER Executable
-      The path to the executable to run and monitor.
+    .DESCRIPTION
+    Runs the specified executable with arguments, waits for completion, and checks the exit code. Standard output and error are redirected to temporary files. Throws an error if the exit code does not match the expected value.
 
-      .PARAMETER Arguments
-      An array of arguments to pass to the executable when it's executed.
+    .PARAMETER Executable
+    The path to the executable to run and monitor.
 
-      .PARAMETER SuccessfulErrorCode
-      The error code that means the executable ran successfully.
-      The default value is 0.
-      #>
+    .PARAMETER Arguments
+    An array of arguments to pass to the executable when it's executed.
+
+    .PARAMETER SuccessfulErrorCode
+    The exit code that means the executable ran successfully. Default is 0.
+
+    .EXAMPLE
+    RunExecutable -Executable 'C:\Windows\System32\notepad.exe' -Arguments @('file.txt')
+
+    Runs notepad.exe with file.txt as an argument and checks for exit code 0.
+
+    .EXAMPLE
+    RunExecutable -Executable 'C:\Temp\myTool.exe' -Arguments @('-run', '-quiet') -SuccessfulErrorCode 1
+
+    Runs myTool.exe with arguments and expects exit code 1 for success.
+
+    .NOTES
+    Author: BladeFireLight
+    #>
 
     [CmdletBinding()]
     param(
@@ -22,7 +36,7 @@ function RunExecutable
         [ValidateNotNullOrEmpty()]
         $Executable,
 
-        [Parameter(Mandatory, HelpMessage = 'aray of arguments to pass to executable')]
+        [Parameter(Mandatory, HelpMessage = 'array of arguments to pass to executable')]
         [string[]]
         [ValidateNotNullOrEmpty()]
         $Arguments,
@@ -50,8 +64,7 @@ function RunExecutable
 
     Write-Verbose -Message "[$($MyInvocation.MyCommand)] : Return code was [$($ret.ExitCode)]"
 
-    if ($ret.ExitCode -ne $SuccessfulErrorCode)
-    {
+    if ($ret.ExitCode -ne $SuccessfulErrorCode) {
         throw "$Executable failed with code $($ret.ExitCode)!"
     }
 }
