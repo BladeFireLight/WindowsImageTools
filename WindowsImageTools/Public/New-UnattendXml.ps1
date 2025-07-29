@@ -74,10 +74,12 @@ function New-UnattendXml {
 
     .EXAMPLE
     New-UnattendXml -AdminCredential (Get-Credential) -LogonCount 1
+
     Creates a randomly named Unattend.xml in $env:temp that sets the Administrator password and auto logon 1 time.
 
     .EXAMPLE
     New-UnattendXml -Path c:\temp\Unattend.xml -AdminCredential (Get-Credential) -LogonCount 100 -FirstLogonScriptPath c:\PsTemp\firstRun.ps1
+
     Creates an Unattend.xml at c:\temp\Unattend.xml that sets the Administrator password, sets auto logon count to 100, and runs c:\PsTemp\firstRun.ps1 at each new user's first logon.
 
     .NOTES
