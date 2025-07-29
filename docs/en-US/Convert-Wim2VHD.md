@@ -13,7 +13,7 @@ Create a VHDX and populate it from a WIM
 
 ## SYNTAX
 
-```PowerShell
+```
 Convert-Wim2VHD [-Path] <String> [-Size <Int64>] [-Dynamic] -DiskLayout <String> [-NoRecoveryTools]
  [-SystemSize <Int32>] [-ReservedSize <Int32>] [-RecoverySize <Int32>] [-force] [-SourcePath] <String>
  [-Index <Int32>] [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-RemoveFeature <String[]>]
@@ -438,7 +438,6 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

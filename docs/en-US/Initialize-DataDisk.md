@@ -13,7 +13,7 @@ Partition GPT and Format as a Data Drive
 
 ## SYNTAX
 
-```PowerShell
+```
 Initialize-DataDisk [-DiskNumber] <String> [-DataFormat <String>] [-AllocationUnitSize <Int32>]
  [-ReservedSize <Int32>] [-force] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
  [<CommonParameters>]
@@ -169,7 +169,6 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS

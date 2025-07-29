@@ -14,8 +14,7 @@ Create a new Unattend.xml
 ## SYNTAX
 
 ### Basic_FirstLogonScript (Default)
-
-```PowerShell
+```
 New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>] [-JoinAccount <PSCredential>]
  [-domain <String>] [-OU <String>] [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>]
  [-FirstLogonScriptPath <String>] [-ProductKey <String>] [-TimeZone <String>] [-InputLocale <String>]
@@ -25,8 +24,7 @@ New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>
 ```
 
 ### Basic_FirstBootScript
-
-```PowerShell
+```
 New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>] [-JoinAccount <PSCredential>]
  [-domain <String>] [-OU <String>] [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>]
  [-FirstBootScriptPath <String>] [-ProductKey <String>] [-TimeZone <String>] [-InputLocale <String>]
@@ -36,14 +34,13 @@ New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>
 ```
 
 ### Advanced
-
-```PowerShell
+```
 New-UnattendXml [-AdminCredential] <PSCredential> [-UserAccount <PSCredential[]>] [-JoinAccount <PSCredential>]
  [-domain <String>] [-OU <String>] [-Path <String>] [-LogonCount <Int32>] [-ComputerName <String>]
  [-ProductKey <String>] [-TimeZone <String>] [-InputLocale <String>] [-SystemLocale <String>]
  [-UserLocale <String>] [-UILanguage <String>] [-RegisteredOwner <String>] [-RegisteredOrganization <String>]
- [-FirstBootExecuteCommand <HashTable[]>] [-FirstLogonExecuteCommand <HashTable[]>]
- [-EveryLogonExecuteCommand <HashTable[]>] [-enableAdministrator] [-ProgressAction <ActionPreference>]
+ [-FirstBootExecuteCommand <Hashtable[]>] [-FirstLogonExecuteCommand <Hashtable[]>]
+ [-EveryLogonExecuteCommand <Hashtable[]>] [-enableAdministrator] [-ProgressAction <ActionPreference>]
  [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
@@ -382,7 +379,7 @@ Array of hashTables with Description, Order, and Path keys, and optional Domain,
 Executed by in the system context
 
 ```yaml
-Type: HashTable[]
+Type: Hashtable[]
 Parameter Sets: Advanced
 Aliases:
 
@@ -399,7 +396,7 @@ Array of hashTables with Description, Order and CommandLine keys.
 Executed at first logon of an Administrator, will auto elevate
 
 ```yaml
-Type: HashTable[]
+Type: Hashtable[]
 Parameter Sets: Advanced
 Aliases:
 
@@ -416,7 +413,7 @@ Array of hashables with Description, Order and CommandLine keys.
 Executed at every logon, does not elevate.
 
 ```yaml
-Type: HashTable[]
+Type: Hashtable[]
 Parameter Sets: Advanced
 Aliases:
 
@@ -493,7 +490,6 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
-
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
