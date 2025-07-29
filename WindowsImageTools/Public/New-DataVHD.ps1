@@ -33,6 +33,7 @@ function New-DataVHD {
 
     .EXAMPLE
     New-DataVHD -Path c:\data.vhdx -Size 100GB -DataFormat NTFS
+
     Creates a new 100GB Data VHDX formatted as NTFS.
 
     .NOTES
