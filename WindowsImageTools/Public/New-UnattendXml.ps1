@@ -9,34 +9,34 @@ function New-UnattendXml {
       Adding user accounts
       Auto logon a set number of times
       Set the Computer Name
-      First Boot or First Logon powersrhell script
+      First Boot or First Logon powershell script
       Product Key
       TimeZone
       Input, System and User Locals
       UI Language
-      Registered Owner and Orginization
+      Registered Owner and Organization
       First Boot, First Logon and Every Logon Commands
-      Enable Administrator account without autologon (client OS)
+      Enable Administrator account without autoLogon (client OS)
 
     If no Path is provided a the file will be created in a temp folder and the path returned.
     .EXAMPLE
     New-UnattendXml -AdminPassword 'P@ssword' -logonCount 1
 
-    Create an an randomly named xml in $env:temp that will set the Administrator Password and autologin 1 time. outputing the path to the file
+    Create an an randomly named xml in $env:temp that will set the Administrator Password and autoLogon 1 time.
     .EXAMPLE
-    New-UnattendXml -Path c:\temp\Unattent.xml -AdminPassword 'P@ssword' -logonCount 100 -FirstLogonScriptPath c:\pstemp\firstrun.ps1
+    New-UnattendXml -Path c:\temp\Unattend.xml -AdminPassword 'P@ssword' -logonCount 100 -FirstLogonScriptPath c:\PsTemp\firstRun.ps1
 
     Create an Unattend in at c:\temp\Unattend.xml that :,
         Sets the Administrator Password
-        Sets the auto logon count to 100 (basicly every reboot untill you manualy logoff)
-        Call c:\pstemp\firstrun.ps1 for each new user's first logon
+        Sets the auto logon count to 100 (basically every reboot until you manually logoff)
+        Call c:\PsTemp\firstRun.ps1 for each new user's first logon
   #>
     [CmdletBinding(DefaultParameterSetName = 'Basic_FirstLogonScript',
         SupportsShouldProcess = $true)]
     [OutputType([System.IO.FileInfo])]
     Param
     (
-        # The password to have unattnd.xml set the local Administrator to (minimum lenght 8)
+        # The password to have unattend.xml set the local Administrator to (minimum length 8)
         [Parameter(Mandatory = $true, HelpMessage = 'Local Administrator Credentials',
             ValueFromPipeline = $true,
             ValueFromPipelineByPropertyName = $true,
@@ -47,7 +47,7 @@ function New-UnattendXml {
         [System.Management.Automation.Credential()][PSCredential]
         $AdminCredential,
 
-        # User account/password to create and add to Administators group
+        # User account/password to create and add to Administrators group
         [System.Management.Automation.Credential()][PSCredential[]]
         $UserAccount,
 
@@ -64,11 +64,11 @@ function New-UnattendXml {
         $OU,
 
         # Output Path
-        [Alias('FilePath', 'FullName', 'pspath', 'outfile')]
+        [Alias('FilePath', 'FullName', 'psPath', 'outfile')]
         [string]
         $Path = "$(New-TemporaryDirectory)\unattend.xml",
 
-        # Number of times that the local Administrator account should automaticaly login (default 0)
+        # Number of times that the local Administrator account should automatically login (default 0)
         [ValidateRange(0, 1000)]
         [int]
         $LogonCount,
@@ -100,7 +100,7 @@ function New-UnattendXml {
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-
+            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
             $possibleValues = [System.TimeZoneInfo]::GetSystemTimeZones().ID  | Where-Object {
               $_ -like "$wordToComplete*"
           } | Foreach-Object{
@@ -125,7 +125,7 @@ function New-UnattendXml {
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-
+            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
             $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
               $_ -like '*-*'
             }  | Where-Object {
@@ -138,9 +138,9 @@ function New-UnattendXml {
       trap [System.Globalization.CultureNotFoundException] {$false}
       $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
       })]
-        [Alias('keyboardlayout')]
+        [Alias('keyboardLayout')]
         [String]
-        $InputLocale =  [System.Globalization.Cultureinfo]::CurrentCulture.Name,
+        $InputLocale =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Specifies the language for non-Unicode programs (default: Current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -150,7 +150,7 @@ function New-UnattendXml {
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-
+            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
             $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
               $_ -like '*-*'
             }  | Where-Object {
@@ -164,7 +164,7 @@ function New-UnattendXml {
       $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
       })]
         [String]
-        $SystemLocale  =  [System.Globalization.Cultureinfo]::CurrentCulture.Name,
+        $SystemLocale  =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Specifies the per-user settings used for formatting dates, times, currency and numbers (default: current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -174,7 +174,7 @@ function New-UnattendXml {
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-
+            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
             $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
               $_ -like '*-*'
             }  | Where-Object {
@@ -188,7 +188,7 @@ function New-UnattendXml {
       $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
       })]
         [String]
-        $UserLocale  =  [System.Globalization.Cultureinfo]::CurrentCulture.Name,
+        $UserLocale  =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Specifies the system default user interface (UI) language (default: current system language)
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -198,7 +198,7 @@ function New-UnattendXml {
                     $wordToComplete,
                     $commandAst,
                     $fakeBoundParameters )
-
+            $null = $commandName, $parameterName, $commandAst, $fakeBoundParameters # Suppress unused variable warnings
             $possibleValues = [System.Globalization.CultureInfo]::GetCultures([System.Globalization.CultureTypes]::AllCultures).Name | Where-Object {
               $_ -like '*-*'
             }  | Where-Object {
@@ -212,7 +212,7 @@ function New-UnattendXml {
       $null -ne [System.Globalization.CultureInfo]::GetCultureInfo($_)
       })]
         [String]
-        $UILanguage  =  [System.Globalization.Cultureinfo]::CurrentCulture.Name,
+        $UILanguage  =  [System.Globalization.CultureInfo]::CurrentCulture.Name,
 
         # Registered Owner (default: 'Valued Customer')
         [Parameter(ValueFromPipelineByPropertyName)]
@@ -226,25 +226,25 @@ function New-UnattendXml {
         [String]
         $RegisteredOrganization,
 
-        # Array of hashtables with Description, Order, and Path keys, and optional Domain, Password(plain text), username keys. Executed by in the system context
+        # Array of hashtable with Description, Order, and Path keys, and optional Domain, Password(plain text), username keys. Executed by in the system context
         [Parameter(ValueFromPipelineByPropertyName = $true,
             ParameterSetName = 'Advanced')]
         [Hashtable[]]
         $FirstBootExecuteCommand,
 
-        # Array of hashtables with Description, Order and CommandLine keys. Execuded at first logon of an Administrator, will auto elivate
+        # Array of hashtable with Description, Order and CommandLine keys. Executed at first logon of an Administrator, will auto elevate
         [Parameter(ValueFromPipelineByPropertyName = $true,
             ParameterSetName = 'Advanced')]
         [Hashtable[]]
         $FirstLogonExecuteCommand,
 
-        # Array of hashtables with Description, Order and CommandLine keys. Executed at every logon, does not elivate.
+        # Array of hashtable with Description, Order and CommandLine keys. Executed at every logon, does not elevate.
         [Parameter(ValueFromPipelineByPropertyName = $true,
             ParameterSetName = 'Advanced')]
         [Hashtable[]]
         $EveryLogonExecuteCommand,
 
-        # Enable Local Administrator account (default $true) this is needed for client OS if your not useing autologon or adding aditional admin users.
+        # Enable Local Administrator account (default $true) this is needed for client OS if your not using autoLogon or adding additional admin users.
         [switch]
         $enableAdministrator
     )
@@ -317,11 +317,11 @@ function New-UnattendXml {
 '@
 
         if ($LogonCount -gt 0) {
-            Write-Warning -Message '-Autologon places the Administrator password in plain txt'
+            Write-Warning -Message '-AutoLogon places the Administrator password in plain txt'
         }
     }
     Process {
-        if ($pscmdlet.ShouldProcess("$path", 'Create new Unattended.xml')) {
+        if ($psCmdlet.ShouldProcess("$path", 'Create new Unattended.xml')) {
             if ($FirstBootScriptPath) {
                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding PowerShell script to First boot command"
                 $FirstBootExecuteCommand = @(@{
@@ -341,7 +341,7 @@ function New-UnattendXml {
             }
 
             if ($enableAdministrator) {
-                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Enabeling Administrator via First boot command"
+                Write-Verbose -Message "[$($MyInvocation.MyCommand)] Enabling Administrator via First boot command"
                 if ($FirstBootExecuteCommand) {
                     $FirstBootExecuteCommand = $FirstBootExecuteCommand + @{
                         Description = 'Enable Administrator'
@@ -370,8 +370,8 @@ function New-UnattendXml {
                                 Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Unattend Domain Join for $($component.'processorArchitecture') Architecture"
                                 $identificationElement = $component.AppendChild($unattendXml.CreateElement('Identification', 'urn:schemas-microsoft-com:unattend'))
                                 $IdCredentialElement = $identificationElement.AppendChild($unattendXml.CreateElement('Credentials', 'urn:schemas-microsoft-com:unattend'))
-                                $IdCredDomainEliment = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Domain', 'urn:schemas-microsoft-com:unattend'))
-                                $Null = $IdCredDomainEliment.AppendChild($unattendXml.CreateTextNode($JoinAccount.GetNetworkCredential().Domain))
+                                $IdCredDomainElement = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Domain', 'urn:schemas-microsoft-com:unattend'))
+                                $Null = $IdCredDomainElement.AppendChild($unattendXml.CreateTextNode($JoinAccount.GetNetworkCredential().Domain))
                                 $IdCredPasswordElement = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Password', 'urn:schemas-microsoft-com:unattend'))
                                 $Null = $IdCredPasswordElement.AppendChild($unattendXml.CreateTextNode($JoinAccount.GetNetworkCredential().Password))
                                 $IdCredUserNameElement = $IdCredentialElement.AppendChild($unattendXml.CreateElement('Username', 'urn:schemas-microsoft-com:unattend'))
@@ -450,7 +450,7 @@ function New-UnattendXml {
                         $concatenatedPassword = '{0}AdministratorPassword' -f $AdminCredential.GetNetworkCredential().password
                         $component.UserAccounts.AdministratorPassword.Value = [System.Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($concatenatedPassword))
                         if ($RegisteredOrganization) {
-                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Registred Organization for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Registered Organization for $($component.'processorArchitecture') Architecture"
                             $component.RegisteredOrganization = $RegisteredOrganization
                         }
                         if ($RegisteredOwner) {
@@ -481,7 +481,7 @@ function New-UnattendXml {
                         }
 
                         if ($LogonCount) {
-                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding Autologon for $($component.'processorArchitecture') Architecture"
+                            Write-Verbose -Message "[$($MyInvocation.MyCommand)] Adding AutoLogon for $($component.'processorArchitecture') Architecture"
                             $autoLogonElement = $component.AppendChild($unattendXml.CreateElement('AutoLogon', 'urn:schemas-microsoft-com:unattend'))
                             $autoLogonPasswordElement = $autoLogonElement.AppendChild($unattendXml.CreateElement('Password', 'urn:schemas-microsoft-com:unattend'))
                             $autoLogonPasswordValueElement = $autoLogonPasswordElement.AppendChild($unattendXml.CreateElement('Value', 'urn:schemas-microsoft-com:unattend'))
@@ -506,13 +506,13 @@ function New-UnattendXml {
                                 $CommandDescriptionElement = $CommandElement.AppendChild($unattendXml.CreateElement('Description', 'urn:schemas-microsoft-com:unattend'))
                                 $CommandOrderElement = $CommandElement.AppendChild($unattendXml.CreateElement('Order', 'urn:schemas-microsoft-com:unattend'))
                                 $CommandCommandLineElement = $CommandElement.AppendChild($unattendXml.CreateElement('CommandLine', 'urn:schemas-microsoft-com:unattend'))
-                                $CommandRequireInputlement = $CommandElement.AppendChild($unattendXml.CreateElement('RequiresUserInput', 'urn:schemas-microsoft-com:unattend'))
+                                $CommandRequireInputElement= $CommandElement.AppendChild($unattendXml.CreateElement('RequiresUserInput', 'urn:schemas-microsoft-com:unattend'))
 
                                 $null = $CommandElement.SetAttribute('action', 'http://schemas.microsoft.com/WMIConfig/2002/State', 'add')
                                 $null = $CommandDescriptionElement.AppendChild($unattendXml.CreateTextNode($command['Description']))
                                 $null = $CommandOrderElement.AppendChild($unattendXml.CreateTextNode($commandOrder))
                                 $null = $CommandCommandLineElement.AppendChild($unattendXml.CreateTextNode($command['CommandLine']))
-                                $null = $CommandRequireInputlement.AppendChild($unattendXml.CreateTextNode('false'))
+                                $null = $CommandRequireInputElement.AppendChild($unattendXml.CreateTextNode('false'))
                                 $commandOrder++
                             }
                         }
@@ -527,13 +527,13 @@ function New-UnattendXml {
                                 $CommandDescriptionElement = $CommandElement.AppendChild($unattendXml.CreateElement('Description', 'urn:schemas-microsoft-com:unattend'))
                                 $CommandOrderElement = $CommandElement.AppendChild($unattendXml.CreateElement('Order', 'urn:schemas-microsoft-com:unattend'))
                                 $CommandCommandLineElement = $CommandElement.AppendChild($unattendXml.CreateElement('CommandLine', 'urn:schemas-microsoft-com:unattend'))
-                                $CommandRequireInputlement = $CommandElement.AppendChild($unattendXml.CreateElement('RequiresUserInput', 'urn:schemas-microsoft-com:unattend'))
+                                $CommandRequireInputElement = $CommandElement.AppendChild($unattendXml.CreateElement('RequiresUserInput', 'urn:schemas-microsoft-com:unattend'))
 
                                 $null = $CommandElement.SetAttribute('action', 'http://schemas.microsoft.com/WMIConfig/2002/State', 'add')
                                 $null = $CommandDescriptionElement.AppendChild($unattendXml.CreateTextNode($command['Description']))
                                 $null = $CommandOrderElement.AppendChild($unattendXml.CreateTextNode($commandOrder))
                                 $null = $CommandCommandLineElement.AppendChild($unattendXml.CreateTextNode($command['CommandLine']))
-                                $null = $CommandRequireInputlement.AppendChild($unattendXml.CreateTextNode('false'))
+                                $null = $CommandRequireInputElement.AppendChild($unattendXml.CreateTextNode('false'))
                                 $commandOrder++
                             }
                         }
