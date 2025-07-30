@@ -26,6 +26,13 @@ function Get-WindowsImageFromIso {
         [string]$Path
     )
 
+    # Check for administrator privileges
+    if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        throw 'Get-WindowsImageFromIso requires administrator privileges.'
+    }
+
+    $Path = Get-FullFilePath -Path $Path
+    Write-Verbose "Mounting ISO: $Path"
     $mountResult = Mount-DiskImage -ImagePath $Path -PassThru
     $driveLetter = ($mountResult | Get-Volume).DriveLetter
     if (-not $driveLetter) {
@@ -33,7 +40,7 @@ function Get-WindowsImageFromIso {
     }
     $mountedPath = $driveLetter + ":\"
 
-    $wimFiles = Get-ChildItem -Path $mountedPath -Filter *.wim -Recurse
+    $wimFiles = Get-ChildItem -Path $mountedPath -Filter install.wim -Recurse
     if ($wimFiles.Count -eq 0) {
         Dismount-DiskImage -ImagePath $Path
         throw "No WIM files found in mounted ISO."
@@ -42,5 +49,5 @@ function Get-WindowsImageFromIso {
         Write-Host "Listing images in $($wim.FullName):"
         Get-WindowsImage -ImagePath $wim.FullName
     }
-    Dismount-DiskImage -ImagePath $Path
+    $null = Dismount-DiskImage -ImagePath $Path
 }
