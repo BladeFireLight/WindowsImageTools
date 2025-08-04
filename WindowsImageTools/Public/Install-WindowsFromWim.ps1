@@ -189,7 +189,11 @@
                     Test-Path -Path $(Resolve-Path $Path)
                 }
             })]
-        [string[]]$filesToInject
+        [string[]]$filesToInject,
+
+        # Use DISM for expansion instead of native PowerShell
+        [Parameter(HelpMessage = 'Use DISM for expansion instead of native PowerShell')]
+        [switch]$UseDismExpansion
 
     )
     $SourcePath = $SourcePath | Get-FullFilePath
@@ -256,6 +260,9 @@
             }
             if ($filesToInject) {
                 $SetDiskPartitionParam.add('filesToInject', $filesToInject)
+            }
+            if ($PSBoundParameters.ContainsKey('UseDismExpansion')) {
+                $SetDiskPartitionParam.add('UseDismExpansion', $UseDismExpansion.IsPresent)
             }
             Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeDiskPartitionParam"
             Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)

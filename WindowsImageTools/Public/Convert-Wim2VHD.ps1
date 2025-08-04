@@ -67,8 +67,12 @@
     .PARAMETER Package
     Paths to packages to install via DISM.
 
+
     .PARAMETER filesToInject
     Files or folders to copy to the root of the Windows drive.
+
+    .PARAMETER UseDismExpansion
+    If specified, uses DISM.exe for image expansion instead of native PowerShell.
 
     .EXAMPLE
     Convert-Wim2VHD -Path c:\windows8.vhdx -SourcePath d:\Source\install.wim -DiskLayout UEFI
@@ -84,6 +88,11 @@
     Convert-Wim2VHD -Path c:\win2go.vhd -SourcePath d:\Source\install.wim -DiskLayout WindowsToGo
 
     Creates a Windows To Go VHD image that can boot in UEFI or BIOS mode.
+
+    .EXAMPLE
+    Convert-Wim2VHD -Path c:\windows8.vhdx -SourcePath d:\Source\install.wim -DiskLayout UEFI -UseDismExpansion $true
+
+    Creates a VHDX using DISM.exe for image expansion. This is required due to CrowdStrike blocking PowerShell from writing core files like SAM to the target disk.
 
     .NOTES
     Author: WindowsImageTools Team
@@ -220,7 +229,11 @@
           Test-Path -Path $(Resolve-Path $Path)
         }
       })]
-    [string[]]$filesToInject
+    [string[]]$filesToInject,
+
+    # Use DISM for expansion instead of native PowerShell
+    [Parameter(HelpMessage = 'Use DISM for expansion instead of native PowerShell')]
+    [switch]$UseDismExpansion
 
   )
   $Path = $Path | Get-FullFilePath
@@ -307,6 +320,9 @@
       if ($filesToInject)
       {
         $SetVHDPartitionParam.add('filesToInject', $filesToInject)
+      }
+      if ($PSBoundParameters.ContainsKey('UseDismExpansion')) {
+        $SetVHDPartitionParam.add('UseDismExpansion', $UseDismExpansion.IsPresent)
       }
       Write-Verbose -Message "[$($MyInvocation.MyCommand)] : InitializeVHDPartitionParam"
       Write-Verbose -Message ($InitializeVHDPartitionParam | Out-String)

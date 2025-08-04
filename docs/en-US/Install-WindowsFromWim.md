@@ -18,7 +18,8 @@ Install-WindowsFromWim [-DiskNumber] <String> -DiskLayout <String> [-NoRecoveryT
  [-ReservedSize <Int32>] [-RecoverySize <Int32>] [-force] [-SourcePath] <String> [-Index <Int32>]
  [-Unattend <String>] [-NativeBoot] [-Feature <String[]>] [-RemoveFeature <String[]>] [-FeatureSource <String>]
  [-FeatureSourceIndex <Int32>] [-Driver <String[]>] [-AddPayloadForRemovedFeature] [-Package <String[]>]
- [-filesToInject <String[]>] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm] [<CommonParameters>]
+ [-filesToInject <String[]>] [-UseDismExpansion] [-ProgressAction <ActionPreference>] [-WhatIf] [-Confirm]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -351,6 +352,21 @@ Aliases:
 Required: False
 Position: Named
 Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -UseDismExpansion
+Use DISM for expansion instead of native PowerShell
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

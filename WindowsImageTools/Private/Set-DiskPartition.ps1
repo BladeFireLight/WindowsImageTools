@@ -110,7 +110,11 @@
         [string[]]$filesToInject,
 
         # Bypass the warning and about lost data
-        [switch]$Force
+        [switch]$Force,
+
+        # Use DISM for image expansion instead of Expand-WindowsImage
+        [Parameter(HelpMessage = 'If true, use Expand-DpWindowsImage for image expansion. If false, use Expand-WindowsImage.')]
+        [switch]$UseDismExpansion = $false
     )
 
 
@@ -216,7 +220,11 @@
                         $WinDrive = Join-Path -Path "$($WindowsPartition.DriveLetter):" -ChildPath '\'
                         $windir = Join-Path -Path $WinDrive -ChildPath Windows
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$DiskNumber] Windows Partition [$($WindowsPartition.partitionNumber)] : Applying image from [$SourcePath] to [$WinDrive] using Index [$Index]"
-                        $null = Expand-WindowsImage -ImagePath $SourcePath -Index $Index -ApplyPath $WinDrive -ErrorAction Stop
+                        if ($UseDismExpansion) {
+                            $null = Expand-DpWindowsImage -ImagePath $SourcePath -Index $Index -ApplyPath $WinDrive -ErrorAction Stop
+                        } else {
+                            $null = Expand-WindowsImage -ImagePath $SourcePath -Index $Index -ApplyPath $WinDrive -ErrorAction Stop
+                        }
 
                         #region Modify the OS with Drivers, Active Features and Packages
                         if ($Driver) {

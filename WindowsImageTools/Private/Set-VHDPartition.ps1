@@ -105,7 +105,11 @@
     [string[]]$filesToInject,
 
     # Bypass the warning and about lost data
-    [switch]$Force
+    [switch]$Force,
+
+    # Use DISM for expansion instead of native PowerShell
+    [Parameter(HelpMessage = 'Use DISM for expansion instead of native PowerShell')]
+    [switch]$UseDismExpansion = $false
   )
 
 
@@ -141,6 +145,7 @@
         try {
           Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$VhdxFileName] : Mounted as diskNumber [$($disk.Number)]"
 
+
           $SetDiskParam = @{
             DiskNumber = $disk.Number
             SourcePath = $SourcePath
@@ -157,6 +162,7 @@
           if ($Driver) { $SetDiskParam.add('Driver', $Driver) }
           if ($Package) { $SetDiskParam.add('Package', $Package) }
           if ($filesToInject) { $SetDiskParam.add('filesToInject', $filesToInject) }
+          if ($PSBoundParameters.ContainsKey('UseDismExpansion')) { $SetDiskParam.add('UseDismExpansion', $UseDismExpansion) }
 
           Set-DiskPartition @ParametersToPass @SetDiskParam
 

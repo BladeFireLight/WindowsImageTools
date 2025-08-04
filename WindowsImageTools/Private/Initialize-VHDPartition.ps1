@@ -142,11 +142,17 @@
                 Try {
                     Add-WindowsImageType
                     $vhdParams = @{
-                        VHDFormat = $VHDFormat
-                        Path      = $Path
-                        SizeBytes = $Size
+                        Path    = $Path
+                        Size    = $Size
+                        Dynamic = $Dynamic
+                        Force   = $force
                     }
-
+                    If (-not $Dynamic) {
+                        Write-Warning -Message 'Creating a Fixed Disk May take a long time!'
+                    }
+                    Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for New-DpVhd"
+                    Write-Verbose -Message ($vhdParams | Out-String)
+                    #New-DpVhd @vhdParams
                     If ($Dynamic) {
                         Write-Verbose -Message "[$($MyInvocation.MyCommand)] [$fileName] : Params for [WIM2VHD.VirtualHardDisk]::CreateSparseDisk()"
                         Write-Verbose -Message ($vhdParams | Out-String)

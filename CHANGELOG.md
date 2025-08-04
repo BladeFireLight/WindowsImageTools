@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+
+## [1.10.35] Released
+
+### Fixed
+  added -UseDismExpansion parmater to mutiple funtion as a workarround for CroudStrike not likeing Expand-WindowsImage.
+
+### Added
+  Get-WindowsImageFromIso this will list the windows image numbers and names on an iso. Same as Get-WindowsImage
+
 ## [1.9.30] Released
 
 ### Fixed

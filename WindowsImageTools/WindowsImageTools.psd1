@@ -12,7 +12,7 @@
     RootModule        = 'WindowsImageTools.psm1'
 
     # Version number of this module.
-    ModuleVersion     = '1.9.30'
+    ModuleVersion     = '1.10.35'
 
     # Supported PSEditions
     # CompatiblePSEditions = @()
